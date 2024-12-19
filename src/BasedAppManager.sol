@@ -177,15 +177,31 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function delegateBalance(address receiver, uint32 percentage) external {
         require(percentage > 0 && percentage <= MAX_PERCENTAGE, "Invalid percentage");
 
-        uint32 existingPercentage = delegations[msg.sender][receiver];
+        require(delegations[msg.sender][receiver] == 0, "Delegation already exists");
 
-        require(
-            totalDelegatedPercentage[msg.sender] - existingPercentage + percentage <= MAX_PERCENTAGE,
-            "Percentage exceeds 100%"
-        );
+        require(totalDelegatedPercentage[msg.sender] + percentage <= MAX_PERCENTAGE, "Total percentage exceeds 100%");
 
         delegations[msg.sender][receiver] = percentage;
-        totalDelegatedPercentage[msg.sender] = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
+        totalDelegatedPercentage[msg.sender] += percentage;
+
+        emit DelegatedBalance(msg.sender, receiver, percentage);
+    }
+
+    /// @notice Function to update the delegated validator balance percentage to another account
+    /// @param receiver The address of the account to delegate to
+    /// @param percentage The updated percentage of the account's balance to delegate
+    /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
+    function updateDelegatedBalance(address receiver, uint32 percentage) external {
+        require(percentage > 0 && percentage <= MAX_PERCENTAGE, "Invalid percentage");
+
+        uint32 existingPercentage = delegations[msg.sender][receiver];
+        require(existingPercentage > 0, "Delegation does not exist");
+
+        uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
+        require(newTotalPercentage <= MAX_PERCENTAGE, "Percentage exceeds 100%");
+
+        delegations[msg.sender][receiver] = percentage;
+        totalDelegatedPercentage[msg.sender] = newTotalPercentage;
 
         emit DelegatedBalance(msg.sender, receiver, percentage);
     }

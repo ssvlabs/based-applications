@@ -166,7 +166,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     function testRevertTotalDelegatePercentage() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        vm.expectRevert("Percentage exceeds 100%");
+        vm.expectRevert("Total percentage exceeds 100%");
         proxiedManager.delegateBalance(RECEIVER2, 1e4);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
@@ -180,7 +180,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     function testUpdateTotalDelegatePercentageByTheSameUser() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        proxiedManager.delegateBalance(RECEIVER, 1e4);
+        proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
         vm.expectRevert("Invalid percentage");
         proxiedManager.delegateBalance(RECEIVER, 1e4 + 1);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
