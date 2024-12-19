@@ -1,7 +1,7 @@
 {
   "name": "based-applications",
   "version": "0.0.0",
-  "description": "Based Applications Contracts SSV",
+  "description": "SSV Based Applications",
   "scripts": {
     "build": "forge fmt && forge build",
     "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
