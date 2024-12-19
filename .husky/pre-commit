@@ -2,4 +2,4 @@ npm run format
 
 solhint 'src/**/*.sol'
 
-npm test
+npm run test-coverage
