@@ -221,9 +221,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         emit RemoveDelegatedBalance(msg.sender, receiver);
     }
 
-    // **********************
-    // ** Section: Service **
-    // **********************
+    // ********************
+    // ** Section: bApps **
+    // ********************
 
     /// @notice Function to register a service
     /// @param owner The address of the owner
