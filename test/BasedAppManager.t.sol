@@ -25,8 +25,12 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     address SERVICE1 = makeAddr("Service1");
     address SERVICE2 = makeAddr("Service2");
 
+    address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
+    uint256 constant INITIAL_USER1_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_RECEIVER_BALANCE_ERC20 = 1000 * 10 ** 18;
+    uint256 constant INITIAL_RECEIVER_BALANCE_ETH = 10 ether;
 
     function setUp() public {
         vm.label(OWNER, "Owner");
@@ -43,6 +47,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         proxiedManager = BasedAppManager(address(proxy));
 
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
+
+        vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);
+        vm.deal(RECEIVER, INITIAL_RECEIVER_BALANCE_ETH);
 
         erc20mock = new ERC20Mock();
         erc20mock.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
@@ -499,6 +506,17 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testStrategyOwnerDepositETHWithNoObligation() public {
+        testStrategyOptInToService();
+        vm.startPrank(USER1);
+        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
+        assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
+        proxiedManager.depositETH{value: 1 ether}(1);
+        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyTokenBalance, 1 ether, "User strategy balance not matching");
+        vm.stopPrank();
+    }
+
     function testRevertObligationNotMatchTokensService() public {
         testStrategyOptInToService();
         vm.startPrank(USER1);
@@ -506,10 +524,12 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         proxiedManager.createObligation(1, SERVICE1, address(erc20mock2), 100);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
+        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        assertEq(tokens[0], address(erc20mock), "Service token");
+        assertEq(tokens.length, 1, "Service token length");
         vm.stopPrank();
     }
 
-    function testRevertDepositNonSupportedTokensIntoStrategy() public {}
     function testRevertDepositNonSupportedETHIntoStrategy() public {}
     function testRevertObligationHigherThanMaxPercentage() public {}
     function testCreateObligationToNonExistingServiceRevert() public {}
