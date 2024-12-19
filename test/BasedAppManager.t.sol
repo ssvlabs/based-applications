@@ -520,10 +520,10 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
         testStrategyOptInToService();
         vm.startPrank(USER1);
-        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
+        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
-        proxiedManager.depositERC20(1, erc20mock, amount);
-        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
+        proxiedManager.depositERC20(1, erc20mock2, amount);
+        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
         assertEq(strategyTokenBalance, amount, "User strategy balance not matching");
         vm.stopPrank();
     }
@@ -592,8 +592,26 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testCreateObligationToNotOwnedStrategyRevert() public {}
-    function testWithdrawErc20FromStrategy() public {}
+    function testCreateObligationToNotOwnedStrategyRevert() public {
+        vm.startPrank(ATTACKER);
+        vm.expectRevert("Not the strategy owner");
+        proxiedManager.createObligation(1, SERVICE1, address(erc20mock), 100);
+        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, ATTACKER, address(erc20mock));
+        assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
+        vm.stopPrank();
+    }
+
+    function testFastWithdrawErc20FromStrategy() public {
+        testStrategyOwnerDepositERC20WithNoObligation(200);
+        vm.startPrank(USER1);
+        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
+        assertEq(strategyTokenBalance, 200, "User strategy balance should be 200");
+        proxiedManager.fastWithdrawERC20(1, erc20mock2, 50);
+        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
+        assertEq(strategyTokenBalance, 150, "User strategy balance should be 150");
+        vm.stopPrank();
+    }
+
     function testWithdrawETHFromStrategy() public {}
     function testUpdateStrategy() public {}
     function testRevertObligationWithNonMatchingToken() public {}
