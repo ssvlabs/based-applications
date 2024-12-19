@@ -6,9 +6,11 @@
     "test": "forge test -vvvv",
     "build": "forge fmt && forge build",
     "gas-report": "forge test -vvvv --gas-report",
+    "format": "forge fmt",
     "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
     "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY",
-    "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs --overwrite"
+    "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs --overwrite",
+    "prepare": "husky"
   },
   "keywords": [
     "Based",
@@ -22,5 +24,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@openzeppelin/contracts-upgradeable": "^5.1.0"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
