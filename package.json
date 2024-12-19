@@ -25,5 +25,8 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "husky": "^9.1.7"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts-upgradeable": "^5.1.0"
   }
 }

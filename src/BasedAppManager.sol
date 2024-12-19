@@ -116,7 +116,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
 
     event StrategyCreated(uint256 indexed strategyId, address indexed owner);
     event ServiceRegistered(address indexed serviceAddress, address indexed owner, address from);
-    event ServiceUpdated(address indexed serviceAddress);
+    event ServiceTokensUpdated(address indexed serviceAddress, address[] tokens);
     event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
     event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
     event StrategyDeposit(
@@ -251,27 +251,23 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         emit ServiceRegistered(serviceAddress, owner, msg.sender);
     }
 
+    /// @notice Function to add tokens to a service
+    /// @param serviceAddress The address of the service
+    /// @param tokens The list of tokens to add
+    function addTokensToService(address serviceAddress, address[] calldata tokens) external {
+        ICore.Service storage service = services[serviceAddress];
+        for (uint256 i = 0; i < tokens.length; i++) {
+            service.tokens.push(tokens[i]);
+        }
+        emit ServiceTokensUpdated(serviceAddress, tokens);
+    }
+
+    /// @notice Function to get the tokens for a service
+    /// @param serviceAddress The address of the service
     function getServiceTokens(
         address serviceAddress
     ) external view returns (address[] memory) {
         return services[serviceAddress].tokens;
-    }
-
-    /// @notice Function to set the account's Strategy for a service
-    /// @param account The address of the account
-    /// @param service The address of the service
-    /// @param strategyId The id of the strategyId
-    function setAccountServiceStrategy(address account, address service, uint256 strategyId) internal {
-        require(accountServiceStrategy[account][service] == 0, "Service already opted-in via another strategy");
-        accountServiceStrategy[account][service] = strategyId;
-    }
-
-    /// @notice Function to get the ODP address for an account and service
-    /// @param account The address of the account
-    /// @param service The address of the service
-    /// @return strategyId The strategy Id
-    function getAccountServiceStrategy(address account, address service) external view returns (uint256 strategyId) {
-        return accountServiceStrategy[account][service];
     }
 
     // ***********************
