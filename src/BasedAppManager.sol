@@ -531,7 +531,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         require(block.timestamp >= request.requestTime + OBLIGATION_TIMELOCK_PERIOD, "Timelock not elapsed");
         require(block.timestamp <= request.requestTime + OBLIGATION_EXPIRE_TIME, "Update expired");
 
-     // Remove the obligation if the percentage is 0
+        // Remove the obligation if the percentage is 0
         if (request.percentage == 0) {
             usedTokens[strategyId][address(token)] -= 1;
             obligationsCounter[strategyId][service] -= 1;

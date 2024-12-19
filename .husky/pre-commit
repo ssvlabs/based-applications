@@ -1,1 +1,1 @@
-forge fmt
+npm run format
