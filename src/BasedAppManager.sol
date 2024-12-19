@@ -88,11 +88,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
      * @notice Tracks obligation percentages for a strategy based on specific services and tokens.
      * @dev Uses a hash of the service and token to map the obligation percentage for the strategy.
      */
-    mapping(uint256 strategyId => mapping(address service => mapping(address token => uint32 obligationPercentage))) public
-        obligations;
+    mapping(uint256 strategyId => mapping(address service => mapping(address token => uint32 obligationPercentage)))
+        public obligations;
     /**
      * @notice Tracks unallocated tokens in a strategy.
-     * @dev Count the number of services that have one obligation set for the token. If the counter is 0, the token is unused and we can allow fast withdrawal.
+     * @dev Count the number of services that have one obligation set for the token.
+     * If the counter is 0, the token is unused and we can allow fast withdrawal.
      */
     mapping(uint256 strategyId => mapping(address token => uint32 servicesCounter)) public usedTokens;
     /**
@@ -104,8 +105,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         withdrawalRequests;
     /**
      * @notice Tracks all the obligation change requests divided by token per strategy.
-     * @dev Strategy can have only one pending obligation change request per token. Only the strategy owner can submit one.
-     *  Submitting a new request will overwrite the previous one and reset the timer.
+     * @dev Strategy can have only one pending obligation change request per token.
+     * Only the strategy owner can submit one.
+     * Submitting a new request will overwrite the previous one and reset the timer.
      */
     mapping(uint256 strategyId => mapping(address token => mapping(address service => ICore.ObligationRequest))) public
         obligationRequests;
@@ -117,8 +119,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event ServiceUpdated(address indexed serviceAddress);
     event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
     event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
-    event StrategyDeposit(uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount);
-    event StrategyWithdrawal(uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount);
+    event StrategyDeposit(
+        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
+    );
+    event StrategyWithdrawal(
+        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
+    );
     event ServiceOptedIn(uint256 indexed strategyId, address indexed service);
     event ServiceObligationSet(
         uint256 indexed strategyId, address indexed service, address indexed token, uint256 obligationPercentage
@@ -133,9 +139,15 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     event WithdrawalProposed(
         uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount, uint256 finalizeTime
     );
-    event WithdrawalFinalized(uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount);
+    event WithdrawalFinalized(
+        uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount
+    );
     event ObligationUpdateProposed(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint32 percentage, uint256 finalizeTime
+        uint256 indexed strategyId,
+        address indexed account,
+        address indexed token,
+        uint32 percentage,
+        uint256 finalizeTime
     );
     event ObligationUpdateFinalized(
         uint256 indexed strategyId, address indexed account, address indexed token, uint32 percentage
@@ -348,7 +360,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         request.amount = amount;
         request.requestTime = block.timestamp;
 
-        emit WithdrawalProposed(strategyId, msg.sender, address(token), amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD);
+        emit WithdrawalProposed(
+            strategyId, msg.sender, address(token), amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD
+        );
     }
 
     /**
@@ -434,7 +448,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @param service The address of the service
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function createObligation(uint256 strategyId, address service, address token, uint32 obligationPercentage) external {
+    function createObligation(
+        uint256 strategyId,
+        address service,
+        address token,
+        uint32 obligationPercentage
+    ) external {
         require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
         require(obligationPercentage > 0 && obligationPercentage <= 1e4, "Invalid obligation percentage");
         require(obligations[strategyId][service][token] == 0, "Obligation already set");
@@ -463,7 +482,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     ) external {
         require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
         require(obligationPercentage > 0 && obligationPercentage <= 1e4, "Invalid obligation percentage");
-        require(obligationPercentage > obligations[strategyId][service][token], "Percentage must be greater for fast update");
+        require(
+            obligationPercentage > obligations[strategyId][service][token], "Percentage must be greater for fast update"
+        );
 
         obligations[strategyId][service][token] = obligationPercentage;
 

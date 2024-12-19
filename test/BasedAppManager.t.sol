@@ -61,7 +61,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address currentImplementation = address(
             uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1))))
         );
-        assertEq(currentImplementation, address(implementation), "Implementation should be the BasedAppManager contract");
+        assertEq(
+            currentImplementation, address(implementation), "Implementation should be the BasedAppManager contract"
+        );
     }
 
     function testUpgradeUnauthorized() public {
@@ -305,7 +307,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
         uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput);
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
         (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
@@ -322,7 +326,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
         uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput);
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
         (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         vm.expectRevert("Service already registered");
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2, 2);
@@ -341,7 +347,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
         uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput);
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
         (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
