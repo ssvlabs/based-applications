@@ -711,5 +711,24 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testUpdateService() public {}
+    function testUpdateServiceWithNewTokens() public {
+        testRegisterService();
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](2);
+        tokensInput[0] = address(erc20mock2);
+        tokensInput[1] = address(ETH_ADDRESS);
+        proxiedManager.addTokensToService(SERVICE1, tokensInput);
+        vm.stopPrank();
+    }
+
+    function testUpdateServiceWithAlreadyPresentTokensRevert() public {
+        testRegisterService();
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](2);
+        tokensInput[0] = address(erc20mock);
+        tokensInput[1] = address(ETH_ADDRESS);
+        vm.expectRevert("Token already added");
+        proxiedManager.addTokensToService(SERVICE1, tokensInput);
+        vm.stopPrank();
+    }
 }

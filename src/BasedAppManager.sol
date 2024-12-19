@@ -257,6 +257,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function addTokensToService(address serviceAddress, address[] calldata tokens) external {
         ICore.Service storage service = services[serviceAddress];
         for (uint256 i = 0; i < tokens.length; i++) {
+            for (uint256 j = 0; j < service.tokens.length; j++) {
+                if (service.tokens[j] == tokens[i]) {
+                    revert("Token already added");
+                }
+            }
             service.tokens.push(tokens[i]);
         }
         emit ServiceTokensUpdated(serviceAddress, tokens);
