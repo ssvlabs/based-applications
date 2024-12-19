@@ -435,6 +435,28 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+        function testStrategyOptInToServiceWithETH() public {
+        testCreateStrategy();
+        testRegisterServiceWithETH();
+        vm.startPrank(USER1);
+        (address owner,,,) = proxiedManager.strategies(1);
+        assertEq(owner, USER1, "Strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = ETH_ADDRESS;
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = 10_000; // 100%
+        proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
+        assertEq(strategyId, 1, "Strategy id");
+        uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, ETH_ADDRESS);
+        assertEq(obligationPercentage, 10_000, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
+        assertEq(usedTokens, 1, "Used tokens");
+        uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
+        assertEq(numberOfObligations, 1, "Number of obligations");
+        vm.stopPrank();
+    }
+
     function testStrategyOptInToServiceNonMatchingTokensAndObligations() public {
         testCreateStrategy();
         testRegisterService();
@@ -530,6 +552,18 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+
+    function testCreateObligationETHAndDepositETH() public {
+        testStrategyOptInToServiceWithETH();
+        vm.startPrank(USER1);
+         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
+        assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
+        proxiedManager.depositETH{value: 1 ether}(1);
+        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyTokenBalance, 1 ether, "User strategy balance not matching");
+        vm.stopPrank();
+    }
+
     function testRevertDepositNonSupportedETHIntoStrategy() public {}
     function testRevertObligationHigherThanMaxPercentage() public {}
     function testCreateObligationToNonExistingServiceRevert() public {}
@@ -560,6 +594,25 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "Service token");
         assertEq(tokensInput[0], address(erc20mock), "Service token");
+        vm.stopPrank();
+    }
+
+        function testRegisterServiceWithETH() public {
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = ETH_ADDRESS;
+        uint32 sharedRiskLevelInput = 102;
+        uint32 slashingCorrelationPenaltyInput = 100;
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
+        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        assertEq(owner, USER1, "Service owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
+        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        assertEq(tokens[0], ETH_ADDRESS, "Service token");
+        assertEq(tokensInput[0], ETH_ADDRESS, "Service token input");
         vm.stopPrank();
     }
 
