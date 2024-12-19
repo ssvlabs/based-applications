@@ -2,6 +2,21 @@
   "name": "based-applications",
   "version": "0.0.0",
   "description": "SSV Based Applications",
+  "author": "SSV.Network",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssvlabs/based-applications.git"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "Based",
+    "BApps",
+    "SSV"
+  ],
+  "contributors": [
+    "Marco Tabasco <marco@ssvlabs.io>",
+    "Riccardo Persiani <r.persiani92@gmail.com>"
+  ],
   "scripts": {
     "build": "forge fmt && forge build",
     "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
@@ -14,20 +29,8 @@
     "test-coverage": "forge coverage",
     "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY"
   },
-  "keywords": [
-    "Based",
-    "BApps",
-    "SSV"
-  ],
-  "contributors": [
-    "Marco Tabasco <marco@ssvlabs.io>",
-    "Riccardo Persiani <r.persiani92@gmail.com>"
-  ],
-  "license": "UNLICENSED",
   "devDependencies": {
+    "@openzeppelin/contracts-upgradeable": "^5.1.0",
     "husky": "^9.1.7"
-  },
-  "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.1.0"
   }
 }
