@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 
 import {BasedAppManager} from "../src/BasedAppManager.sol";
 import {ICore} from "../src/interfaces/ICore.sol";
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol"; // For deploying the UUPS proxy
+import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./mocks/MockERC20.sol";
 
@@ -52,6 +52,10 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    // *****************************************
+    // ** Section: Ownership **
+    // *****************************************
+
     // Check the owner of the BasedAppManager
     function testOwner() public view {
         assertEq(proxiedManager.owner(), OWNER, "Owner should be the deployer");
@@ -61,7 +65,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address currentImplementation = address(
             uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1))))
         );
-        assertEq(currentImplementation, address(implementation), "Implementation should be the BasedAppManager contract");
+        assertEq(
+            currentImplementation, address(implementation), "Implementation should be the BasedAppManager contract"
+        );
     }
 
     function testUpgradeUnauthorized() public {
@@ -85,6 +91,10 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         );
         assertEq(currentImplementation, address(newImplementation), "Implementation should be upgraded");
     }
+
+    // *****************************************
+    // ** Section: Delegate Validator Balance **
+    // *****************************************
 
     function testDelegateMinimumBalance() public {
         vm.startPrank(USER1);
@@ -164,7 +174,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     function testRevertTotalDelegatePercentage() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        vm.expectRevert("Percentage exceeds 100%");
+        vm.expectRevert("Total percentage exceeds 100%");
         proxiedManager.delegateBalance(RECEIVER2, 1e4);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
@@ -175,10 +185,33 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testRevertDoubleDelegateSameReceiver() public {
+        vm.startPrank(USER1);
+        proxiedManager.delegateBalance(RECEIVER, 1);
+        vm.expectRevert("Delegation already exists");
+        proxiedManager.delegateBalance(RECEIVER, 2);
+        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 1, "Delegated amount should be 0.01%");
+        assertEq(totalDelegatedPercentage, 1, "Total delegated percentage should be 0.01%");
+        vm.stopPrank();
+    }
+
+    function testRevertInvalidPercentageDelegateBalance() public {
+        vm.startPrank(USER1);
+        vm.expectRevert("Invalid percentage");
+        proxiedManager.delegateBalance(RECEIVER, 1e4 + 1);
+        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 0, "Delegated amount should be 0.01%");
+        assertEq(totalDelegatedPercentage, 0, "Total delegated percentage should be 0.01%");
+        vm.stopPrank();
+    }
+
     function testUpdateTotalDelegatePercentageByTheSameUser() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        proxiedManager.delegateBalance(RECEIVER, 1e4);
+        proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
         vm.expectRevert("Invalid percentage");
         proxiedManager.delegateBalance(RECEIVER, 1e4 + 1);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
@@ -187,6 +220,78 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(totalDelegatedPercentage, 1e4, "Total delegated percentage should be 100%");
         vm.stopPrank();
     }
+
+    function testRevertUpdateBalanceNotExisting() public {
+        vm.startPrank(USER1);
+        vm.expectRevert("Delegation does not exist");
+        proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
+        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 0, "Delegated amount should be 100%");
+        assertEq(totalDelegatedPercentage, 0, "Total delegated percentage should be 100%");
+        vm.stopPrank();
+    }
+
+    function testRevertUpdateBalanceTooHigh() public {
+        vm.startPrank(USER1);
+        proxiedManager.delegateBalance(RECEIVER, 1);
+        proxiedManager.delegateBalance(RECEIVER2, 1);
+        vm.expectRevert("Percentage exceeds 100%");
+        proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
+        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
+        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 1, "Delegated amount should be 100%");
+        assertEq(delegatedAmount2, 1, "Delegated amount should be 100%");
+        assertEq(totalDelegatedPercentage, 2, "Total delegated percentage should be 100%");
+        vm.stopPrank();
+    }
+
+    function testRemoveDelegateBalance() public {
+        testDelegateFullBalance();
+        vm.startPrank(USER1);
+        proxiedManager.removeDelegatedBalance(RECEIVER);
+        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 0, "Delegated amount should be 0%");
+        assertEq(totalDelegatedPercentage, 0, "Total delegated percentage should be 0%");
+        vm.stopPrank();
+    }
+
+    function testRemoveDelgateBalanceAndComputeTotal() public {
+        testUpdateTotalDelegatedPercentage(100, 200);
+        vm.startPrank(USER1);
+        proxiedManager.removeDelegatedBalance(RECEIVER);
+        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
+        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 0, "Delegated amount should be 0%");
+        assertEq(delegatedAmount2, 200, "Delegated amount should be 0.01%");
+        assertEq(totalDelegatedPercentage, 200, "Total delegated percentage should be 0.01%");
+        proxiedManager.delegateBalance(RECEIVER, 1);
+        delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
+        totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 1, "Delegated amount should be 0%");
+        assertEq(delegatedAmount2, 200, "Delegated amount should be 0.01%");
+        assertEq(totalDelegatedPercentage, 201, "Total delegated percentage should be 0.01%");
+        vm.stopPrank();
+    }
+
+    function testRevertRemoveNonExistingBalance() public {
+        vm.startPrank(USER1);
+        vm.expectRevert("No delegation exists");
+        proxiedManager.removeDelegatedBalance(RECEIVER);
+        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
+        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
+        assertEq(delegatedAmount, 0, "Delegated amount should be 0%");
+        assertEq(totalDelegatedPercentage, 0, "Total delegated percentage should be 0%");
+        vm.stopPrank();
+    }
+
+    // ***********************
+    // ** Section: Strategy **
+    // ***********************
 
     function testCreateStrategy() public {
         vm.startPrank(USER1);
@@ -299,13 +404,19 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    // ********************
+    // ** Section: bApps **
+    // ********************
+
     function testRegisterService() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
         uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput);
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
         (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
@@ -322,7 +433,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
         uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput);
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
         (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         vm.expectRevert("Service already registered");
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2, 2);
@@ -341,7 +454,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
         uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput);
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
         (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");

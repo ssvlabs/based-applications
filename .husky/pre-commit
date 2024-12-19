@@ -1,0 +1,5 @@
+npm run format
+
+solhint 'src/**/*.sol'
+
+npm run test-coverage
