@@ -612,9 +612,18 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testWithdrawETHFromStrategy() public {}
+    function testWithdrawETHFromStrategy() public {
+        testStrategyOwnerDepositETHWithNoObligation();
+        vm.startPrank(USER1);
+        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyTokenBalance, 1 ether, "User strategy balance should be 1 ether");
+        proxiedManager.fastWithdrawETH(1, 0.4 ether);
+        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyTokenBalance, 0.6 ether, "User strategy balance should be 0.6 ether");
+        vm.stopPrank();
+    }
+
     function testUpdateStrategy() public {}
-    function testRevertObligationWithNonMatchingToken() public {}
 
     // ********************
     // ** Section: bApps **

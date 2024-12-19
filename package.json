@@ -9,6 +9,7 @@
     "gas-report": "forge test -vvvv --gas-report",
     "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs --overwrite",
     "prepare": "husky",
+    "lint:solhint": "solhint './src/**/*.sol'",
     "test": "forge test -vvvv",
     "test-coverage": "forge coverage",
     "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY"
