@@ -25,6 +25,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     address SERVICE1 = makeAddr("Service1");
     address SERVICE2 = makeAddr("Service2");
 
+    uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
+    uint256 constant INITIAL_RECEIVER_BALANCE_ERC20 = 1000 * 10 ** 18;
+
     function setUp() public {
         vm.label(OWNER, "Owner");
         vm.label(USER1, "User1");
@@ -42,12 +45,12 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         erc20mock = new ERC20Mock();
-        erc20mock.transfer(USER1, 1000 * 10 ** 18);
-        erc20mock.transfer(RECEIVER, 1000 * 10 ** 18);
+        erc20mock.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
+        erc20mock.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 
         erc20mock2 = new ERC20Mock();
-        erc20mock2.transfer(USER1, 1000 * 10 ** 18);
-        erc20mock2.transfer(RECEIVER, 1000 * 10 ** 18);
+        erc20mock2.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
+        erc20mock2.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 
         vm.stopPrank();
     }
@@ -387,7 +390,6 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint256 strategyId = proxiedManager.createStrategy(1);
         erc20mock.approve(address(proxiedManager), 200_000);
         proxiedManager.depositERC20(strategyId, erc20mock, 100_000);
-
         assertEq(
             proxiedManager.strategyTokenBalances(strategyId, USER1, address(erc20mock)),
             100_000,
@@ -395,7 +397,6 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         );
         proxiedManager.fastWithdrawERC20(strategyId, erc20mock, 50_000);
         proxiedManager.fastWithdrawERC20(strategyId, erc20mock, 10_000);
-
         assertEq(
             proxiedManager.strategyTokenBalances(strategyId, USER1, address(erc20mock)),
             40_000,
@@ -483,7 +484,19 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function checkUserTotalAndObligationNumber() public {}
+    function testStrategyOwnerDepositERC20(uint256 amount) public 
+    {       vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
+            testStrategyOptInToService();
+            vm.startPrank(USER1);
+            uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
+            assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
+            proxiedManager.depositERC20(1, erc20mock, amount);
+            strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
+            assertEq(strategyTokenBalance, amount, "User strategy balance not matching");
+            vm.stopPrank();
+    }
+
+
     function testRevertNotMatchTokensServiceAndStrategy() public {}
     function testRevertDepositNonSupportedTokensIntoStrategy() public {}
     function testRevertDepositNonSupportedETHIntoStrategy() public {}
