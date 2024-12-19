@@ -1,20 +1,20 @@
 {
-  "name": "ms-contracts",
+  "name": "based-applications",
   "version": "0.0.0",
   "description": "Based Applications Contracts SSV",
   "scripts": {
-    "test": "forge test -vvvv",
     "build": "forge fmt && forge build",
-    "gas-report": "forge test -vvvv --gas-report",
-    "format": "forge fmt",
     "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
-    "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY",
+    "format": "forge fmt",
+    "gas-report": "forge test -vvvv --gas-report",
     "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs --overwrite",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "forge test -vvvv",
+    "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY"
   },
   "keywords": [
     "Based",
-    "Applications",
+    "Bapps",
     "SSV"
   ],
   "contributors": [
@@ -22,9 +22,6 @@
     "Riccardo Persiani <r.persiani92@gmail.com>"
   ],
   "license": "UNLICENSED",
-  "dependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.1.0"
-  },
   "devDependencies": {
     "husky": "^9.1.7"
   }
