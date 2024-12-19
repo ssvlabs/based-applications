@@ -404,73 +404,6 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    // ********************
-    // ** Section: bApps **
-    // ********************
-
-    function testRegisterService() public {
-        vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokensInput[0], address(erc20mock), "Service token");
-        vm.stopPrank();
-    }
-
-    function testRegisterServiceTwice() public {
-        vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        vm.expectRevert("Service already registered");
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2, 2);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokensInput[0], address(erc20mock), "Service token");
-        vm.stopPrank();
-    }
-
-    function testRegisterServiceOverwrite() public {
-        vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokensInput[0], address(erc20mock), "Service token");
-        vm.stopPrank();
-        vm.startPrank(ATTACKER);
-        vm.expectRevert("Service already registered");
-        proxiedManager.registerService(ATTACKER, SERVICE1, tokensInput, 2, 2);
-        vm.stopPrank();
-    }
-
     function testStrategyOptInToService() public {
         testCreateStrategy();
         testRegisterService();
@@ -550,32 +483,85 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testCreateObligationToNonExistingServiceRevert() public {
-        vm.startPrank(USER1);
+    function checkUserTotalAndObligationNumber() public {}
+    function testRevertNotMatchTokensServiceAndStrategy() public {}
+    function testRevertDepositNonSupportedTokensIntoStrategy() public {}
+    function testRevertDepositNonSupportedETHIntoStrategy() public {}
+    function testRevertObligationHigherThanMaxPercentage() public {}
+    function testCreateObligationToNonExistingServiceRevert() public {}
+    function testCreateObligationToNonExistingStrategyRevert() public {}
+    function testCreateObligationToNotOwnedStrategyRevert() public {}
+    function testWithdrawErc20FromStrategy() public {}
+    function testWithdrawETHFromStrategy() public {}
+    function testUpdateStrategy() public {}
+    function testRevertObligationWithNonMatchingToken() public {}
 
+    // ********************
+    // ** Section: bApps **
+    // ********************
+
+    function testRegisterService() public {
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32 sharedRiskLevelInput = 102;
+        uint32 slashingCorrelationPenaltyInput = 100;
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
+        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        assertEq(owner, USER1, "Service owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
+        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        assertEq(tokens[0], address(erc20mock), "Service token");
+        assertEq(tokensInput[0], address(erc20mock), "Service token");
         vm.stopPrank();
     }
 
-    function testCreateObligationToNonExistingStrategyRevert() public {
+    function testRegisterServiceTwice() public {
         vm.startPrank(USER1);
-
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32 sharedRiskLevelInput = 102;
+        uint32 slashingCorrelationPenaltyInput = 100;
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
+        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        vm.expectRevert("Service already registered");
+        proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2, 2);
+        assertEq(owner, USER1, "Service owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
+        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        assertEq(tokens[0], address(erc20mock), "Service token");
+        assertEq(tokensInput[0], address(erc20mock), "Service token");
         vm.stopPrank();
     }
 
-    function testCreateObligationToNotOwnedStrategyRevert() public {
+    function testRegisterServiceOverwrite() public {
         vm.startPrank(USER1);
-
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32 sharedRiskLevelInput = 102;
+        uint32 slashingCorrelationPenaltyInput = 100;
+        proxiedManager.registerService(
+            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
+        );
+        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        assertEq(owner, USER1, "Service owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
+        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        assertEq(tokens[0], address(erc20mock), "Service token");
+        assertEq(tokensInput[0], address(erc20mock), "Service token");
+        vm.stopPrank();
+        vm.startPrank(ATTACKER);
+        vm.expectRevert("Service already registered");
+        proxiedManager.registerService(ATTACKER, SERVICE1, tokensInput, 2, 2);
         vm.stopPrank();
     }
 
-    // TODO: check user tokens and number of obligations
-
-    // TODO: test strategy tokens not match even one in service - should revert
-    // TODO: try allocate more percentage than 100%% in obligations
-    // TODO: try to allocate more NS percentage than 100%
-    // TODO: try to deposit not supported erc20s
-    // TODO: withdraw from strategy
-    // TODO: update Strategy
-    // TODO: update Service
-    // TODO: test when adding a new obligation and match fail that the obligation is not added
+    function testUpdateService() public {}
 }
