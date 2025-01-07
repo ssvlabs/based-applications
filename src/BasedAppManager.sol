@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "./interfaces/ICore.sol";
+import "./interfaces/IBasedAppManager.sol";
 
 /**
  * @title BasedAppManager
@@ -38,7 +39,7 @@ import "./interfaces/ICore.sol";
  * Marco Tabasco
  * Riccardo Persiani
  */
-contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
+contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, IBasedAppManager {
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_PERCENTAGE = 1e4;
@@ -113,45 +114,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable {
         obligationRequests;
 
     mapping(uint256 strategyId => mapping(address service => uint32 numberOfObligations)) public obligationsCounter;
-
-    event StrategyCreated(uint256 indexed strategyId, address indexed owner);
-    event ServiceRegistered(address indexed serviceAddress, address indexed owner, address from);
-    event ServiceTokensUpdated(address indexed serviceAddress, address[] tokens);
-    event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
-    event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
-    event StrategyDeposit(
-        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
-    );
-    event StrategyWithdrawal(
-        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
-    );
-    event ServiceOptedIn(uint256 indexed strategyId, address indexed service);
-    event ServiceObligationSet(
-        uint256 indexed strategyId, address indexed service, address indexed token, uint256 obligationPercentage
-    );
-    event ServiceObligationUpdated(
-        uint256 indexed strategyId, address indexed service, address indexed token, uint256 obligationPercentage
-    );
-    event StrategyFeeUpdateRequested(
-        uint256 indexed strategyId, address owner, uint32 proposedFee, uint32 fee, uint256 expirationTime
-    );
-    event StrategyFeeUpdated(uint256 indexed strategyId, address owner, uint32 fee, uint32 oldFee);
-    event WithdrawalProposed(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount, uint256 finalizeTime
-    );
-    event WithdrawalFinalized(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount
-    );
-    event ObligationUpdateProposed(
-        uint256 indexed strategyId,
-        address indexed account,
-        address indexed token,
-        uint32 percentage,
-        uint256 finalizeTime
-    );
-    event ObligationUpdateFinalized(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint32 percentage
-    );
 
     constructor() {
         _disableInitializers();
