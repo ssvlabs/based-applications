@@ -104,8 +104,6 @@ interface IBasedAppManager {
         uint32 obligationPercentage
     ) external;
 
-    function fastRemoveObligation(uint256 strategyId, address service, address token) external;
-
     function proposeUpdateObligation(
         uint256 strategyId,
         address service,

@@ -438,7 +438,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         require(obligations[strategyId][service][token] == 0, "Obligation already set");
         require(obligationsCounter[strategyId][service] > 0, "Service not opted-in");
 
-        matchToken(token, services[service].tokens);
+        address[] storage serviceTokens = services[service].tokens;
+        matchToken(token, serviceTokens);
 
         obligations[strategyId][service][token] = obligationPercentage;
         accountServiceStrategy[msg.sender][service] = strategyId;
@@ -470,27 +471,28 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit ServiceObligationUpdated(strategyId, service, token, obligationPercentage);
     }
 
+    // TODO: this function is not used now, but could be useful in the future if the service can remove supported tokens.
     /// @notice Remove obligation for a service
     /// @param strategyId The ID of the strategy
     /// @param service The address of the service
     /// @param token The address of the token
-    function fastRemoveObligation(uint256 strategyId, address service, address token) external {
-        require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-        require(obligations[strategyId][service][token] > 0, "Obligation not set");
+    // function fastRemoveObligation(uint256 strategyId, address service, address token) external {
+    //     require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
+    //     require(obligations[strategyId][service][token] > 0, "Obligation not set");
 
-        for (uint256 i = 0; i < services[service].tokens.length; i++) {
-            if (services[service].tokens[i] == token) {
-                revert("token is used by the service");
-            }
-        }
+    //     for (uint256 i = 0; i < services[service].tokens.length; i++) {
+    //         if (services[service].tokens[i] == token) {
+    //             revert("token is used by the service");
+    //         }
+    //     }
 
-        obligations[strategyId][service][token] = 0;
-        usedTokens[strategyId][token] -= 1;
-        obligationsCounter[strategyId][service] -= 1;
+    //     obligations[strategyId][service][token] = 0;
+    //     usedTokens[strategyId][token] -= 1;
+    //     obligationsCounter[strategyId][service] -= 1;
 
-        emit ServiceObligationUpdated(strategyId, service, token, 0);
-        // todo: create a new event for removedObligation?
-    }
+    //     emit ServiceObligationUpdated(strategyId, service, token, 0);
+    //     // todo: create a new event for removedObligation?
+    // }
 
     /**
      * @notice Propose a withdrawal of ERC20 tokens from the strategy.
@@ -594,22 +596,22 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     // Match the tokens of strategy with the service
     // Complexity: O(n * m)
-    function matchTokens(address[] calldata tokens, address[] storage serviceTokens) internal view {
+    function matchTokens(address[] calldata tokens, address[] memory serviceTokens) internal view {
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
             matchToken(token, serviceTokens);
         }
     }
 
-    function matchToken(address token, address[] storage serviceTokens) internal view {
-        for (uint256 i = 0; i < serviceTokens.length; i++) {
-            bool matched = false;
+    function matchToken(address token, address[] memory serviceTokens) internal view {
+        bool matched = false;
+        for (uint256 i = 0; i < serviceTokens.length; ++i) {
             address serviceToken = serviceTokens[i];
             if (serviceToken == token) {
                 matched = true;
                 break;
             }
-            require(matched == true, "Strategy: token not supported by service");
         }
+        require(matched == true, "Strategy: token not supported by service");
     }
 }
