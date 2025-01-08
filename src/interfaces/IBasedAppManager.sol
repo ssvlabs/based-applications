@@ -47,7 +47,9 @@ interface IBasedAppManager {
 
     function updateDelegatedBalance(address receiver, uint32 percentage) external;
 
-    function removeDelegatedBalance(address receiver) external;
+    function removeDelegatedBalance(
+        address receiver
+    ) external;
 
     function registerService(
         address owner,
@@ -59,9 +61,13 @@ interface IBasedAppManager {
 
     function addTokensToService(address serviceAddress, address[] calldata tokens) external;
 
-    function getServiceTokens(address serviceAddress) external view returns (address[] memory);
+    function getServiceTokens(
+        address serviceAddress
+    ) external view returns (address[] memory);
 
-    function createStrategy(uint32 fee) external returns (uint256 strategyId);
+    function createStrategy(
+        uint32 fee
+    ) external returns (uint256 strategyId);
 
     function optInToService(
         uint256 strategyId,
@@ -78,7 +84,9 @@ interface IBasedAppManager {
 
     function finalizeWithdrawal(uint256 strategyId, IERC20 token) external;
 
-    function depositETH(uint256 strategyId) external payable;
+    function depositETH(
+        uint256 strategyId
+    ) external payable;
 
     function fastWithdrawETH(uint256 strategyId, uint256 amount) external;
 
@@ -109,5 +117,7 @@ interface IBasedAppManager {
 
     function proposeFeeUpdate(uint256 strategyId, uint32 proposedFee) external;
 
-    function finalizeFeeUpdate(uint256 strategyId) external;
+    function finalizeFeeUpdate(
+        uint256 strategyId
+    ) external;
 }

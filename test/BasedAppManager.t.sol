@@ -25,6 +25,12 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     address SERVICE1 = makeAddr("Service1");
     address SERVICE2 = makeAddr("Service2");
 
+    uint256 STRATEGY1 = 1;
+    uint32 STRATEGY1_INITIAL_FEE = 5;
+    uint32 STRATEGY1_UPDATE_FEE = 10;
+    address ERC20_ADDRESS1 = address(erc20mock);
+    address ERC20_ADDRESS2 = address(erc20mock2);
+
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
@@ -268,7 +274,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testRemoveDelgateBalanceAndComputeTotal() public {
+    function testRemoveDelegatedBalanceAndComputeTotal() public {
         testUpdateTotalDelegatedPercentage(100, 200);
         vm.startPrank(USER1);
         proxiedManager.removeDelegatedBalance(RECEIVER);
@@ -305,7 +311,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testCreateStrategy() public {
         vm.startPrank(USER1);
-        uint256 strategyId1 = proxiedManager.createStrategy(5);
+        uint256 strategyId1 = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE);
         proxiedManager.createStrategy(100);
         proxiedManager.createStrategy(1000);
         uint256 strategyId4 = proxiedManager.createStrategy(10_000);
@@ -313,7 +319,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(strategyId4, 4, "Strategy id 4 was saved correctly");
         (address owner, uint32 delegationFeeOnRewards,,) = proxiedManager.strategies(strategyId1);
         assertEq(owner, USER1, "Strategy owner");
-        assertEq(delegationFeeOnRewards, 5, "Strategy fee");
+        assertEq(delegationFeeOnRewards, STRATEGY1_INITIAL_FEE, "Strategy fee");
         vm.stopPrank();
     }
 
@@ -333,7 +339,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testCreateStrategyAndSingleDeposit() public {
         vm.startPrank(USER1);
-        uint256 strategyId = proxiedManager.createStrategy(1);
+        uint256 strategyId = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE);
         erc20mock.approve(address(proxiedManager), 200_000);
         proxiedManager.depositERC20(strategyId, erc20mock, 100_000);
 
@@ -347,7 +353,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testCreateStrategyAndMultipleDeposits() public {
         vm.startPrank(USER1);
-        uint256 strategyId = proxiedManager.createStrategy(1);
+        uint256 strategyId = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE);
         uint256 strategyId2 = proxiedManager.createStrategy(100);
         erc20mock.approve(address(proxiedManager), 200_000);
         proxiedManager.depositERC20(strategyId, erc20mock, 100_000);
@@ -373,7 +379,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testCreateStrategyAndSingleDepositAndSingleWithdrawal() public {
         vm.startPrank(USER1);
-        uint256 strategyId = proxiedManager.createStrategy(1);
+        uint256 strategyId = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE);
         erc20mock.approve(address(proxiedManager), 200_000);
         proxiedManager.depositERC20(strategyId, erc20mock, 100_000);
 
@@ -394,7 +400,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testCreateStrategyAndSingleDepositAndMultipleFastWithdrawals() public {
         vm.startPrank(USER1);
-        uint256 strategyId = proxiedManager.createStrategy(1);
+        uint256 strategyId = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE);
         erc20mock.approve(address(proxiedManager), 200_000);
         proxiedManager.depositERC20(strategyId, erc20mock, 100_000);
         assertEq(
@@ -422,12 +428,12 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
-        obligationPercentagesInput[0] = 10_000; // 100%
+        obligationPercentagesInput[0] = 9000; // 90%
         proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
         uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
-        assertEq(obligationPercentage, 10_000, "Obligation percentage");
+        assertEq(obligationPercentage, 9000, "Obligation percentage");
         uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
         assertEq(usedTokens, 1, "Used tokens");
         uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
@@ -623,7 +629,119 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testUpdateStrategy() public {}
+    function testFastUpdateObligation() public {
+        testStrategyOptInToService();
+        vm.startPrank(USER1);
+        uint32 strategyId = 1;
+        proxiedManager.fastUpdateObligation(strategyId, SERVICE1, address(erc20mock), 10_000);
+        uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
+        assertEq(obligationPercentage, 10_000, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 1, "Used tokens");
+        uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
+        assertEq(numberOfObligations, 1, "Number of obligations");
+        vm.stopPrank();
+    }
+
+    function testStrategyFeeUpdateOnInitialLimit() public {
+        testStrategyOptInToService();
+        vm.startPrank(USER1);
+        proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
+        (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
+        assertEq(feeProposed, 20, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        vm.warp(block.timestamp + 7 days);
+        proxiedManager.finalizeFeeUpdate(STRATEGY1);
+        (owner, fee, feeProposed, feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, 20, "Strategy fee");
+        assertEq(feeProposed, 0, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 0, "Strategy fee update time");
+        vm.stopPrank();
+    }
+
+    function testStrategyFeeUpdateOnFinalTimeLimit() public {
+        testStrategyOptInToService();
+        vm.startPrank(USER1);
+        proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
+        (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
+        assertEq(feeProposed, 20, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        vm.warp(block.timestamp + 7 days + 1 days);
+        proxiedManager.finalizeFeeUpdate(STRATEGY1);
+        (owner, fee, feeProposed, feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, 20, "Strategy fee");
+        assertEq(feeProposed, 0, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 0, "Strategy fee update time");
+        vm.stopPrank();
+    }
+
+    function testStrategyFeeUpdateTooLate() public {
+        testStrategyOptInToService();
+        vm.startPrank(USER1);
+        proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
+        (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
+        assertEq(feeProposed, 20, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        vm.warp(block.timestamp + 7 days + 1 days + 1 seconds);
+        vm.expectRevert("Fee update expired");
+        proxiedManager.finalizeFeeUpdate(STRATEGY1);
+        (owner, fee, feeProposed, feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
+        assertEq(feeProposed, 20, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        vm.stopPrank();
+    }
+
+    function testStrategyFeeUpdateTooEarly() public {
+        testStrategyOptInToService();
+        vm.startPrank(USER1);
+        proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
+        (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
+        assertEq(feeProposed, 20, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        vm.warp(block.timestamp + 7 days - 1 seconds);
+        vm.expectRevert("Timelock not passed");
+        proxiedManager.finalizeFeeUpdate(STRATEGY1);
+        (owner, fee, feeProposed, feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
+        assertEq(feeProposed, 20, "Strategy fee proposed");
+        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        vm.stopPrank();
+    }
+
+    function testUpdateStrategyObligationFinalize() public {
+        testStrategyOptInToService();
+        vm.startPrank(USER1);
+        proxiedManager.proposeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock), 1000);
+        (uint32 percentage, uint256 requestTime) =
+            proxiedManager.obligationRequests(STRATEGY1, SERVICE1, address(erc20mock));
+        uint32 oldPercentage = proxiedManager.obligations(STRATEGY1, SERVICE1, address(erc20mock));
+        assertEq(oldPercentage, 9000, "Obligation percentage proposed");
+        assertEq(percentage, 1000, "Obligation percentage proposed");
+        assertEq(requestTime, 1, "Obligation update time");
+        vm.warp(block.timestamp + 7 days);
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock));
+        (percentage, requestTime) = proxiedManager.obligationRequests(STRATEGY1, SERVICE1, address(erc20mock));
+        assertEq(percentage, 1000, "Obligation percentage proposed");
+        assertEq(requestTime, 1, "Obligation update time");
+        uint32 newPercentage = proxiedManager.obligations(STRATEGY1, SERVICE1, address(erc20mock));
+        assertEq(newPercentage, 1000, "Obligation new percentage");
+        vm.stopPrank();
+    }
+
+    // todo check update removal obligation
 
     // ********************
     // ** Section: bApps **
