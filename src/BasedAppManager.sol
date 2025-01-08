@@ -513,7 +513,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         request.requestTime = block.timestamp;
 
         emit ObligationUpdateProposed(
-            strategyId, msg.sender, address(token), obligationPercentage, block.timestamp + OBLIGATION_TIMELOCK_PERIOD
+            strategyId,
+            msg.sender,
+            address(token),
+            obligationPercentage,
+            request.requestTime + OBLIGATION_TIMELOCK_PERIOD
         );
     }
 
@@ -529,7 +533,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         ICore.ObligationRequest storage request = obligationRequests[strategyId][service][address(token)];
         require(request.requestTime > 0, "No pending update");
         require(block.timestamp >= request.requestTime + OBLIGATION_TIMELOCK_PERIOD, "Timelock not elapsed");
-        require(block.timestamp <= request.requestTime + OBLIGATION_EXPIRE_TIME, "Update expired");
+        require(
+            block.timestamp <= request.requestTime + OBLIGATION_TIMELOCK_PERIOD + OBLIGATION_EXPIRE_TIME,
+            "Update expired"
+        );
 
         // Remove the obligation if the percentage is 0
         if (request.percentage == 0) {
@@ -537,9 +544,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             obligationsCounter[strategyId][service] -= 1;
         }
 
-        obligations[strategyId][msg.sender][address(token)] = request.percentage;
+        obligations[strategyId][service][address(token)] = request.percentage;
 
         emit ObligationUpdateFinalized(strategyId, msg.sender, address(token), request.percentage);
+
+        // TODO: maybe empty the request structure or not needed to save gas?
     }
 
     /// @notice Propose a new fee for a strategy
