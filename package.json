@@ -26,7 +26,8 @@
     "prepare": "husky",
     "lint:solhint": "solhint './src/**/*.sol'",
     "test": "forge test -vvvv",
-    "test-coverage": "forge coverage",
+    "test-coverage": "forge coverage --no-match-coverage \"(script|test)\"",
+    "test-coverage-report": "forge coverage --no-match-coverage \"(script|test)\" --report lcov && genhtml lcov.info -o report --branch-coverage",
     "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY"
   },
   "devDependencies": {
