@@ -55,8 +55,7 @@ interface IBasedAppManager {
         address owner,
         address serviceAddress,
         address[] calldata tokens,
-        uint32 sharedRiskLevel,
-        uint32 slashingCorrelationPenalty
+        uint32 sharedRiskLevel
     ) external;
 
     function addTokensToService(address serviceAddress, address[] calldata tokens) external;

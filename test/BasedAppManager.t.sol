@@ -909,14 +909,10 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "Service token");
         assertEq(tokensInput[0], address(erc20mock), "Service token");
@@ -929,14 +925,10 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(erc20mock2);
         uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "Service token");
         assertEq(tokensInput[0], address(erc20mock), "Service token");
@@ -950,14 +942,10 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = ETH_ADDRESS;
         uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
         assertEq(tokens[0], ETH_ADDRESS, "Service token");
         assertEq(tokensInput[0], ETH_ADDRESS, "Service token input");
@@ -969,16 +957,12 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         vm.expectRevert("Service already registered");
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2, 2);
+        proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "Service token");
         assertEq(tokensInput[0], address(erc20mock), "Service token");
@@ -990,21 +974,17 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        uint32 slashingCorrelationPenaltyInput = 100;
-        proxiedManager.registerService(
-            USER1, SERVICE1, tokensInput, sharedRiskLevelInput, slashingCorrelationPenaltyInput
-        );
-        (address owner, uint32 slashingCorrelationPenalty, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
         assertEq(owner, USER1, "Service owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
-        assertEq(slashingCorrelationPenaltyInput, slashingCorrelationPenalty, "Service slashingCorrelationPenalty");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "Service token");
         assertEq(tokensInput[0], address(erc20mock), "Service token");
         vm.stopPrank();
         vm.startPrank(ATTACKER);
         vm.expectRevert("Service already registered");
-        proxiedManager.registerService(ATTACKER, SERVICE1, tokensInput, 2, 2);
+        proxiedManager.registerService(ATTACKER, SERVICE1, tokensInput, 2);
         vm.stopPrank();
     }
 

@@ -8,8 +8,6 @@ interface ICore {
         address owner;
         /// @dev The erc20 tokens the service accepts (can accept multiple)
         address[] tokens;
-        /// @dev alpha parameter
-        uint32 slashingCorrelationPenalty;
         /// @dev beta parameter
         uint32 sharedRiskLevel;
     }

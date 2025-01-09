@@ -192,19 +192,16 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param serviceAddress The address of the service
     /// @param tokens The list of tokens the service accepts
     /// @param sharedRiskLevel The shared risk level of the service
-    /// @param slashingCorrelationPenalty The slashing correlation penalty of the service
     function registerService(
         address owner,
         address serviceAddress,
         address[] calldata tokens,
-        uint32 sharedRiskLevel,
-        uint32 slashingCorrelationPenalty
+        uint32 sharedRiskLevel
     ) external {
         ICore.Service storage service = services[serviceAddress];
         require(service.owner == address(0), "Service already registered");
         service.owner = owner;
         service.sharedRiskLevel = sharedRiskLevel;
-        service.slashingCorrelationPenalty = slashingCorrelationPenalty;
 
         for (uint256 i = 0; i < tokens.length; i++) {
             service.tokens.push(tokens[i]);
