@@ -875,6 +875,31 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testAsyncWithdrawFromStrategy() public {
+        testCreateStrategyAndMultipleDeposits();
+        vm.startPrank(USER1);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 1000);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            120_000,
+            "User strategy balance should be 120_000"
+        );
+        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, block.timestamp, "Request time");
+        assertEq(amount, 1000, "Request amount");
+        vm.warp(block.timestamp + 5 days);
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            119_000,
+            "User strategy balance should be 110_000"
+        );
+        (amount, requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, 0, "Request time");
+        assertEq(amount, 0, "Request amount");
+        vm.stopPrank();
+    }
+
     // function testFastRemovalObligation() public {
     //      testStrategyOptInToService();
     //     vm.startPrank(USER1);

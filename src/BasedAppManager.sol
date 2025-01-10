@@ -350,7 +350,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
         require(request.requestTime > 0, "No pending withdrawal");
         require(block.timestamp >= request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD, "Timelock not elapsed");
-        require(block.timestamp <= request.requestTime + WITHDRAWAL_EXPIRE_TIME, "Withdrawal expired");
+        require(
+            block.timestamp <= request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME,
+            "Withdrawal expired"
+        );
 
         uint256 amount = request.amount;
 
