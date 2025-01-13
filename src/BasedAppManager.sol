@@ -89,8 +89,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @notice Tracks obligation percentages for a strategy based on specific services and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
      */
-    mapping(uint256 strategyId => mapping(address bApp => mapping(address token => uint32 obligationPercentage)))
-        public obligations;
+    mapping(uint256 strategyId => mapping(address bApp => mapping(address token => uint32 obligationPercentage))) public
+        obligations;
     /**
      * @notice Tracks unallocated tokens in a strategy.
      * @dev Count the number of services that have one obligation set for the token.
@@ -427,12 +427,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function createObligation(
-        uint256 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) external {
+    function createObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external {
         require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
         require(obligationPercentage > 0 && obligationPercentage <= 1e4, "Invalid obligation percentage");
         require(obligations[strategyId][bApp][token] == 0, "Obligation already set");
