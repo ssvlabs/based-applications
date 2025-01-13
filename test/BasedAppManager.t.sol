@@ -530,7 +530,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32[] memory obligationPercentagesInput = new uint32[](2);
         obligationPercentagesInput[0] = 6000; // 60%
         obligationPercentagesInput[1] = 5000; // 50%
-        vm.expectRevert("Strategy: token not supported by service");
+        vm.expectRevert("Strategy: token not supported by bApp");
         proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
         uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
         assertEq(strategyId, 0, "Strategy id was not saved");
@@ -544,7 +544,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(owner, USER1, "Strategy owner");
         address tokensInput = address(erc20mock2);
         uint32 obligationPercentagesInput = 7000; // 70%
-        vm.expectRevert("Service not opted-in");
+        vm.expectRevert("BApp not opted-in");
         proxiedManager.createObligation(1, SERVICE2, tokensInput, obligationPercentagesInput);
         uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE2);
         assertEq(strategyId, 0, "Strategy id");
@@ -585,13 +585,13 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     function testRevertObligationNotMatchTokensService() public {
         testStrategyOptInToService();
         vm.startPrank(USER1);
-        vm.expectRevert("Strategy: token not supported by service");
+        vm.expectRevert("Strategy: token not supported by bApp");
         proxiedManager.createObligation(1, SERVICE1, address(erc20mock2), 100);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokens.length, 1, "Service token length");
+        assertEq(tokens[0], address(erc20mock), "BApp token");
+        assertEq(tokens.length, 1, "BApp token length");
         vm.stopPrank();
     }
 
@@ -619,7 +619,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     function testCreateObligationToNonExistingServiceRevert() public {
         testStrategyOptInToService();
         vm.startPrank(USER1);
-        vm.expectRevert("Service not opted-in");
+        vm.expectRevert("BApp not opted-in");
         proxiedManager.createObligation(1, SERVICE2, address(erc20mock), 100);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
@@ -648,9 +648,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         testStrategyOptInToServiceWithMultipleTokens();
         vm.startPrank(USER1);
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokens[1], address(erc20mock2), "Service token 2");
-        assertEq(tokens.length, 2, "Service token length");
+        assertEq(tokens[0], address(erc20mock), "BApp token");
+        assertEq(tokens[1], address(erc20mock2), "BApp token 2");
+        assertEq(tokens.length, 2, "BApp token length");
         proxiedManager.createObligation(STRATEGY1, SERVICE1, address(erc20mock2), 10_000);
         vm.stopPrank();
     }
@@ -936,11 +936,11 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32 sharedRiskLevelInput = 102;
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
         (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(owner, USER1, "BApp owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokensInput[0], address(erc20mock), "Service token");
+        assertEq(tokens[0], address(erc20mock), "BApp token");
+        assertEq(tokensInput[0], address(erc20mock), "BApp token");
         vm.stopPrank();
     }
 
@@ -952,13 +952,13 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32 sharedRiskLevelInput = 102;
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
         (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(owner, USER1, "BApp owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokensInput[0], address(erc20mock), "Service token");
-        assertEq(tokens[1], address(erc20mock2), "Service token 2");
-        assertEq(tokensInput[1], address(erc20mock2), "Service token 2");
+        assertEq(tokens[0], address(erc20mock), "BApp token");
+        assertEq(tokensInput[0], address(erc20mock), "BApp token");
+        assertEq(tokens[1], address(erc20mock2), "BApp token 2");
+        assertEq(tokensInput[1], address(erc20mock2), "BApp token 2");
         vm.stopPrank();
     }
 
@@ -969,11 +969,11 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32 sharedRiskLevelInput = 102;
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
         (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(owner, USER1, "BApp owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], ETH_ADDRESS, "Service token");
-        assertEq(tokensInput[0], ETH_ADDRESS, "Service token input");
+        assertEq(tokens[0], ETH_ADDRESS, "BApp token");
+        assertEq(tokensInput[0], ETH_ADDRESS, "BApp token input");
         vm.stopPrank();
     }
 
@@ -984,13 +984,13 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32 sharedRiskLevelInput = 102;
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
         (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        vm.expectRevert("Service already registered");
+        vm.expectRevert("BApp already registered");
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(owner, USER1, "BApp owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokensInput[0], address(erc20mock), "Service token");
+        assertEq(tokens[0], address(erc20mock), "BApp token");
+        assertEq(tokensInput[0], address(erc20mock), "BApp token");
         vm.stopPrank();
     }
 
@@ -1001,14 +1001,14 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32 sharedRiskLevelInput = 102;
         proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
         (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
-        assertEq(owner, USER1, "Service owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "Service sharedRiskLevel");
+        assertEq(owner, USER1, "BApp owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
         address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
-        assertEq(tokens[0], address(erc20mock), "Service token");
-        assertEq(tokensInput[0], address(erc20mock), "Service token");
+        assertEq(tokens[0], address(erc20mock), "BApp token");
+        assertEq(tokensInput[0], address(erc20mock), "BApp token");
         vm.stopPrank();
         vm.startPrank(ATTACKER);
-        vm.expectRevert("Service already registered");
+        vm.expectRevert("BApp already registered");
         proxiedManager.registerService(ATTACKER, SERVICE1, tokensInput, 2);
         vm.stopPrank();
     }

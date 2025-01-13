@@ -3,10 +3,10 @@ pragma solidity 0.8.28;
 
 interface ICore {
     /// @notice Represents an AVS
-    struct Service {
-        /// @dev The owner of the service
+    struct BApp {
+        /// @dev The owner of the bApp
         address owner;
-        /// @dev The erc20 tokens the service accepts (can accept multiple)
+        /// @dev The erc20 tokens the bApp accepts (can accept multiple)
         address[] tokens;
         /// @dev beta parameter
         uint32 sharedRiskLevel;
