@@ -39,4 +39,6 @@ interface ICore {
         /// @dev The block time when the request was sent
         uint256 requestTime;
     }
+
+    error TokenAlreadyAddedToService(address token);
 }

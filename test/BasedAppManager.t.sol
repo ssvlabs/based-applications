@@ -1029,7 +1029,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(ETH_ADDRESS);
-        vm.expectRevert("Token already added");
+        vm.expectRevert(abi.encodeWithSelector(ICore.TokenAlreadyAddedToService.selector, address(erc20mock)));
         proxiedManager.addTokensToService(SERVICE1, tokensInput);
         vm.stopPrank();
     }

@@ -218,7 +218,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         for (uint256 i = 0; i < tokens.length; i++) {
             for (uint256 j = 0; j < bApp.tokens.length; j++) {
                 if (bApp.tokens[j] == tokens[i]) {
-                    revert("Token already added");
+                    revert ICore.TokenAlreadyAddedToService(tokens[i]);
                 }
             }
             bApp.tokens.push(tokens[i]);
