@@ -137,9 +137,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param percentage The percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function delegateBalance(address receiver, uint32 percentage) external {
-        require(percentage > 0 && percentage <= MAX_PERCENTAGE, "Invalid percentage");
+        if (percentage == 0 || percentage > MAX_PERCENTAGE) {
+            revert ICore.InvalidPercentage();
+        }
 
-        require(delegations[msg.sender][receiver] == 0, "Delegation already exists");
+        if (delegations[msg.sender][receiver] != 0) {
+            revert ICore.DelegationAlreadyExists();
+        }
 
         require(totalDelegatedPercentage[msg.sender] + percentage <= MAX_PERCENTAGE, "Total percentage exceeds 100%");
 

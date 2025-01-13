@@ -147,7 +147,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testDelegateBalanceTooLow() public {
         vm.startPrank(USER1);
-        vm.expectRevert("Invalid percentage");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, 0);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         assertEq(delegatedAmount, 0, "Delegated amount should be 0%");
@@ -159,7 +159,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     ) public {
         vm.assume(highBalance > 10_000);
         vm.startPrank(USER1);
-        vm.expectRevert("Invalid percentage");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, highBalance);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         assertEq(delegatedAmount, 0, "Delegated amount should be 0%");
@@ -204,7 +204,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     function testRevertDoubleDelegateSameReceiver() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        vm.expectRevert("Delegation already exists");
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationAlreadyExists.selector));
         proxiedManager.delegateBalance(RECEIVER, 2);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
@@ -215,7 +215,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testRevertInvalidPercentageDelegateBalance() public {
         vm.startPrank(USER1);
-        vm.expectRevert("Invalid percentage");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, 1e4 + 1);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
@@ -228,7 +228,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
-        vm.expectRevert("Invalid percentage");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, 1e4 + 1);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);

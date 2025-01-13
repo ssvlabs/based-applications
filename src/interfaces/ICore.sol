@@ -40,5 +40,7 @@ interface ICore {
         uint256 requestTime;
     }
 
+    error InvalidPercentage();
+    error DelegationAlreadyExists();
     error TokenAlreadyAddedToService(address token);
 }
