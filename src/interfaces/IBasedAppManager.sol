@@ -89,12 +89,7 @@ interface IBasedAppManager {
 
     function fastWithdrawETH(uint256 strategyId, uint256 amount) external;
 
-    function createObligation(
-        uint256 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) external;
+    function createObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external;
 
     function fastUpdateObligation(
         uint256 strategyId,
