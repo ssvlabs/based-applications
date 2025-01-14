@@ -40,7 +40,14 @@ interface ICore {
         uint256 requestTime;
     }
 
-    error InvalidPercentage();
+    error BAppAlreadyOptedIn();
     error DelegationAlreadyExists();
+    error InvalidAmount();
+    error InvalidDelegationFee();
+    error InvalidPercentage();
+    error InsufficientBalance();
+    error InvalidStrategyOwner(address caller, address expectedOwner);
     error TokenAlreadyAddedToBApp(address token);
+    error TokensLengthNotMatchingPercentages();
+    error TokenIsUsedByTheBApp();
 }

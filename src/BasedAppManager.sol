@@ -247,7 +247,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function createStrategy(
         uint32 fee
     ) external returns (uint256 strategyId) {
-        require(fee > 0 && fee <= MAX_PERCENTAGE, "Invalid delegation fee");
+        if (fee == 0 || fee > MAX_PERCENTAGE) {
+            revert ICore.InvalidDelegationFee();
+        }
+        // require(fee > 0 && fee <= MAX_PERCENTAGE, "Invalid delegation fee");
         strategyId = ++_strategyCounter;
 
         // Create the strategy struct
@@ -271,16 +274,17 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address[] calldata tokens,
         uint32[] calldata obligationPercentages
     ) external {
-        require(tokens.length == obligationPercentages.length, "Strategy: tokens and percentages length mismatch");
+        if (tokens.length != obligationPercentages.length) revert ICore.TokensLengthNotMatchingPercentages();
 
         ICore.BApp storage existingBApp = bApps[bApp];
         matchTokens(tokens, existingBApp.tokens);
 
-        uint256 existingStrategyId = accountBAppStrategy[msg.sender][bApp];
-        require(existingStrategyId == 0, "Strategy: already opted-in to this bApp");
+        // Check if a strategy exists for the given bApp
+        // you cannot opt-in to the same bApp twice with the same strategy owner
+        if (accountBAppStrategy[msg.sender][bApp] != 0) revert ICore.BAppAlreadyOptedIn();
 
         ICore.Strategy storage strategy = strategies[strategyId];
-        require(strategy.owner == msg.sender, "Strategy: not the owner");
+        if (strategy.owner != msg.sender) revert ICore.InvalidStrategyOwner(msg.sender, strategy.owner);
 
         emit BAppOptedIn(strategyId, bApp);
 
@@ -294,7 +298,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param token The ERC20 token address
     /// @param amount The amount to deposit
     function depositERC20(uint256 strategyId, IERC20 token, uint256 amount) external {
-        require(amount > 0, "Amount must be greater than zero");
+        if (amount == 0) revert ICore.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] += amount;
 
@@ -308,12 +312,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param token The ERC20 token address
     /// @param amount The amount to withdraw
     function fastWithdrawERC20(uint256 strategyId, IERC20 token, uint256 amount) external {
-        require(amount > 0, "Amount must be greater than zero");
+        if (amount == 0) revert ICore.InvalidAmount();
 
-        require(usedTokens[strategyId][address(token)] == 0, "Token is used by a bApp");
+        if (usedTokens[strategyId][address(token)] != 0) revert ICore.TokenIsUsedByTheBApp();
 
-        uint256 contributorBalance = strategyTokenBalances[strategyId][msg.sender][address(token)];
-        require(contributorBalance >= amount, "Insufficient balance");
+        // uint256 contributorBalance = strategyTokenBalances[strategyId][msg.sender][address(token)];
+        // require(contributorBalance >= amount, "Insufficient balance");
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
 

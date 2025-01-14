@@ -325,14 +325,15 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testCreateStrategyWithZeroFee() public {
         vm.startPrank(USER1);
-        vm.expectRevert("Invalid delegation fee");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidDelegationFee.selector));
+
         proxiedManager.createStrategy(0);
         vm.stopPrank();
     }
 
     function testCreateStrategyWithTooHighFee() public {
         vm.startPrank(USER1);
-        vm.expectRevert("Invalid delegation fee");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidDelegationFee.selector));
         proxiedManager.createStrategy(10_001);
         vm.stopPrank();
     }
@@ -348,6 +349,14 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
             100_000,
             "User strategy balance should be 100_000"
         );
+        vm.stopPrank();
+    }
+
+    function testInvalidDepositWithZeroAmount() public {
+        testCreateStrategyAndSingleDeposit();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, 0);
         vm.stopPrank();
     }
 
@@ -398,6 +407,23 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testInvalidFastWithdrawalWithZeroAmount() public {
+        testCreateStrategyAndSingleDepositAndSingleWithdrawal();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 0);
+        vm.stopPrank();
+    }
+
+        function testInvalidFastWithdrawalWithInsufficientBalance() public {
+        testCreateStrategyAndSingleDepositAndSingleWithdrawal();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 2000 * 10 ** 18);
+        vm.stopPrank();
+    }
+
+
     function testCreateStrategyAndSingleDepositAndMultipleFastWithdrawals() public {
         vm.startPrank(USER1);
         uint256 strategyId = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE);
@@ -438,6 +464,14 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(usedTokens, 1, "Used tokens");
         uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
         assertEq(numberOfObligations, 1, "Number of obligations");
+        vm.stopPrank();
+    }
+
+    function testInvalidFastWithdrawalWithUsedToken() public {
+        testStrategyOptInToBApp();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.TokenIsUsedByTheBApp.selector));
+        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 50_000);
         vm.stopPrank();
     }
 
@@ -495,7 +529,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 9000; // 90%
-        vm.expectRevert("Strategy: not the owner");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), owner));
         proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
         vm.stopPrank();
     }
@@ -511,7 +545,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[1] = address(erc20mock2);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 10_000; // 100%
-        vm.expectRevert("Strategy: tokens and percentages length mismatch");
+        vm.expectRevert(abi.encodeWithSelector(ICore.TokensLengthNotMatchingPercentages.selector));
         proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 0, "Strategy id was not saved");
@@ -536,6 +570,30 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(strategyId, 0, "Strategy id was not saved");
         vm.stopPrank();
     }
+
+    function testStrategyAlreadyOptedIn() public {
+        testStrategyOptInToBApp();
+        vm.startPrank(USER1);
+        (address owner,,,) = proxiedManager.strategies(1);
+        assertEq(owner, USER1, "Strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = 9000; // 90%
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyOptedIn.selector));
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
+        assertEq(strategyId, 1, "Strategy id");
+        uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
+        assertEq(obligationPercentage, 9000, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 1, "Used tokens");
+        uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
+        assertEq(numberOfObligations, 1, "Number of obligations");
+        vm.stopPrank();
+    }
+
+    // TODO try the error above with a different strategy id
 
     function testCreateObligationToExistingStrategyRevert() public {
         testStrategyOptInToBApp();
