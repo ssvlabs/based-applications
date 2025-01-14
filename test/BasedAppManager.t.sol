@@ -415,7 +415,15 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-        function testInvalidFastWithdrawalWithInsufficientBalance() public {
+    function testInvalidProposeWithdrawalWithZeroAmount() public {
+        testCreateStrategyAndSingleDepositAndSingleWithdrawal();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 0);
+        vm.stopPrank();
+    }
+
+    function testInvalidFastWithdrawalWithInsufficientBalance() public {
         testCreateStrategyAndSingleDepositAndSingleWithdrawal();
         vm.startPrank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
@@ -423,6 +431,13 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testInvalidProposeWithdrawalWithInsufficientBalance() public {
+        testCreateStrategyAndSingleDepositAndSingleWithdrawal();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 2000 * 10 ** 18);
+        vm.stopPrank();
+    }
 
     function testCreateStrategyAndSingleDepositAndMultipleFastWithdrawals() public {
         vm.startPrank(USER1);
@@ -475,6 +490,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    // todo add another token, there is just one
     function testStrategyOptInToBAppWithMultipleTokens() public {
         testCreateStrategy();
         testRegisterBAppWith2Tokens();
@@ -494,6 +510,54 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(usedTokens, 1, "Used tokens");
         uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
         assertEq(numberOfObligations, 1, "Number of obligations");
+        vm.stopPrank();
+    }
+
+    // todo use fuzzers
+
+    function testStrategyOptInToBAppWithMultipleTokensFailsPercentageOverMax() public {
+        testCreateStrategy();
+        testRegisterBAppWith2Tokens();
+        vm.startPrank(USER1);
+        (address owner,,,) = proxiedManager.strategies(1);
+        assertEq(owner, USER1, "Strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = 10_001; // 100.01%
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
+        assertEq(strategyId, 0, "Strategy id");
+        uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
+        assertEq(obligationPercentage, 0, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 0, "Used tokens");
+        uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
+        assertEq(numberOfObligations, 0, "Number of obligations");
+        vm.stopPrank();
+    }
+
+    function testStrategyOptInToBAppWithMultipleTokensFailsPercentageZero() public {
+        testCreateStrategy();
+        testRegisterBAppWith2Tokens();
+        vm.startPrank(USER1);
+        (address owner,,,) = proxiedManager.strategies(1);
+        assertEq(owner, USER1, "Strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = 0; // 0%
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
+        assertEq(strategyId, 0, "Strategy id");
+        uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
+        assertEq(obligationPercentage, 0, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 0, "Used tokens");
+        uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
+        assertEq(numberOfObligations, 0, "Number of obligations");
         vm.stopPrank();
     }
 
@@ -640,6 +704,18 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testStrategyOwnerDepositETHWithNoObligationRevertWithZeroAmount() public {
+        testStrategyOptInToBApp();
+        vm.startPrank(USER1);
+        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
+        assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        proxiedManager.depositETH{value: 0 ether}(1);
+        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyTokenBalance, 0 ether, "User strategy balance not matching");
+        vm.stopPrank();
+    }
+
     function testRevertObligationNotMatchTokensBApp() public {
         testStrategyOptInToBApp();
         vm.startPrank(USER1);
@@ -659,15 +735,31 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
         proxiedManager.depositETH{value: 1 ether}(1);
-        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
-        assertEq(strategyTokenBalance, 1 ether, "User strategy balance not matching");
+        uint256 strategyETHBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyETHBalance, 1 ether, "User strategy balance not matching");
+        vm.stopPrank();
+    }
+
+    function testInvalidFastWithdrawalETHWithUsedToken() public {
+        testCreateStrategyETHAndDepositETH();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.TokenIsUsedByTheBApp.selector));
+        proxiedManager.fastWithdrawETH(STRATEGY1, 0.5 ether);
+        vm.stopPrank();
+    }
+
+    function testInvalidFastWithdrawalETHWithInvalidAmount() public {
+        testStrategyOptInToBApp();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        proxiedManager.fastWithdrawETH(STRATEGY1, 100 ether);
         vm.stopPrank();
     }
 
     function testRevertObligationHigherThanMaxPercentage() public {
         testStrategyOptInToBApp();
         vm.startPrank(USER1);
-        vm.expectRevert("Invalid obligation percentage");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.createObligation(1, SERVICE1, address(erc20mock2), 10_001);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
@@ -686,7 +778,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testCreateObligationToNonExistingStrategyRevert() public {
         vm.startPrank(USER1);
-        vm.expectRevert("Not the strategy owner");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(USER1), 0x00));
         proxiedManager.createObligation(3, SERVICE1, address(erc20mock), 100);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
@@ -694,8 +786,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testCreateObligationToNotOwnedStrategyRevert() public {
+        testCreateStrategy();
         vm.startPrank(ATTACKER);
-        vm.expectRevert("Not the strategy owner");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
         proxiedManager.createObligation(1, SERVICE1, address(erc20mock), 100);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, ATTACKER, address(erc20mock));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
@@ -712,6 +805,20 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         proxiedManager.createObligation(STRATEGY1, SERVICE1, address(erc20mock2), 10_000);
         vm.stopPrank();
     }
+
+    function testCreateObligationFailCauseAlreadySet() public {
+        testCreateNewObligationSuccessful();
+        vm.startPrank(USER1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
+        assertEq(tokens[0], address(erc20mock), "BApp token");
+        assertEq(tokens[1], address(erc20mock2), "BApp token 2");
+        assertEq(tokens.length, 2, "BApp token length");
+        vm.expectRevert(abi.encodeWithSelector(ICore.ObligationAlreadySet.selector));
+        proxiedManager.createObligation(STRATEGY1, SERVICE1, address(erc20mock2), 10_000);
+        vm.stopPrank();
+    }
+
+    // TODO function testCreateNewObligationETHSuccessful() public {}
 
     function testFastWithdrawErc20FromStrategy() public {
         testStrategyOwnerDepositERC20WithNoObligation(200);
@@ -732,6 +839,18 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         proxiedManager.fastWithdrawETH(1, 0.4 ether);
         strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
         assertEq(strategyTokenBalance, 0.6 ether, "User strategy balance should be 0.6 ether");
+        vm.stopPrank();
+    }
+
+    function testWithdrawETHFromStrategyRevertWithZeroAmount() public {
+        testStrategyOwnerDepositETHWithNoObligation();
+        vm.startPrank(USER1);
+        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyTokenBalance, 1 ether, "User strategy balance should be 1 ether");
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        proxiedManager.fastWithdrawETH(1, 0 ether);
+        strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, ETH_ADDRESS);
+        assertEq(strategyTokenBalance, 1 ether, "User strategy balance should be 1 ether after");
         vm.stopPrank();
     }
 
@@ -955,6 +1074,83 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         (amount, requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
         assertEq(requestTime, 0, "Request time");
         assertEq(amount, 0, "Request amount");
+        vm.stopPrank();
+    }
+
+    function testAsyncFailedWithdrawFromStrategy() public {
+        testCreateStrategyAndMultipleDeposits();
+        vm.startPrank(USER1);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 1000);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            120_000,
+            "User strategy balance should be 120_000"
+        );
+        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, block.timestamp, "Request time");
+        assertEq(amount, 1000, "Request amount");
+        vm.warp(block.timestamp + 5 days);
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            119_000,
+            "User strategy balance should be 119_000"
+        );
+        (amount, requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, 0, "Request time");
+        assertEq(amount, 0, "Request amount");
+        vm.stopPrank();
+    }
+
+    function testAsyncFailedWithdrawFromStrategyTooEarly() public {
+        testCreateStrategyAndMultipleDeposits();
+        vm.startPrank(USER1);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 1000);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            120_000,
+            "User strategy balance should be 120_000"
+        );
+        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, block.timestamp, "Request time");
+        assertEq(amount, 1000, "Request amount");
+        vm.warp(block.timestamp + 5 days - 1 seconds);
+        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            120_000,
+            "User strategy balance should be 120_000 after"
+        );
+        (amount, requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, 1, "Request time after");
+        assertEq(amount, 1000, "Request amount after");
+        vm.stopPrank();
+    }
+
+    function testAsyncFailedWithdrawFromStrategyTooLate() public {
+        testCreateStrategyAndMultipleDeposits();
+        vm.startPrank(USER1);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 1000);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            120_000,
+            "User strategy balance should be 120_000"
+        );
+        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, block.timestamp, "Request time");
+        assertEq(amount, 1000, "Request amount");
+        vm.warp(block.timestamp + 5 days + 1 days + 1 seconds);
+        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalExpired.selector));
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
+            120_000,
+            "User strategy balance should be 120_000"
+        );
+        (amount, requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
+        assertEq(requestTime, 1, "Request time");
+        assertEq(amount, 1000, "Request amount");
         vm.stopPrank();
     }
 

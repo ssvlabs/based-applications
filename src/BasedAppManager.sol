@@ -316,8 +316,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         if (usedTokens[strategyId][address(token)] != 0) revert ICore.TokenIsUsedByTheBApp();
 
-        // uint256 contributorBalance = strategyTokenBalances[strategyId][msg.sender][address(token)];
-        // require(contributorBalance >= amount, "Insufficient balance");
+        // Check if the user has enough balance for the selected token
         if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
@@ -334,11 +333,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @param amount The amount to withdraw.
      */
     function proposeWithdrawal(uint256 strategyId, address token, uint256 amount) external {
-        require(amount > 0, "Amount must be greater than zero");
+        if (amount == 0) revert ICore.InvalidAmount();
 
-        uint256 accountBalance = strategyTokenBalances[strategyId][msg.sender][address(token)];
-
-        require(accountBalance >= amount, "Insufficient balance");
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
 
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
 
@@ -357,14 +354,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      */
     function finalizeWithdrawal(uint256 strategyId, IERC20 token) external {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
-        require(request.requestTime > 0, "No pending withdrawal");
-        require(block.timestamp >= request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD, "Timelock not elapsed");
-        require(
-            block.timestamp <= request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME,
-            "Withdrawal expired"
-        );
+        if (block.timestamp < request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.TimelockNotElapsed();
+
+        if (block.timestamp > request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
+            revert ICore.WithdrawalExpired();
+        }
 
         uint256 amount = request.amount;
+        // if (amount == 0) revert ICore.InvalidAmount(); todo check if not necessary?
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
 
@@ -382,7 +379,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function depositETH(
         uint256 strategyId
     ) external payable {
-        require(msg.value > 0, "Amount must be greater than zero");
+        if (msg.value == 0) revert ICore.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
 
@@ -393,12 +390,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     /// @param amount The amount to withdraw
     function fastWithdrawETH(uint256 strategyId, uint256 amount) external {
-        require(amount > 0, "Amount must be greater than zero");
+        if (amount == 0) revert ICore.InvalidAmount();
 
-        require(usedTokens[strategyId][ETH_ADDRESS] == 0, "ETH is used by a bApp");
+        if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert ICore.TokenIsUsedByTheBApp();
 
-        uint256 contributorBalance = strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS];
-        require(contributorBalance >= amount, "Insufficient balance");
+        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
 
@@ -421,12 +417,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
             uint32 obligationPercentage = obligationPercentages[i];
-            require(obligationPercentage > 0 && obligationPercentage <= 1e4, "ODP: invalid obligation percentage");
+
+            if (obligationPercentage == 0 || obligationPercentage > 1e4) revert ICore.InvalidPercentage();
 
             obligations[strategyId][bApp][token] = obligationPercentage;
             obligationsCounter[strategyId][bApp] += 1;
-
             usedTokens[strategyId][token] += 1;
+
             emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
         }
     }
@@ -437,9 +434,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function createObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external {
-        require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-        require(obligationPercentage > 0 && obligationPercentage <= 1e4, "Invalid obligation percentage");
-        require(obligations[strategyId][bApp][token] == 0, "Obligation already set");
+        if (strategies[strategyId].owner != msg.sender) {
+            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
+        }
+        if (obligationPercentage > 1e4) revert ICore.InvalidPercentage();
+        if (obligations[strategyId][bApp][token] != 0) revert ICore.ObligationAlreadySet();
         require(obligationsCounter[strategyId][bApp] > 0, "BApp not opted-in");
 
         address[] storage bAppTokens = bApps[bApp].tokens;
@@ -474,6 +473,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         emit BAppObligationUpdated(strategyId, bApp, token, obligationPercentage);
     }
+
+    // todo: createNativeETHObligation
 
     // TODO: this function is not used now, but could be useful in the future if the bApp can remove supported tokens.
     /// @notice Remove obligation for a bApp

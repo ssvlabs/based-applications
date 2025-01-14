@@ -46,8 +46,12 @@ interface ICore {
     error InvalidDelegationFee();
     error InvalidPercentage();
     error InsufficientBalance();
+    error NoPendingWithdrawal();
     error InvalidStrategyOwner(address caller, address expectedOwner);
     error TokenAlreadyAddedToBApp(address token);
     error TokensLengthNotMatchingPercentages();
     error TokenIsUsedByTheBApp();
+    error TimelockNotElapsed();
+    error WithdrawalExpired();
+    error ObligationAlreadySet();
 }
