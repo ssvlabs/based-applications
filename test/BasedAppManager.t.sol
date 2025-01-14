@@ -22,8 +22,8 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     address ATTACKER = makeAddr("Attacker");
     address RECEIVER = makeAddr("Receiver");
     address RECEIVER2 = makeAddr("Receiver2");
-    address SERVICE1 = makeAddr("Service1");
-    address SERVICE2 = makeAddr("Service2");
+    address SERVICE1 = makeAddr("BApp1");
+    address SERVICE2 = makeAddr("BApp2");
 
     uint256 STRATEGY1 = 1;
     uint32 STRATEGY1_INITIAL_FEE = 5;
@@ -44,8 +44,8 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.label(ATTACKER, "Attacker");
         vm.label(RECEIVER, "Receiver");
         vm.label(RECEIVER2, "Receiver2");
-        vm.label(SERVICE1, "Service1");
-        vm.label(SERVICE2, "Service2");
+        vm.label(SERVICE1, "BApp1");
+        vm.label(SERVICE2, "BApp2");
         vm.startPrank(OWNER);
         implementation = new BasedAppManager();
         bytes memory data = abi.encodeWithSelector(implementation.initialize.selector); // Encodes initialize() call
@@ -419,9 +419,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testStrategyOptInToService() public {
+    function testStrategyOptInToBApp() public {
         testCreateStrategy();
-        testRegisterService();
+        testRegisterBApp();
         vm.startPrank(USER1);
         (address owner,,,) = proxiedManager.strategies(1);
         assertEq(owner, USER1, "Strategy owner");
@@ -429,8 +429,8 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 9000; // 90%
-        proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
-        uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
         assertEq(obligationPercentage, 9000, "Obligation percentage");
@@ -441,9 +441,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testStrategyOptInToServiceWithMultipleTokens() public {
+    function testStrategyOptInToBAppWithMultipleTokens() public {
         testCreateStrategy();
-        testRegisterServiceWith2Tokens();
+        testRegisterBAppWith2Tokens();
         vm.startPrank(USER1);
         (address owner,,,) = proxiedManager.strategies(1);
         assertEq(owner, USER1, "Strategy owner");
@@ -451,8 +451,8 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 9000; // 90%
-        proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
-        uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
         assertEq(obligationPercentage, 9000, "Obligation percentage");
@@ -463,9 +463,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testStrategyOptInToServiceWithETH() public {
+    function testStrategyOptInToBAppWithETH() public {
         testCreateStrategy();
-        testRegisterServiceWithETH();
+        testRegisterBAppWithETH();
         vm.startPrank(USER1);
         (address owner,,,) = proxiedManager.strategies(1);
         assertEq(owner, USER1, "Strategy owner");
@@ -473,8 +473,8 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         tokensInput[0] = ETH_ADDRESS;
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 10_000; // 100%
-        proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
-        uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, ETH_ADDRESS);
         assertEq(obligationPercentage, 10_000, "Obligation percentage");
@@ -487,7 +487,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testStrategyOptInWithNonOwner() public {
         testCreateStrategy();
-        testRegisterService();
+        testRegisterBApp();
         vm.startPrank(ATTACKER);
         (address owner,,,) = proxiedManager.strategies(1);
         assertEq(owner, USER1, "Strategy owner");
@@ -496,13 +496,13 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 9000; // 90%
         vm.expectRevert("Strategy: not the owner");
-        proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
         vm.stopPrank();
     }
 
-    function testStrategyOptInToServiceNonMatchingTokensAndObligations() public {
+    function testStrategyOptInToBAppNonMatchingTokensAndObligations() public {
         testCreateStrategy();
-        testRegisterService();
+        testRegisterBApp();
         vm.startPrank(USER1);
         (address owner,,,) = proxiedManager.strategies(1);
         assertEq(owner, USER1, "Strategy owner");
@@ -512,15 +512,15 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 10_000; // 100%
         vm.expectRevert("Strategy: tokens and percentages length mismatch");
-        proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
-        uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 0, "Strategy id was not saved");
         vm.stopPrank();
     }
 
-    function testStrategyOptInToServiceNotAllowNonMatchingStrategyTokensWithServiceTokens() public {
+    function testStrategyOptInToBAppNotAllowNonMatchingStrategyTokensWithBAppTokens() public {
         testCreateStrategy();
-        testRegisterService();
+        testRegisterBApp();
         vm.startPrank(USER1);
         (address owner,,,) = proxiedManager.strategies(1);
         assertEq(owner, USER1, "Strategy owner");
@@ -531,14 +531,14 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         obligationPercentagesInput[0] = 6000; // 60%
         obligationPercentagesInput[1] = 5000; // 50%
         vm.expectRevert("Strategy: token not supported by bApp");
-        proxiedManager.optInToService(1, SERVICE1, tokensInput, obligationPercentagesInput);
-        uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE1);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 0, "Strategy id was not saved");
         vm.stopPrank();
     }
 
     function testCreateObligationToExistingStrategyRevert() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         (address owner,,,) = proxiedManager.strategies(1);
         assertEq(owner, USER1, "Strategy owner");
@@ -546,7 +546,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32 obligationPercentagesInput = 7000; // 70%
         vm.expectRevert("BApp not opted-in");
         proxiedManager.createObligation(1, SERVICE2, tokensInput, obligationPercentagesInput);
-        uint256 strategyId = proxiedManager.accountServiceStrategy(USER1, SERVICE2);
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE2);
         assertEq(strategyId, 0, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE2, address(erc20mock2));
         assertEq(obligationPercentage, 0, "Obligation percentage");
@@ -561,7 +561,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint256 amount
     ) public {
         vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
@@ -572,7 +572,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testStrategyOwnerDepositETHWithNoObligation() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
@@ -582,21 +582,21 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testRevertObligationNotMatchTokensService() public {
-        testStrategyOptInToService();
+    function testRevertObligationNotMatchTokensBApp() public {
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         vm.expectRevert("Strategy: token not supported by bApp");
         proxiedManager.createObligation(1, SERVICE1, address(erc20mock2), 100);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "BApp token");
         assertEq(tokens.length, 1, "BApp token length");
         vm.stopPrank();
     }
 
     function testCreateStrategyETHAndDepositETH() public {
-        testStrategyOptInToServiceWithETH();
+        testStrategyOptInToBAppWithETH();
         vm.startPrank(USER1);
         uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
         assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
@@ -607,7 +607,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testRevertObligationHigherThanMaxPercentage() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         vm.expectRevert("Invalid obligation percentage");
         proxiedManager.createObligation(1, SERVICE1, address(erc20mock2), 10_001);
@@ -616,8 +616,8 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testCreateObligationToNonExistingServiceRevert() public {
-        testStrategyOptInToService();
+    function testCreateObligationToNonExistingBAppRevert() public {
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         vm.expectRevert("BApp not opted-in");
         proxiedManager.createObligation(1, SERVICE2, address(erc20mock), 100);
@@ -645,9 +645,9 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testCreateNewObligationSuccessful() public {
-        testStrategyOptInToServiceWithMultipleTokens();
+        testStrategyOptInToBAppWithMultipleTokens();
         vm.startPrank(USER1);
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "BApp token");
         assertEq(tokens[1], address(erc20mock2), "BApp token 2");
         assertEq(tokens.length, 2, "BApp token length");
@@ -678,7 +678,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testFastUpdateObligation() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         uint32 strategyId = 1;
         proxiedManager.fastUpdateObligation(strategyId, SERVICE1, address(erc20mock), 10_000);
@@ -692,7 +692,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testStrategyFeeUpdateOnInitialLimit() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
         (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
@@ -711,7 +711,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testStrategyFeeUpdateOnFinalTimeLimit() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
         (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
@@ -730,7 +730,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testStrategyFeeUpdateTooLate() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
         (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
@@ -750,7 +750,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testStrategyFeeUpdateTooEarly() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeFeeUpdate(STRATEGY1, 20);
         (address owner, uint32 fee, uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
@@ -770,7 +770,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testUpdateStrategyObligationFinalizeOnInitialLimit() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock), 1000);
         (uint32 percentage, uint256 requestTime) =
@@ -790,7 +790,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testUpdateStrategyObligationFinalizeOnLatestLimit() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock), 1000);
         (uint32 percentage, uint256 requestTime) =
@@ -810,7 +810,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testUpdateStrategyObligationRemoval() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock), 0);
         (uint32 percentage, uint256 requestTime) =
@@ -834,7 +834,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testUpdateStrategyObligationFinalizeTooLate() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock), 1000);
         (uint32 percentage, uint256 requestTime) =
@@ -855,7 +855,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     function testUpdateStrategyObligationFinalizeTooEarly() public {
-        testStrategyOptInToService();
+        testStrategyOptInToBApp();
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock), 1000);
         (uint32 percentage, uint256 requestTime) =
@@ -901,7 +901,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     }
 
     // function testFastRemovalObligation() public {
-    //      testStrategyOptInToService();
+    //      testStrategyOptInToBApp();
     //     vm.startPrank(USER1);
     //     proxiedManager.createObligation(STRATEGY1, SERVICE1, address(erc20mock2), 10000);
     //     uint32 percentage = proxiedManager.obligations(STRATEGY1, SERVICE1, address(erc20mock2));
@@ -929,32 +929,32 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     // ** Section: bApps **
     // ********************
 
-    function testRegisterService() public {
+    function testRegisterBApp() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "BApp token");
         assertEq(tokensInput[0], address(erc20mock), "BApp token");
         vm.stopPrank();
     }
 
-    function testRegisterServiceWith2Tokens() public {
+    function testRegisterBAppWith2Tokens() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(erc20mock2);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "BApp token");
         assertEq(tokensInput[0], address(erc20mock), "BApp token");
         assertEq(tokens[1], address(erc20mock2), "BApp token 2");
@@ -962,75 +962,75 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    function testRegisterServiceWithETH() public {
+    function testRegisterBAppWithETH() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = ETH_ADDRESS;
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
         assertEq(tokens[0], ETH_ADDRESS, "BApp token");
         assertEq(tokensInput[0], ETH_ADDRESS, "BApp token input");
         vm.stopPrank();
     }
 
-    function testRegisterServiceTwice() public {
+    function testRegisterBAppTwice() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         vm.expectRevert("BApp already registered");
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, 2);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, 2);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "BApp token");
         assertEq(tokensInput[0], address(erc20mock), "BApp token");
         vm.stopPrank();
     }
 
-    function testRegisterServiceOverwrite() public {
+    function testRegisterBAppOverwrite() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerService(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.services(SERVICE1);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getServiceTokens(SERVICE1);
+        address[] memory tokens = proxiedManager.getBAppTokens(SERVICE1);
         assertEq(tokens[0], address(erc20mock), "BApp token");
         assertEq(tokensInput[0], address(erc20mock), "BApp token");
         vm.stopPrank();
         vm.startPrank(ATTACKER);
         vm.expectRevert("BApp already registered");
-        proxiedManager.registerService(ATTACKER, SERVICE1, tokensInput, 2);
+        proxiedManager.registerBApp(ATTACKER, SERVICE1, tokensInput, 2);
         vm.stopPrank();
     }
 
-    function testUpdateServiceWithNewTokens() public {
-        testRegisterService();
+    function testUpdateBAppWithNewTokens() public {
+        testRegisterBApp();
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = address(erc20mock2);
         tokensInput[1] = address(ETH_ADDRESS);
-        proxiedManager.addTokensToService(SERVICE1, tokensInput);
+        proxiedManager.addTokensToBApp(SERVICE1, tokensInput);
         vm.stopPrank();
     }
 
-    function testUpdateServiceWithAlreadyPresentTokensRevert() public {
-        testRegisterService();
+    function testUpdateBAppWithAlreadyPresentTokensRevert() public {
+        testRegisterBApp();
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(ETH_ADDRESS);
-        vm.expectRevert(abi.encodeWithSelector(ICore.TokenAlreadyAddedToService.selector, address(erc20mock)));
-        proxiedManager.addTokensToService(SERVICE1, tokensInput);
+        vm.expectRevert(abi.encodeWithSelector(ICore.TokenAlreadyAddedToBApp.selector, address(erc20mock)));
+        proxiedManager.addTokensToBApp(SERVICE1, tokensInput);
         vm.stopPrank();
     }
 }

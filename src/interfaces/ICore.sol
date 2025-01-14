@@ -42,5 +42,5 @@ interface ICore {
 
     error InvalidPercentage();
     error DelegationAlreadyExists();
-    error TokenAlreadyAddedToService(address token);
+    error TokenAlreadyAddedToBApp(address token);
 }

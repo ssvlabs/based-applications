@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBasedAppManager {
     event StrategyCreated(uint256 indexed strategyId, address indexed owner);
-    event ServiceRegistered(address indexed serviceAddress, address indexed owner, address from);
-    event ServiceTokensUpdated(address indexed serviceAddress, address[] tokens);
+    event BAppRegistered(address indexed bAppAddress, address indexed owner, address from);
+    event BAppTokensUpdated(address indexed bAppAddress, address[] tokens);
     event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
     event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
     event StrategyDeposit(
@@ -15,12 +15,12 @@ interface IBasedAppManager {
     event StrategyWithdrawal(
         uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
     );
-    event ServiceOptedIn(uint256 indexed strategyId, address indexed service);
-    event ServiceObligationSet(
-        uint256 indexed strategyId, address indexed service, address indexed token, uint256 obligationPercentage
+    event BAppOptedIn(uint256 indexed strategyId, address indexed bApp);
+    event BAppObligationSet(
+        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
     );
-    event ServiceObligationUpdated(
-        uint256 indexed strategyId, address indexed service, address indexed token, uint256 obligationPercentage
+    event BAppObligationUpdated(
+        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
     );
     event StrategyFeeUpdateRequested(
         uint256 indexed strategyId, address owner, uint32 proposedFee, uint32 fee, uint256 expirationTime
@@ -51,26 +51,26 @@ interface IBasedAppManager {
         address receiver
     ) external;
 
-    function registerService(
+    function registerBApp(
         address owner,
-        address serviceAddress,
+        address bAppAddress,
         address[] calldata tokens,
         uint32 sharedRiskLevel
     ) external;
 
-    function addTokensToService(address serviceAddress, address[] calldata tokens) external;
+    function addTokensToBApp(address bAppAddress, address[] calldata tokens) external;
 
-    function getServiceTokens(
-        address serviceAddress
+    function getBAppTokens(
+        address bAppAddress
     ) external view returns (address[] memory);
 
     function createStrategy(
         uint32 fee
     ) external returns (uint256 strategyId);
 
-    function optInToService(
+    function optInToBApp(
         uint256 strategyId,
-        address service,
+        address bApp,
         address[] calldata tokens,
         uint32[] calldata obligationPercentages
     ) external;
@@ -91,26 +91,26 @@ interface IBasedAppManager {
 
     function createObligation(
         uint256 strategyId,
-        address service,
+        address bApp,
         address token,
         uint32 obligationPercentage
     ) external;
 
     function fastUpdateObligation(
         uint256 strategyId,
-        address service,
+        address bApp,
         address token,
         uint32 obligationPercentage
     ) external;
 
     function proposeUpdateObligation(
         uint256 strategyId,
-        address service,
+        address bApp,
         address token,
         uint32 obligationPercentage
     ) external;
 
-    function finalizeUpdateObligation(uint256 strategyId, address service, address token) external;
+    function finalizeUpdateObligation(uint256 strategyId, address bApp, address token) external;
 
     function proposeFeeUpdate(uint256 strategyId, uint32 proposedFee) external;
 

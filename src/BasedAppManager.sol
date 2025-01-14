@@ -10,7 +10,7 @@ import "./interfaces/IBasedAppManager.sol";
 
 /**
  * @title BasedAppManager
- * @notice Core contract to manage strategies, services, and obligations for SSV Based Apps.
+ * @notice Core contract to manage strategies, bApps, and obligations for SSV Based Apps.
  *
  * **************
  * ** GLOSSARY **
@@ -25,7 +25,7 @@ import "./interfaces/IBasedAppManager.sol";
  * - **Delegator**: An Ethereum address that delegates its balance to a receiver.
  *   The delegator can be equal to the receiver, meaning the delegator delegates its balance to itself.
  *
- * - **Strategy**: A component that manages the delegated ERC20 tokens and has obligations to services.
+ * - **Strategy**: A component that manages the delegated ERC20 tokens and has obligations to bApps.
  *
  * - **Obligation**: A percentage of the strategy's balance in ERC20 (or ETH) that is reserved for securing a bApp.
  *
@@ -58,7 +58,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @notice Tracks the strategies created
      * @dev The strategy ID is incremental and unique
      */
-    mapping(address bApp => ICore.BApp) public services;
+    mapping(address bApp => ICore.BApp) public bApps;
     /**
      * @notice Tracks the strategies created
      * @dev The strategy ID is incremental and unique
@@ -68,7 +68,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @notice Links an account to a single strategy for a specific bApp
      * @dev Guarantees that an account cannot have more than one strategy for a given bApp
      */
-    mapping(address account => mapping(address bApp => uint256 strategyId)) public accountServiceStrategy;
+    mapping(address account => mapping(address bApp => uint256 strategyId)) public accountBAppStrategy;
     /**
      * @notice Tracks the percentage of validator balance a delegator has delegated to a specific receiver
      * @dev Each delegator can allocate a portion of their validator balance to multiple accounts including itself
@@ -86,17 +86,17 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     mapping(uint256 strategyId => mapping(address account => mapping(address token => uint256 balance))) public
         strategyTokenBalances;
     /**
-     * @notice Tracks obligation percentages for a strategy based on specific services and tokens.
+     * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
      */
     mapping(uint256 strategyId => mapping(address bApp => mapping(address token => uint32 obligationPercentage))) public
         obligations;
     /**
      * @notice Tracks unallocated tokens in a strategy.
-     * @dev Count the number of services that have one obligation set for the token.
+     * @dev Count the number of bApps that have one obligation set for the token.
      * If the counter is 0, the token is unused and we can allow fast withdrawal.
      */
-    mapping(uint256 strategyId => mapping(address token => uint32 servicesCounter)) public usedTokens;
+    mapping(uint256 strategyId => mapping(address token => uint32 bAppsCounter)) public usedTokens;
     /**
      * @notice Tracks all the withdrawal requests divided by token per strategy.
      * @dev User can have only one pending withdrawal request per token.
@@ -193,16 +193,16 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     /// @notice Function to register a bApp
     /// @param owner The address of the owner
-    /// @param serviceAddress The address of the bApp
+    /// @param bAppAddress The address of the bApp
     /// @param tokens The list of tokens the bApp accepts
     /// @param sharedRiskLevel The shared risk level of the bApp
-    function registerService(
+    function registerBApp(
         address owner,
-        address serviceAddress,
+        address bAppAddress,
         address[] calldata tokens,
         uint32 sharedRiskLevel
     ) external {
-        ICore.BApp storage bApp = services[serviceAddress];
+        ICore.BApp storage bApp = bApps[bAppAddress];
         require(bApp.owner == address(0), "BApp already registered");
         bApp.owner = owner;
         bApp.sharedRiskLevel = sharedRiskLevel;
@@ -211,31 +211,31 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             bApp.tokens.push(tokens[i]);
         }
 
-        emit ServiceRegistered(serviceAddress, owner, msg.sender);
+        emit BAppRegistered(bAppAddress, owner, msg.sender);
     }
 
     /// @notice Function to add tokens to a bApp
-    /// @param serviceAddress The address of the bApp
+    /// @param bAppAddress The address of the bApp
     /// @param tokens The list of tokens to add
-    function addTokensToService(address serviceAddress, address[] calldata tokens) external {
-        ICore.BApp storage bApp = services[serviceAddress];
+    function addTokensToBApp(address bAppAddress, address[] calldata tokens) external {
+        ICore.BApp storage bApp = bApps[bAppAddress];
         for (uint256 i = 0; i < tokens.length; i++) {
             for (uint256 j = 0; j < bApp.tokens.length; j++) {
                 if (bApp.tokens[j] == tokens[i]) {
-                    revert ICore.TokenAlreadyAddedToService(tokens[i]);
+                    revert ICore.TokenAlreadyAddedToBApp(tokens[i]);
                 }
             }
             bApp.tokens.push(tokens[i]);
         }
-        emit ServiceTokensUpdated(serviceAddress, tokens);
+        emit BAppTokensUpdated(bAppAddress, tokens);
     }
 
     /// @notice Function to get the tokens for a bApp
-    /// @param serviceAddress The address of the bApp
-    function getServiceTokens(
-        address serviceAddress
+    /// @param bAppAddress The address of the bApp
+    function getBAppTokens(
+        address bAppAddress
     ) external view returns (address[] memory) {
-        return services[serviceAddress].tokens;
+        return bApps[bAppAddress].tokens;
     }
 
     // ***********************
@@ -265,7 +265,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to opt-in with
     /// @param obligationPercentages The list of obligation percentages for each token
-    function optInToService(
+    function optInToBApp(
         uint256 strategyId,
         address bApp,
         address[] calldata tokens,
@@ -273,20 +273,20 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     ) external {
         require(tokens.length == obligationPercentages.length, "Strategy: tokens and percentages length mismatch");
 
-        ICore.BApp storage existingService = services[bApp];
-        matchTokens(tokens, existingService.tokens);
+        ICore.BApp storage existingBApp = bApps[bApp];
+        matchTokens(tokens, existingBApp.tokens);
 
-        uint256 existingStrategyId = accountServiceStrategy[msg.sender][bApp];
+        uint256 existingStrategyId = accountBAppStrategy[msg.sender][bApp];
         require(existingStrategyId == 0, "Strategy: already opted-in to this bApp");
 
         ICore.Strategy storage strategy = strategies[strategyId];
         require(strategy.owner == msg.sender, "Strategy: not the owner");
 
-        emit ServiceOptedIn(strategyId, bApp);
+        emit BAppOptedIn(strategyId, bApp);
 
         _setObligations(strategyId, bApp, tokens, obligationPercentages);
 
-        accountServiceStrategy[msg.sender][bApp] = strategyId;
+        accountBAppStrategy[msg.sender][bApp] = strategyId;
     }
 
     /// @notice Deposit ERC20 tokens into the strategy
@@ -422,7 +422,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             obligationsCounter[strategyId][bApp] += 1;
 
             usedTokens[strategyId][token] += 1;
-            emit ServiceObligationSet(strategyId, bApp, token, obligationPercentage);
+            emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
         }
     }
 
@@ -437,15 +437,15 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         require(obligations[strategyId][bApp][token] == 0, "Obligation already set");
         require(obligationsCounter[strategyId][bApp] > 0, "BApp not opted-in");
 
-        address[] storage serviceTokens = services[bApp].tokens;
-        matchToken(token, serviceTokens);
+        address[] storage bAppTokens = bApps[bApp].tokens;
+        matchToken(token, bAppTokens);
 
         obligations[strategyId][bApp][token] = obligationPercentage;
-        accountServiceStrategy[msg.sender][bApp] = strategyId;
+        accountBAppStrategy[msg.sender][bApp] = strategyId;
         usedTokens[strategyId][token] += 1;
         obligationsCounter[strategyId][bApp] += 1;
 
-        emit ServiceObligationSet(strategyId, bApp, token, obligationPercentage);
+        emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
     }
 
     /// @notice Fast set obligation ratio higher for a bApp
@@ -467,7 +467,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         obligations[strategyId][bApp][token] = obligationPercentage;
 
-        emit ServiceObligationUpdated(strategyId, bApp, token, obligationPercentage);
+        emit BAppObligationUpdated(strategyId, bApp, token, obligationPercentage);
     }
 
     // TODO: this function is not used now, but could be useful in the future if the bApp can remove supported tokens.
@@ -479,8 +479,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     //     require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
     //     require(obligations[strategyId][bApp][token] > 0, "Obligation not set");
 
-    //     for (uint256 i = 0; i < services[bApp].tokens.length; i++) {
-    //         if (services[bApp].tokens[i] == token) {
+    //     for (uint256 i = 0; i < bApps[bApp].tokens.length; i++) {
+    //         if (bApps[bApp].tokens[i] == token) {
     //             revert("token is used by the bApp");
     //         }
     //     }
@@ -489,7 +489,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     //     usedTokens[strategyId][token] -= 1;
     //     obligationsCounter[strategyId][bApp] -= 1;
 
-    //     emit ServiceObligationUpdated(strategyId, bApp, token, 0);
+    //     emit BAppObligationUpdated(strategyId, bApp, token, 0);
     //     // todo: create a new event for removedObligation?
     // }
 
@@ -595,18 +595,18 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     // Match the tokens of strategy with the bApp
     // Complexity: O(n * m)
-    function matchTokens(address[] calldata tokens, address[] memory serviceTokens) internal view {
+    function matchTokens(address[] calldata tokens, address[] memory bAppTokens) internal view {
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            matchToken(token, serviceTokens);
+            matchToken(token, bAppTokens);
         }
     }
 
-    function matchToken(address token, address[] memory serviceTokens) internal view {
+    function matchToken(address token, address[] memory bAppTokens) internal view {
         bool matched = false;
-        for (uint256 i = 0; i < serviceTokens.length; ++i) {
-            address serviceToken = serviceTokens[i];
-            if (serviceToken == token) {
+        for (uint256 i = 0; i < bAppTokens.length; ++i) {
+            address bAppToken = bAppTokens[i];
+            if (bAppToken == token) {
                 matched = true;
                 break;
             }
