@@ -158,13 +158,22 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param percentage The updated percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function updateDelegatedBalance(address receiver, uint32 percentage) external {
-        require(percentage > 0 && percentage <= MAX_PERCENTAGE, "Invalid percentage");
+        if (percentage == 0 || percentage > MAX_PERCENTAGE) {
+            revert ICore.InvalidPercentage();
+        }
 
         uint32 existingPercentage = delegations[msg.sender][receiver];
-        require(existingPercentage > 0, "Delegation does not exist");
+        if (existingPercentage == percentage) {
+            revert ICore.DelegationExistsWithSameValue();
+        }
+        if (existingPercentage == 0) {
+            revert ICore.DelegationDoesNotExist();
+        }
 
         uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
-        require(newTotalPercentage <= MAX_PERCENTAGE, "Percentage exceeds 100%");
+        if (newTotalPercentage > MAX_PERCENTAGE) {
+            revert ICore.ExceedingPercentageUpdate();
+        }
 
         delegations[msg.sender][receiver] = percentage;
         totalDelegatedPercentage[msg.sender] = newTotalPercentage;
@@ -437,7 +446,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (strategies[strategyId].owner != msg.sender) {
             revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
         }
-        // todo maybe not allow to create a 0 percetage obligation?
+        // todo maybe not allow to create a 0 percentage obligation?
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligations[strategyId][bApp][token] != 0) revert ICore.ObligationAlreadySet();
 
@@ -535,7 +544,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         // Remove the obligation if the percentage is 0
         if (percentage == 0) {
             usedTokens[strategyId][address(token)] -= 1;
-            obligationsCounter[strategyId][bApp] -= 1; // todo: consider to not decrement and keep it there as sign that was opten in and can update in future instead of recreating
+            obligationsCounter[strategyId][bApp] -= 1; // todo: consider to not decrement and keep it there as sign that was opted in and can update in future instead of recreating
         }
 
         obligations[strategyId][bApp][address(token)] = percentage;

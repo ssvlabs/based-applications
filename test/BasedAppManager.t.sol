@@ -237,9 +237,25 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testRevert_UpdateTotalDelegatePercentageWithZero() public {
+        vm.startPrank(USER1);
+        proxiedManager.delegateBalance(RECEIVER, 1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        proxiedManager.updateDelegatedBalance(RECEIVER, 0);
+        vm.stopPrank();
+    }
+
+    function testRevert_UpdateTotalDelegatePercentageWithSameBalance() public {
+        vm.startPrank(USER1);
+        proxiedManager.delegateBalance(RECEIVER, 1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationExistsWithSameValue.selector));
+        proxiedManager.updateDelegatedBalance(RECEIVER, 1);
+        vm.stopPrank();
+    }
+
     function testRevertUpdateBalanceNotExisting() public {
         vm.startPrank(USER1);
-        vm.expectRevert("Delegation does not exist");
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
@@ -252,7 +268,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
         proxiedManager.delegateBalance(RECEIVER2, 1);
-        vm.expectRevert("Percentage exceeds 100%");
+        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingPercentageUpdate.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
