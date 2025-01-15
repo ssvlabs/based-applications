@@ -45,13 +45,22 @@ interface ICore {
     error InvalidAmount();
     error InvalidDelegationFee();
     error InvalidPercentage();
+    error InvalidPercentageIncrement();
+    error FeeAlreadySet();
     error InsufficientBalance();
     error NoPendingWithdrawal();
+    error NoPendingObligationUpdate();
+    error UpdateObligationExpired();
+    error FeeUpdateExpired();
     error InvalidStrategyOwner(address caller, address expectedOwner);
     error TokenAlreadyAddedToBApp(address token);
     error TokensLengthNotMatchingPercentages();
     error TokenIsUsedByTheBApp();
-    error TimelockNotElapsed();
+    error TimelockNotElapsed(); // maybe add withdrawal
+    error ObligationTimelockNotElapsed();
+    error FeeTimelockNotElapsed();
     error WithdrawalExpired();
     error ObligationAlreadySet();
+    error BAppNotOptedIn();
+    error TokenNoTSupportedByBApp(address token);
 }

@@ -50,7 +50,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     uint256 public constant WITHDRAWAL_EXPIRE_TIME = 1 days;
     uint256 public constant FEE_EXPIRE_TIME = 1 days;
     uint256 public constant OBLIGATION_EXPIRE_TIME = 1 days;
-    uint32 public constant MAX_INCREMENT = 500; // 5% // TODO set in the constructor...
+    uint32 public constant MAX_FEE_INCREMENT = 500; // 5% // TODO set in the constructor...
 
     uint256 private _strategyCounter;
 
@@ -307,6 +307,18 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit StrategyDeposit(strategyId, msg.sender, address(token), amount);
     }
 
+    /// @notice Deposit ETH into the strategy
+    /// @param strategyId The ID of the strategy
+    function depositETH(
+        uint256 strategyId
+    ) external payable {
+        if (msg.value == 0) revert ICore.InvalidAmount();
+
+        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
+
+        emit StrategyDeposit(strategyId, msg.sender, ETH_ADDRESS, msg.value);
+    }
+
     /// @notice Withdraw ERC20 tokens from the strategy
     /// @param strategyId The ID of the strategy
     /// @param token The ERC20 token address
@@ -324,6 +336,23 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         token.safeTransfer(msg.sender, amount);
 
         emit StrategyWithdrawal(strategyId, msg.sender, address(token), amount);
+    }
+
+    /// @notice Withdraw ETH from the strategy
+    /// @param strategyId The ID of the strategy
+    /// @param amount The amount to withdraw
+    function fastWithdrawETH(uint256 strategyId, uint256 amount) external {
+        if (amount == 0) revert ICore.InvalidAmount();
+
+        if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert ICore.TokenIsUsedByTheBApp();
+
+        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
+
+        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
+
+        payable(msg.sender).transfer(amount);
+
+        emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount);
     }
 
     /**
@@ -374,35 +403,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     // TODO: add eth proposeWithdrawal and finalizeWithdrawal
 
-    /// @notice Deposit ETH into the strategy
-    /// @param strategyId The ID of the strategy
-    function depositETH(
-        uint256 strategyId
-    ) external payable {
-        if (msg.value == 0) revert ICore.InvalidAmount();
-
-        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
-
-        emit StrategyDeposit(strategyId, msg.sender, ETH_ADDRESS, msg.value);
-    }
-
-    /// @notice Withdraw ETH from the strategy
-    /// @param strategyId The ID of the strategy
-    /// @param amount The amount to withdraw
-    function fastWithdrawETH(uint256 strategyId, uint256 amount) external {
-        if (amount == 0) revert ICore.InvalidAmount();
-
-        if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert ICore.TokenIsUsedByTheBApp();
-
-        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
-
-        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
-
-        payable(msg.sender).transfer(amount);
-
-        emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount);
-    }
-
     /// @notice Set the obligation percentages for a strategy
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
@@ -418,7 +418,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             address token = tokens[i];
             uint32 obligationPercentage = obligationPercentages[i];
 
-            if (obligationPercentage == 0 || obligationPercentage > 1e4) revert ICore.InvalidPercentage();
+            if (obligationPercentage == 0 || obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
             obligations[strategyId][bApp][token] = obligationPercentage;
             obligationsCounter[strategyId][bApp] += 1;
@@ -437,9 +437,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (strategies[strategyId].owner != msg.sender) {
             revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
         }
-        if (obligationPercentage > 1e4) revert ICore.InvalidPercentage();
+        // todo maybe not allow to create a 0 percetage obligation?
+        if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligations[strategyId][bApp][token] != 0) revert ICore.ObligationAlreadySet();
-        require(obligationsCounter[strategyId][bApp] > 0, "BApp not opted-in");
+
+        // TODO Check the implications, what if a strategy is create and then the obligation deleted? This could block the strategy
+        // todo use another method to check if a strategyWasOptedIn?
+        // TODO allow obligation to be 0 but still be counted?
+        if (obligationsCounter[strategyId][bApp] == 0) revert ICore.BAppNotOptedIn();
 
         address[] storage bAppTokens = bApps[bApp].tokens;
         matchToken(token, bAppTokens);
@@ -463,41 +468,16 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address token,
         uint32 obligationPercentage
     ) external {
-        require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-        require(obligationPercentage > 0 && obligationPercentage <= 1e4, "Invalid obligation percentage");
-        require(
-            obligationPercentage > obligations[strategyId][bApp][token], "Percentage must be greater for fast update"
-        );
+        if (strategies[strategyId].owner != msg.sender) {
+            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
+        }
+        if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+        if (obligationPercentage <= obligations[strategyId][bApp][token]) revert ICore.InvalidPercentage();
 
         obligations[strategyId][bApp][token] = obligationPercentage;
 
         emit BAppObligationUpdated(strategyId, bApp, token, obligationPercentage);
     }
-
-    // todo: createNativeETHObligation
-
-    // TODO: this function is not used now, but could be useful in the future if the bApp can remove supported tokens.
-    /// @notice Remove obligation for a bApp
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    // function fastRemoveObligation(uint256 strategyId, address bApp, address token) external {
-    //     require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-    //     require(obligations[strategyId][bApp][token] > 0, "Obligation not set");
-
-    //     for (uint256 i = 0; i < bApps[bApp].tokens.length; i++) {
-    //         if (bApps[bApp].tokens[i] == token) {
-    //             revert("token is used by the bApp");
-    //         }
-    //     }
-
-    //     obligations[strategyId][bApp][token] = 0;
-    //     usedTokens[strategyId][token] -= 1;
-    //     obligationsCounter[strategyId][bApp] -= 1;
-
-    //     emit BAppObligationUpdated(strategyId, bApp, token, 0);
-    //     // todo: create a new event for removedObligation?
-    // }
 
     /**
      * @notice Propose a withdrawal of ERC20 tokens from the strategy.
@@ -511,8 +491,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address token,
         uint32 obligationPercentage
     ) external {
-        require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-        require(obligationPercentage <= 10_000, "Percentage must lower than 100%");
+        if (strategies[strategyId].owner != msg.sender) {
+            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
+        }
+        if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
         ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][token];
 
@@ -535,45 +517,54 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @param token The ERC20 token address.
      */
     function finalizeUpdateObligation(uint256 strategyId, address bApp, address token) external {
-        require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-
-        ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][address(token)];
-        require(request.requestTime > 0, "No pending update");
-        require(block.timestamp >= request.requestTime + OBLIGATION_TIMELOCK_PERIOD, "Timelock not elapsed");
-        require(
-            block.timestamp <= request.requestTime + OBLIGATION_TIMELOCK_PERIOD + OBLIGATION_EXPIRE_TIME,
-            "Update expired"
-        );
-
-        // Remove the obligation if the percentage is 0
-        if (request.percentage == 0) {
-            usedTokens[strategyId][address(token)] -= 1;
-            obligationsCounter[strategyId][bApp] -= 1;
+        if (strategies[strategyId].owner != msg.sender) {
+            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
         }
 
-        obligations[strategyId][bApp][address(token)] = request.percentage;
+        ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][address(token)];
+        uint256 requestTime = request.requestTime;
+        uint32 percentage = request.percentage;
 
-        emit ObligationUpdateFinalized(strategyId, msg.sender, address(token), request.percentage);
+        if (requestTime == 0) revert ICore.NoPendingObligationUpdate();
+
+        if (block.timestamp < request.requestTime + OBLIGATION_TIMELOCK_PERIOD) revert ICore.TimelockNotElapsed();
+
+        if (block.timestamp > request.requestTime + OBLIGATION_TIMELOCK_PERIOD + OBLIGATION_EXPIRE_TIME) {
+            revert ICore.UpdateObligationExpired();
+        }
+        // Remove the obligation if the percentage is 0
+        if (percentage == 0) {
+            usedTokens[strategyId][address(token)] -= 1;
+            obligationsCounter[strategyId][bApp] -= 1; // todo: consider to not decrement and keep it there as sign that was opten in and can update in future instead of recreating
+        }
+
+        obligations[strategyId][bApp][address(token)] = percentage;
+
+        emit ObligationUpdateFinalized(strategyId, msg.sender, address(token), percentage);
 
         // TODO: maybe empty the request structure or not needed to save gas?
+        // delete obligationRequests[strategyId][bApp][address(token)];
     }
 
     /// @notice Propose a new fee for a strategy
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
     function proposeFeeUpdate(uint256 strategyId, uint32 proposedFee) external {
-        require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-        require(proposedFee > 0 && proposedFee <= 1e4, "Invalid fee");
-        ICore.Strategy storage strategy = strategies[strategyId];
+        if (strategies[strategyId].owner != msg.sender) {
+            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
+        }
+        if (proposedFee > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
-        // Enforce the maximum increment rule
-        require(proposedFee <= strategy.fee + MAX_INCREMENT, "Fee increase exceeds max increment");
+        ICore.Strategy storage strategy = strategies[strategyId];
+        uint32 fee = strategy.fee;
+
+        if (proposedFee > fee + MAX_FEE_INCREMENT) revert ICore.InvalidPercentageIncrement();
+        if (proposedFee == fee) revert ICore.FeeAlreadySet();
 
         strategy.feeProposed = proposedFee;
-        require(proposedFee != strategy.fee, "Fee already set");
         strategy.feeUpdateTime = block.timestamp + FEE_TIMELOCK_PERIOD;
 
-        emit StrategyFeeUpdateRequested(strategyId, msg.sender, proposedFee, strategy.fee, strategy.feeUpdateTime);
+        emit StrategyFeeUpdateRequested(strategyId, msg.sender, proposedFee, fee, strategy.feeUpdateTime);
     }
 
     /// @notice Finalize the fee update for a strategy
@@ -582,10 +573,17 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint256 strategyId
     ) external {
         ICore.Strategy storage strategy = strategies[strategyId];
-        require(strategy.owner == msg.sender, "Not the strategy owner");
-        require(strategy.feeProposed > 0, "No fee proposed");
-        require(block.timestamp >= strategy.feeUpdateTime, "Timelock not passed");
-        require(block.timestamp <= strategy.feeUpdateTime + FEE_EXPIRE_TIME, "Fee update expired");
+        if (strategy.owner != msg.sender) {
+            revert ICore.InvalidStrategyOwner(msg.sender, strategy.owner);
+        }
+
+        uint256 feeUpdateTime = strategy.feeUpdateTime;
+
+        if (block.timestamp < feeUpdateTime) revert ICore.FeeTimelockNotElapsed();
+
+        if (block.timestamp > feeUpdateTime + FEE_EXPIRE_TIME) {
+            revert ICore.FeeUpdateExpired();
+        }
 
         uint32 oldFee = strategy.fee;
         strategy.fee = strategy.feeProposed;
@@ -601,14 +599,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     // Match the tokens of strategy with the bApp
     // Complexity: O(n * m)
-    function matchTokens(address[] calldata tokens, address[] memory bAppTokens) internal view {
+    function matchTokens(address[] calldata tokens, address[] memory bAppTokens) internal pure {
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
             matchToken(token, bAppTokens);
         }
     }
 
-    function matchToken(address token, address[] memory bAppTokens) internal view {
+    function matchToken(address token, address[] memory bAppTokens) internal pure {
         bool matched = false;
         for (uint256 i = 0; i < bAppTokens.length; ++i) {
             address bAppToken = bAppTokens[i];
@@ -617,6 +615,35 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
                 break;
             }
         }
-        require(matched == true, "Strategy: token not supported by bApp");
+        if (!matched) revert ICore.TokenNoTSupportedByBApp(token);
     }
+
+    // ********************************
+    // ** Section: Not Supported yet **
+    // ********************************
+    // todo: createNativeETHObligation
+
+    // TODO: this function is not used now, but could be useful in the future if the bApp can remove supported tokens.
+
+    /// @notice Remove obligation for a bApp
+    /// @param strategyId The ID of the strategy
+    /// @param bApp The address of the bApp
+    /// @param token The address of the token
+    // function fastRemoveObligation(uint256 strategyId, address bApp, address token) external {
+    //     require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
+    //     require(obligations[strategyId][bApp][token] > 0, "Obligation not set");
+
+    //     for (uint256 i = 0; i < bApps[bApp].tokens.length; i++) {
+    //         if (bApps[bApp].tokens[i] == token) {
+    //             revert("token is used by the bApp");
+    //         }
+    //     }
+
+    //     obligations[strategyId][bApp][token] = 0;
+    //     usedTokens[strategyId][token] -= 1;
+    //     obligationsCounter[strategyId][bApp] -= 1;
+
+    //     emit BAppObligationUpdated(strategyId, bApp, token, 0);
+    //     // todo: create a new event for removedObligation?
+    // }
 }
