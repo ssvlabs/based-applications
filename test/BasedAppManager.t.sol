@@ -190,7 +190,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
     function testRevertTotalDelegatePercentage() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        vm.expectRevert("Total percentage exceeds 100%");
+        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingPercentageUpdate.selector));
         proxiedManager.delegateBalance(RECEIVER2, 1e4);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
@@ -312,7 +312,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
 
     function testRevertRemoveNonExistingBalance() public {
         vm.startPrank(USER1);
-        vm.expectRevert("No delegation exists");
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
         proxiedManager.removeDelegatedBalance(RECEIVER);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
@@ -1462,7 +1462,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint32 sharedRiskLevelInput = 102;
         proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
         (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
-        vm.expectRevert("BApp already registered");
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
         proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, 2);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
@@ -1486,7 +1486,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(tokensInput[0], address(erc20mock), "BApp token");
         vm.stopPrank();
         vm.startPrank(ATTACKER);
-        vm.expectRevert("BApp already registered");
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
         proxiedManager.registerBApp(ATTACKER, SERVICE1, tokensInput, 2);
         vm.stopPrank();
     }

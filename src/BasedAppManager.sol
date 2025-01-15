@@ -145,7 +145,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             revert ICore.DelegationAlreadyExists();
         }
 
-        require(totalDelegatedPercentage[msg.sender] + percentage <= MAX_PERCENTAGE, "Total percentage exceeds 100%");
+        if (totalDelegatedPercentage[msg.sender] + percentage > MAX_PERCENTAGE) {
+            revert ICore.ExceedingPercentageUpdate();
+        }
 
         delegations[msg.sender][receiver] = percentage;
         totalDelegatedPercentage[msg.sender] += percentage;
@@ -187,7 +189,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address receiver
     ) external {
         uint32 percentage = delegations[msg.sender][receiver];
-        require(percentage > 0, "No delegation exists");
+        if (percentage == 0) {
+            revert ICore.DelegationDoesNotExist();
+        }
 
         // Clear delegation
         delegations[msg.sender][receiver] = 0;
@@ -212,7 +216,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint32 sharedRiskLevel
     ) external {
         ICore.BApp storage bApp = bApps[bAppAddress];
-        require(bApp.owner == address(0), "BApp already registered");
+        if (bApp.owner != address(0)) {
+            revert ICore.BAppAlreadyRegistered();
+        }
         bApp.owner = owner;
         bApp.sharedRiskLevel = sharedRiskLevel;
 
