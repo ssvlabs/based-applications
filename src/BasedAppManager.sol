@@ -394,7 +394,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      */
     function finalizeWithdrawal(uint256 strategyId, IERC20 token) external {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
-        if (block.timestamp < request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.TimelockNotElapsed();
+        if (block.timestamp < request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD) {
+            revert ICore.WithdrawalTimelockNotElapsed();
+        }
 
         if (block.timestamp > request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
             revert ICore.WithdrawalExpired();
@@ -538,7 +540,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         if (requestTime == 0) revert ICore.NoPendingObligationUpdate();
 
-        if (block.timestamp < request.requestTime + OBLIGATION_TIMELOCK_PERIOD) revert ICore.TimelockNotElapsed();
+        if (block.timestamp < request.requestTime + OBLIGATION_TIMELOCK_PERIOD) {
+            revert ICore.ObligationTimelockNotElapsed();
+        }
 
         if (block.timestamp > request.requestTime + OBLIGATION_TIMELOCK_PERIOD + OBLIGATION_EXPIRE_TIME) {
             revert ICore.UpdateObligationExpired();

@@ -1155,7 +1155,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(percentage, 1000, "Obligation percentage proposed");
         assertEq(requestTime, 1, "Obligation update time");
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD() - timeToLimit);
-        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.ObligationTimelockNotElapsed.selector));
         proxiedManager.finalizeUpdateObligation(STRATEGY1, SERVICE1, address(erc20mock));
         vm.stopPrank();
     }
@@ -1224,7 +1224,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(requestTime, block.timestamp, "Request time");
         assertEq(amount, 1000, "Request amount");
         vm.warp(block.timestamp + 5 days - 1 seconds);
-        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalTimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
     }

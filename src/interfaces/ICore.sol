@@ -60,11 +60,11 @@ interface ICore {
     error NoPendingWithdrawal();
     error ObligationAlreadySet();
     error ObligationTimelockNotElapsed();
-    error TimelockNotElapsed(); // maybe add withdrawal
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();
     error TokenNoTSupportedByBApp(address token);
     error TokensLengthNotMatchingPercentages();
     error UpdateObligationExpired();
     error WithdrawalExpired();
+    error WithdrawalTimelockNotElapsed();
 }
