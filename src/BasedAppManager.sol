@@ -55,8 +55,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     uint256 private _strategyCounter;
 
     /**
-     * @notice Tracks the strategies created
-     * @dev The strategy ID is incremental and unique
+     * @notice Tracks the bApps created
+     * @dev The bApp is identified with its address
      */
     mapping(address bApp => ICore.BApp) public bApps;
     /**
@@ -262,18 +262,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function createStrategy(
         uint32 fee
     ) external returns (uint256 strategyId) {
-        if (fee == 0 || fee > MAX_PERCENTAGE) {
+        if (fee > MAX_PERCENTAGE) {
             revert ICore.InvalidDelegationFee();
         }
-        // require(fee > 0 && fee <= MAX_PERCENTAGE, "Invalid delegation fee");
         strategyId = ++_strategyCounter;
 
-        // Create the strategy struct
         ICore.Strategy storage newStrategy = strategies[strategyId];
         newStrategy.owner = msg.sender;
         newStrategy.fee = fee;
-
-        strategies[strategyId] = newStrategy;
 
         emit StrategyCreated(strategyId, msg.sender);
     }
@@ -550,7 +546,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         // Remove the obligation if the percentage is 0
         if (percentage == 0) {
             usedTokens[strategyId][address(token)] -= 1;
-            obligationsCounter[strategyId][bApp] -= 1; // todo: consider to not decrement and keep it there as sign that was opted in and can update in future instead of recreating
+            // obligationsCounter[strategyId][bApp] -= 1; // todo: consider to not decrement and keep it there as sign that was opted in and can update in future instead of recreating // double check over the codebase
         }
 
         obligations[strategyId][bApp][address(token)] = percentage;

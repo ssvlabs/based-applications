@@ -15,3 +15,6 @@ multiline_func_header = "params_first"
 number_underscore = "thousands"
 quote_style = "double"
 tab_width = 4
+
+[fuzz]
+runs = 5000
