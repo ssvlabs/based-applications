@@ -540,10 +540,6 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    // TODO opt in with multiple tokens too
-    // TODO opt in with duplicate tokens
-    // TODO function testCreateNewObligationETHSuccessful() public {}
-
     function testRevert_StrategyOptInToBAppWithMultipleTokensFailsPercentageOverMax() public {
         test_CreateStrategies();
         test_RegisterBAppWith2Tokens();
@@ -1354,9 +1350,11 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
-    // todo try finalize withdrawal with a different sender if it's possible
-    // todo check update removal obligation
-    // todo test empty updates, when no request was sent before, so just the finalize.
-    // todo test double finalize
-    // fastRemove obligation
+    // TODO try finalize withdrawal with a different sender if it's possible
+    // TODO check update removal obligation
+    // TODO test empty updates, when no request was sent before, so just the finalize.
+    // TODO test double finalize
+    // TODO opt in with multiple tokens too
+    // TODO opt in with duplicate tokens
+    // TODO function testCreateNewObligationETHSuccessful() public {}
 }
