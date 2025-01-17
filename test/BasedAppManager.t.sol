@@ -392,7 +392,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         assertEq(obligationPercentage, 5000, "Obligation percentage");
         uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
         assertEq(usedTokens, 0, "Used tokens");
-        usedTokens = proxiedManager.usedTokens(STRATEGY1,ETH_ADDRESS);
+        usedTokens = proxiedManager.usedTokens(STRATEGY1, ETH_ADDRESS);
         assertEq(usedTokens, 1, "Used ETH");
         uint256 numberOfObligations = proxiedManager.obligationsCounter(STRATEGY1, SERVICE1);
         assertEq(numberOfObligations, 2, "Obligations");
