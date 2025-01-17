@@ -382,6 +382,22 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function test_updateObligationFromZeroToHigher() public {
+        test_CreateObligationETHWithZeroPercentage();
+        vm.startPrank(USER1);
+        proxiedManager.proposeUpdateObligation(STRATEGY1, SERVICE1, ETH_ADDRESS, 5000);
+        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, SERVICE1, ETH_ADDRESS);
+        uint256 obligationPercentage = proxiedManager.obligations(STRATEGY1, SERVICE1, ETH_ADDRESS);
+        assertEq(obligationPercentage, 5000, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
+        assertEq(usedTokens, 0, "Used tokens");
+        usedTokens = proxiedManager.usedTokens(STRATEGY1,ETH_ADDRESS);
+        assertEq(usedTokens, 1, "Used ETH");
+        uint256 numberOfObligations = proxiedManager.obligationsCounter(STRATEGY1, SERVICE1);
+        assertEq(numberOfObligations, 2, "Obligations");
+    }
+
     function test_CreateStrategies() public {
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
@@ -658,7 +674,7 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
         assertEq(usedTokens, 0, "Used tokens");
         uint32 numberOfObligations = proxiedManager.obligationsCounter(strategyId, SERVICE1);
-        assertEq(numberOfObligations, 1, "Used tokens");
+        assertEq(numberOfObligations, 1, "Obligations");
         vm.stopPrank();
     }
 

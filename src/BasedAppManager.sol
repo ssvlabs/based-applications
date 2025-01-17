@@ -590,7 +590,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         // If updating an obligation from 0 to greater then increase the usedToken counter
         if (obligations[strategyId][bApp][address(token)] == 0) {
-            usedTokens[strategyId][address(token)] += 1; // todo double check
+            usedTokens[strategyId][address(token)] += 1;
         }
 
         obligations[strategyId][bApp][address(token)] = percentage;
