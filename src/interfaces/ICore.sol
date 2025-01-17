@@ -57,8 +57,10 @@ interface ICore {
     error InvalidPercentageIncrement();
     error InvalidStrategyOwner(address caller, address expectedOwner);
     error InvalidToken();
+    error NoPendingFeeUpdate();
     error NoPendingObligationUpdate();
     error NoPendingWithdrawal();
+    error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
     error ObligationTimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);

@@ -51,7 +51,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     uint256 public constant WITHDRAWAL_EXPIRE_TIME = 1 days;
     uint256 public constant FEE_EXPIRE_TIME = 1 days;
     uint256 public constant OBLIGATION_EXPIRE_TIME = 1 days;
-    uint32 public constant MAX_FEE_INCREMENT = 500; // 5% // TODO set in the constructor...
+    uint32 public constant MAX_FEE_INCREMENT = 500; // 5%
 
     uint256 private _strategyCounter;
 
@@ -367,12 +367,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount);
     }
 
-    /**
-     * @notice Propose a withdrawal of ERC20 tokens from the strategy.
-     * @param strategyId The ID of the strategy.
-     * @param token The ERC20 token address.
-     * @param amount The amount to withdraw.
-     */
+    /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
+    /// @param strategyId The ID of the strategy.
+    /// @param token The ERC20 token address.
+    /// @param amount The amount to withdraw.
     function proposeWithdrawal(uint256 strategyId, address token, uint256 amount) external {
         if (amount == 0) revert ICore.InvalidAmount();
 
@@ -390,15 +388,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         );
     }
 
-    /**
-     * @notice Finalize the ERC20 withdrawal after the timelock period has passed.
-     * @param strategyId The ID of the strategy.
-     * @param token The ERC20 token address.
-     */
+    /// @notice Finalize the ERC20 withdrawal after the timelock period has passed.
+    /// @param strategyId The ID of the strategy.
+    /// @param token The ERC20 token address.
     function finalizeWithdrawal(uint256 strategyId, IERC20 token) external {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
         uint256 requestTime = request.requestTime;
 
+        if (requestTime == 0) revert ICore.NoPendingWithdrawal();
         if (block.timestamp < requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.WithdrawalTimelockNotElapsed();
         if (block.timestamp > requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
             revert ICore.WithdrawalExpired();
@@ -413,11 +410,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit WithdrawalFinalized(strategyId, msg.sender, address(token), amount);
     }
 
-    /**
-     * @notice Propose an ETH withdrawal from the strategy.
-     * @param strategyId The ID of the strategy.
-     * @param amount The amount of ETH to withdraw.
-     */
+    /// @notice Propose an ETH withdrawal from the strategy.
+    /// @param strategyId The ID of the strategy.
+    /// @param amount The amount of ETH to withdraw.
     function proposeWithdrawalETH(uint256 strategyId, uint256 amount) external {
         if (amount == 0) revert ICore.InvalidAmount();
 
@@ -431,16 +426,15 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit WithdrawalETHProposed(strategyId, msg.sender, amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD);
     }
 
-    /**
-     * @notice Finalize the ETH withdrawal after the timelock period has passed.
-     * @param strategyId The ID of the strategy.
-     */
+    /// @notice Finalize the ETH withdrawal after the timelock period has passed.
+    /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(
         uint256 strategyId
     ) external {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
         uint256 requestTime = request.requestTime;
 
+        if (requestTime == 0) revert ICore.NoPendingWithdrawalETH();
         if (block.timestamp < requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.WithdrawalTimelockNotElapsed();
         if (block.timestamp > requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
             revert ICore.WithdrawalExpired();
@@ -470,11 +464,18 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             address token = tokens[i];
             uint32 obligationPercentage = obligationPercentages[i];
 
-            if (obligationPercentage == 0 || obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+            if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
-            obligations[strategyId][bApp][token] = obligationPercentage;
+            // obligations[strategyId][bApp][token] = obligationPercentage;
+            // obligationsCounter[strategyId][bApp] += 1;
+            // usedTokens[strategyId][token] += 1;
+
+            if (obligationPercentage != 0) {
+                usedTokens[strategyId][token] += 1;
+                obligations[strategyId][bApp][token] = obligationPercentage;
+            }
+
             obligationsCounter[strategyId][bApp] += 1;
-            usedTokens[strategyId][token] += 1;
 
             emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
         }
@@ -489,21 +490,20 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (strategies[strategyId].owner != msg.sender) {
             revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
         }
-        // todo maybe not allow to create a 0 percentage obligation?
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligations[strategyId][bApp][token] != 0) revert ICore.ObligationAlreadySet();
 
-        // TODO Check the implications, what if a strategy is create and then the obligation deleted? This could block the strategy
-        // todo use another method to check if a strategyWasOptedIn?
-        // TODO allow obligation to be 0 but still be counted?
         if (obligationsCounter[strategyId][bApp] == 0) revert ICore.BAppNotOptedIn();
 
         address[] storage bAppTokens = bApps[bApp].tokens;
         matchToken(token, bAppTokens);
 
-        obligations[strategyId][bApp][token] = obligationPercentage;
+        if (obligationPercentage != 0) {
+            usedTokens[strategyId][token] += 1;
+            obligations[strategyId][bApp][token] = obligationPercentage;
+        }
+
         accountBAppStrategy[msg.sender][bApp] = strategyId;
-        usedTokens[strategyId][token] += 1;
         obligationsCounter[strategyId][bApp] += 1;
 
         emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
@@ -531,12 +531,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit BAppObligationUpdated(strategyId, bApp, token, obligationPercentage);
     }
 
-    /**
-     * @notice Propose a withdrawal of ERC20 tokens from the strategy.
-     * @param strategyId The ID of the strategy.
-     * @param token The ERC20 token address.
-     * @param obligationPercentage The new percentage of the obligation
-     */
+    /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
+    /// @param strategyId The ID of the strategy.
+    /// @param token The ERC20 token address.
+    /// @param obligationPercentage The new percentage of the obligation
     function proposeUpdateObligation(
         uint256 strategyId,
         address bApp,
@@ -562,12 +560,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         );
     }
 
-    /**
-     * @notice Finalize the withdrawal after the timelock period has passed.
-     * @param strategyId The ID of the strategy.
-     * @param bApp The address of the bApp.
-     * @param token The ERC20 token address.
-     */
+    /// @notice Finalize the withdrawal after the timelock period has passed.
+    /// @param strategyId The ID of the strategy.
+    /// @param bApp The address of the bApp.
+    /// @param token The ERC20 token address.
     function finalizeUpdateObligation(uint256 strategyId, address bApp, address token) external {
         if (strategies[strategyId].owner != msg.sender) {
             revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
@@ -586,18 +582,22 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (block.timestamp > request.requestTime + OBLIGATION_TIMELOCK_PERIOD + OBLIGATION_EXPIRE_TIME) {
             revert ICore.UpdateObligationExpired();
         }
-        // Remove the obligation if the percentage is 0
+
+        // Remove the usedToken from the counter but not the obligation counter
         if (percentage == 0) {
             usedTokens[strategyId][address(token)] -= 1;
-            // obligationsCounter[strategyId][bApp] -= 1; // todo: consider to not decrement and keep it there as sign that was opted in and can update in future instead of recreating // double check over the codebase
+        }
+
+        // If updating an obligation from 0 to greater then increase the usedToken counter
+        if (obligations[strategyId][bApp][address(token)] == 0) {
+            usedTokens[strategyId][address(token)] += 1; // todo double check
         }
 
         obligations[strategyId][bApp][address(token)] = percentage;
 
         emit ObligationUpdateFinalized(strategyId, msg.sender, address(token), percentage);
 
-        // TODO: maybe empty the request structure or not needed to save gas?
-        // delete obligationRequests[strategyId][bApp][address(token)];
+        delete obligationRequests[strategyId][bApp][address(token)];
     }
 
     /// @notice Propose a new fee for a strategy
@@ -632,6 +632,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         }
 
         uint256 feeUpdateTime = strategy.feeUpdateTime;
+
+        if (feeUpdateTime == 0) revert ICore.NoPendingFeeUpdate();
 
         if (block.timestamp < feeUpdateTime) revert ICore.FeeTimelockNotElapsed();
 
@@ -671,33 +673,4 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         }
         if (!matched) revert ICore.TokenNoTSupportedByBApp(token);
     }
-
-    // ********************************
-    // ** Section: Not Supported yet **
-    // ********************************
-    // todo: createNativeETHObligation
-
-    // TODO: this function is not used now, but could be useful in the future if the bApp can remove supported tokens.
-
-    /// @notice Remove obligation for a bApp
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    // function fastRemoveObligation(uint256 strategyId, address bApp, address token) external {
-    //     require(strategies[strategyId].owner == msg.sender, "Not the strategy owner");
-    //     require(obligations[strategyId][bApp][token] > 0, "Obligation not set");
-
-    //     for (uint256 i = 0; i < bApps[bApp].tokens.length; i++) {
-    //         if (bApps[bApp].tokens[i] == token) {
-    //             revert("token is used by the bApp");
-    //         }
-    //     }
-
-    //     obligations[strategyId][bApp][token] = 0;
-    //     usedTokens[strategyId][token] -= 1;
-    //     obligationsCounter[strategyId][bApp] -= 1;
-
-    //     emit BAppObligationUpdated(strategyId, bApp, token, 0);
-    //     // todo: create a new event for removedObligation?
-    // }
 }
