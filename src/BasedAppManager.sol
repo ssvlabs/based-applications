@@ -378,6 +378,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
 
+        if (token == ETH_ADDRESS) revert ICore.InvalidToken();
+
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
 
         request.amount = amount;
@@ -389,25 +391,21 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     }
 
     /**
-     * @notice Finalize the withdrawal after the timelock period has passed.
+     * @notice Finalize the ERC20 withdrawal after the timelock period has passed.
      * @param strategyId The ID of the strategy.
      * @param token The ERC20 token address.
      */
     function finalizeWithdrawal(uint256 strategyId, IERC20 token) external {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
-        if (block.timestamp < request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD) {
-            revert ICore.WithdrawalTimelockNotElapsed();
-        }
+        uint256 requestTime = request.requestTime;
 
-        if (block.timestamp > request.requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
+        if (block.timestamp < requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.WithdrawalTimelockNotElapsed();
+        if (block.timestamp > requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
             revert ICore.WithdrawalExpired();
         }
 
         uint256 amount = request.amount;
-        // if (amount == 0) revert ICore.InvalidAmount(); todo check if not necessary?
-
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
-
         delete withdrawalRequests[strategyId][msg.sender][address(token)];
 
         token.safeTransfer(msg.sender, amount);
@@ -415,7 +413,47 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit WithdrawalFinalized(strategyId, msg.sender, address(token), amount);
     }
 
-    // TODO: add eth proposeWithdrawal and finalizeWithdrawal
+    /**
+     * @notice Propose an ETH withdrawal from the strategy.
+     * @param strategyId The ID of the strategy.
+     * @param amount The amount of ETH to withdraw.
+     */
+    function proposeWithdrawalETH(uint256 strategyId, uint256 amount) external {
+        if (amount == 0) revert ICore.InvalidAmount();
+
+        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
+
+        ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+
+        request.amount = amount;
+        request.requestTime = block.timestamp;
+
+        emit WithdrawalETHProposed(strategyId, msg.sender, amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD);
+    }
+
+    /**
+     * @notice Finalize the ETH withdrawal after the timelock period has passed.
+     * @param strategyId The ID of the strategy.
+     */
+    function finalizeWithdrawalETH(
+        uint256 strategyId
+    ) external {
+        ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+        uint256 requestTime = request.requestTime;
+
+        if (block.timestamp < requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.WithdrawalTimelockNotElapsed();
+        if (block.timestamp > requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
+            revert ICore.WithdrawalExpired();
+        }
+
+        uint256 amount = request.amount;
+        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
+        delete withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+
+        payable(msg.sender).transfer(amount);
+
+        emit WithdrawalETHFinalized(strategyId, msg.sender, amount);
+    }
 
     /// @notice Set the obligation percentages for a strategy
     /// @param strategyId The ID of the strategy

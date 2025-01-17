@@ -56,6 +56,7 @@ interface ICore {
     error InvalidPercentage();
     error InvalidPercentageIncrement();
     error InvalidStrategyOwner(address caller, address expectedOwner);
+    error InvalidToken();
     error NoPendingObligationUpdate();
     error NoPendingWithdrawal();
     error ObligationAlreadySet();

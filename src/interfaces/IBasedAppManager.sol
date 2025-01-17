@@ -32,6 +32,10 @@ interface IBasedAppManager {
     event WithdrawalFinalized(
         uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount
     );
+    event WithdrawalETHProposed(
+        uint256 indexed strategyId, address indexed account, uint256 amount, uint256 finalizeTime
+    );
+    event WithdrawalETHFinalized(uint256 indexed strategyId, address indexed account, uint256 amount);
     event ObligationUpdateProposed(
         uint256 indexed strategyId,
         address indexed account,

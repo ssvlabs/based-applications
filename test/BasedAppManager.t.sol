@@ -443,6 +443,14 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.stopPrank();
     }
 
+    function testRevert_InvalidProposeWithdrawalETHWithZeroAmount() public {
+        test_CreateStrategyETHAndDepositETH();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, 0);
+        vm.stopPrank();
+    }
+
     function testRevert_InvalidFastWithdrawalWithInsufficientBalance() public {
         test_CreateStrategyAndSingleDepositAndSingleWithdrawal();
         vm.startPrank(USER1);
@@ -456,6 +464,14 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         vm.startPrank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 2000 * 10 ** 18);
+        vm.stopPrank();
+    }
+
+    function testRevert_InvalidProposeWithdrawalETHWithInsufficientBalance() public {
+        test_CreateStrategyETHAndDepositETH();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, 2 ether);
         vm.stopPrank();
     }
 
@@ -1208,6 +1224,94 @@ contract BasedAppManagerTest is Test, OwnableUpgradeable {
         (amount, requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
         assertEq(requestTime, 0, "Request time");
         assertEq(amount, 0, "Request amount");
+        vm.stopPrank();
+    }
+
+    function test_AsyncWithdrawETHFromStrategy(
+        uint256 withdrawalAmount
+    ) public {
+        test_CreateStrategyETHAndDepositETH();
+        vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
+        vm.startPrank(USER1);
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, withdrawalAmount);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS),
+            1 ether,
+            "User strategy balance should be set correctly"
+        );
+        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, ETH_ADDRESS);
+        assertEq(requestTime, block.timestamp, "Request time");
+        assertEq(amount, withdrawalAmount, "Request amount");
+        vm.warp(block.timestamp + 5 days);
+        proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS),
+            1 ether - withdrawalAmount,
+            "User strategy balance should be reduced correctly"
+        );
+        (amount, requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, ETH_ADDRESS);
+        assertEq(requestTime, 0, "Request time");
+        assertEq(amount, 0, "Request amount");
+        vm.stopPrank();
+    }
+
+    function testRevert_AsyncWithdrawETHFromStrategyWithMadeUpToken() public {
+        test_CreateStrategyAndMultipleDeposits(100_000, 20_000, 200_000);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(1), 1000);
+    }
+
+    function testRevert_AsyncFailedWithdrawETHFromStrategyTooEarly(
+        uint256 withdrawalAmount
+    ) public {
+        test_CreateStrategyETHAndDepositETH();
+        vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
+        vm.startPrank(USER1);
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, withdrawalAmount);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS),
+            1 ether,
+            "User strategy balance should be set correctly"
+        );
+        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, ETH_ADDRESS);
+        assertEq(requestTime, block.timestamp, "Request time");
+        assertEq(amount, withdrawalAmount, "Request amount");
+        vm.warp(block.timestamp + 5 days - 1 seconds);
+        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalTimelockNotElapsed.selector));
+        proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+        vm.stopPrank();
+    }
+
+    function testRevert_AsyncFailedWithdrawETHFromStrategyTooLate(
+        uint256 withdrawalAmount
+    ) public {
+        test_CreateStrategyETHAndDepositETH();
+        vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
+        vm.startPrank(USER1);
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, withdrawalAmount);
+        assertEq(
+            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS),
+            1 ether,
+            "User strategy balance should be set correctly"
+        );
+        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, ETH_ADDRESS);
+        assertEq(requestTime, block.timestamp, "Request time");
+        assertEq(amount, withdrawalAmount, "Request amount");
+        vm.warp(block.timestamp + 5 days + 1 days + 1 seconds);
+        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalExpired.selector));
+        proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+        vm.stopPrank();
+    }
+
+    function testRevert_AsyncFailedWithdrawFromStrategyETHInsteadOfERC20(
+        uint256 withdrawalAmount
+    ) public {
+        test_CreateStrategyETHAndDepositETH();
+        vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
+        proxiedManager.proposeWithdrawal(STRATEGY1, ETH_ADDRESS, withdrawalAmount);
         vm.stopPrank();
     }
 
