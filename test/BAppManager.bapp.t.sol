@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import "./BAppManager.setup.t.sol";
 
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
-    
     function test_RegisterBApp() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);

@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import "./BAppManager.setup.t.sol";
 
 contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest {
-    
     function test_OwnerOfBasedAppManager() public view {
         assertEq(proxiedManager.owner(), OWNER, "Owner should be the deployer");
     }

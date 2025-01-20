@@ -5,7 +5,6 @@ import "./BAppManager.setup.t.sol";
 import "./BAppManager.bapp.t.sol";
 
 contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManagerBAppTest {
-    
     function test_CreateStrategies() public {
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
@@ -1081,7 +1080,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         vm.stopPrank();
     }
 
-      function test_CreateObligationETH(
+    function test_CreateObligationETH(
         uint32 percentage
     ) public {
         vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());

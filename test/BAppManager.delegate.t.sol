@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import "./BAppManager.setup.t.sol";
 
 contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
-    
     function test_DelegateMinimumBalance() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
