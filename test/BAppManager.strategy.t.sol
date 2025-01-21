@@ -200,7 +200,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
@@ -236,7 +236,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
@@ -259,7 +259,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = proxiedManager.MAX_PERCENTAGE() + 1; // 100.01%
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         vm.stopPrank();
     }
 
@@ -273,7 +273,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 0; // 0%
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
@@ -295,7 +295,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         tokensInput[0] = ETH_ADDRESS;
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = proxiedManager.MAX_PERCENTAGE(); // 100%
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, ETH_ADDRESS);
@@ -318,7 +318,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 9000; // 90%
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), owner));
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         vm.stopPrank();
     }
 
@@ -334,7 +334,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = proxiedManager.MAX_PERCENTAGE(); // 100%
         vm.expectRevert(abi.encodeWithSelector(ICore.TokensLengthNotMatchingPercentages.selector));
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         vm.stopPrank();
     }
 
@@ -351,7 +351,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         obligationPercentagesInput[0] = 6000; // 60%
         obligationPercentagesInput[1] = 5000; // 50%
         vm.expectRevert(abi.encodeWithSelector(ICore.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 0, "Strategy id was not saved");
         vm.stopPrank();
@@ -370,7 +370,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage; // 90%
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyOptedIn.selector));
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         vm.stopPrank();
     }
 
@@ -644,9 +644,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
     ) public {
         test_StrategyOptInToBApp(9000);
         (, uint32 fee,,) = proxiedManager.strategies(STRATEGY1);
-        vm.assume(
-            proposedFee < proxiedManager.MAX_PERCENTAGE() && proposedFee > fee + proxiedManager.MAX_FEE_INCREMENT()
-        );
+        vm.assume(proposedFee < proxiedManager.MAX_PERCENTAGE() && proposedFee > fee + proxiedManager.maxFeeIncrement());
         vm.startPrank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentageIncrement.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, proposedFee);
@@ -1093,7 +1091,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));
@@ -1122,7 +1120,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = 0;
-        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(1, SERVICE1, tokensInput, obligationPercentagesInput, 0x00);
         uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, SERVICE1);
         assertEq(strategyId, 1, "Strategy id");
         uint256 obligationPercentage = proxiedManager.obligations(strategyId, SERVICE1, address(erc20mock));

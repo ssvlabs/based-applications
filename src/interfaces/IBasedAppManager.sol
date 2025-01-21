@@ -4,24 +4,29 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBasedAppManager {
-    event StrategyCreated(uint256 indexed strategyId, address indexed owner);
-    event BAppRegistered(address indexed bAppAddress, address indexed owner, address from);
-    event BAppTokensUpdated(address indexed bAppAddress, address[] tokens);
-    event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
-    event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
-    event StrategyDeposit(
-        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
-    );
-    event StrategyWithdrawal(
-        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
-    );
-    event BAppOptedIn(uint256 indexed strategyId, address indexed bApp);
     event BAppObligationSet(
         uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
     );
     event BAppObligationUpdated(
         uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
     );
+    event BAppOptedIn(uint256 indexed strategyId, address indexed bApp, bytes32 data);
+    event BAppRegistered(address indexed bAppAddress, address indexed owner, address from);
+    event BAppTokensUpdated(address indexed bAppAddress, address[] tokens);
+    event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
+    event MaxFeeIncrementSet(uint32 indexed newMaxFeeIncrement);
+    event ObligationUpdateFinalized(
+        uint256 indexed strategyId, address indexed account, address indexed token, uint32 percentage
+    );
+    event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
+    event StrategyCreated(uint256 indexed strategyId, address indexed owner);
+    event StrategyDeposit(
+        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
+    );
+    event StrategyWithdrawal(
+        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
+    );
+
     event StrategyFeeUpdateRequested(
         uint256 indexed strategyId, address owner, uint32 proposedFee, uint32 fee, uint256 expirationTime
     );
@@ -42,9 +47,6 @@ interface IBasedAppManager {
         address indexed token,
         uint32 percentage,
         uint256 finalizeTime
-    );
-    event ObligationUpdateFinalized(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint32 percentage
     );
 
     function delegateBalance(address receiver, uint32 percentage) external;
@@ -76,22 +78,29 @@ interface IBasedAppManager {
         uint256 strategyId,
         address bApp,
         address[] calldata tokens,
-        uint32[] calldata obligationPercentages
+        uint32[] calldata obligationPercentages,
+        bytes32 data
     ) external;
 
     function depositERC20(uint256 strategyId, IERC20 token, uint256 amount) external;
-
-    function fastWithdrawERC20(uint256 strategyId, IERC20 token, uint256 amount) external;
-
-    function proposeWithdrawal(uint256 strategyId, address token, uint256 amount) external;
-
-    function finalizeWithdrawal(uint256 strategyId, IERC20 token) external;
 
     function depositETH(
         uint256 strategyId
     ) external payable;
 
+    function fastWithdrawERC20(uint256 strategyId, IERC20 token, uint256 amount) external;
+
     function fastWithdrawETH(uint256 strategyId, uint256 amount) external;
+
+    function proposeWithdrawal(uint256 strategyId, address token, uint256 amount) external;
+
+    function finalizeWithdrawal(uint256 strategyId, IERC20 token) external;
+
+    function proposeWithdrawalETH(uint256 strategyId, uint256 amount) external;
+
+    function finalizeWithdrawalETH(
+        uint256 strategyId
+    ) external;
 
     function createObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external;
 

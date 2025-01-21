@@ -44,14 +44,19 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_PERCENTAGE = 1e4;
+
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     uint256 public constant FEE_TIMELOCK_PERIOD = 7 days;
-    uint256 public constant WITHDRAWAL_TIMELOCK_PERIOD = 5 days;
-    uint256 public constant OBLIGATION_TIMELOCK_PERIOD = 7 days;
-    uint256 public constant WITHDRAWAL_EXPIRE_TIME = 1 days;
     uint256 public constant FEE_EXPIRE_TIME = 1 days;
+
+    uint256 public constant WITHDRAWAL_TIMELOCK_PERIOD = 5 days;
+    uint256 public constant WITHDRAWAL_EXPIRE_TIME = 1 days;
+
+    uint256 public constant OBLIGATION_TIMELOCK_PERIOD = 7 days;
     uint256 public constant OBLIGATION_EXPIRE_TIME = 1 days;
-    uint32 public constant MAX_FEE_INCREMENT = 500; // 5%
+
+    uint32 public maxFeeIncrement;
 
     uint256 private _strategyCounter;
 
@@ -120,9 +125,27 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         _disableInitializers();
     }
 
-    function initialize() public initializer {
+    function initialize(
+        uint32 _maxFeeIncrement
+    ) public initializer {
+        if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) {
+            revert ICore.InvalidMaxFeeIncrement();
+        }
+
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
+
+        maxFeeIncrement = _maxFeeIncrement;
+        emit MaxFeeIncrementSet(maxFeeIncrement);
+    }
+
+    modifier onlyStrategyOwner(
+        uint256 strategyId
+    ) {
+        if (strategies[strategyId].owner != msg.sender) {
+            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
+        }
+        _;
     }
 
     function _authorizeUpgrade(
@@ -194,7 +217,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             revert ICore.DelegationDoesNotExist();
         }
 
-        // Clear delegation
         delegations[msg.sender][receiver] = 0;
         totalDelegatedPercentage[msg.sender] -= percentage;
 
@@ -284,21 +306,19 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint256 strategyId,
         address bApp,
         address[] calldata tokens,
-        uint32[] calldata obligationPercentages
-    ) external {
+        uint32[] calldata obligationPercentages,
+        bytes32 data
+    ) external onlyStrategyOwner(strategyId) {
         if (tokens.length != obligationPercentages.length) revert ICore.TokensLengthNotMatchingPercentages();
 
         ICore.BApp storage existingBApp = bApps[bApp];
-        matchTokens(tokens, existingBApp.tokens);
+        _matchTokens(tokens, existingBApp.tokens);
 
-        // Check if a strategy exists for the given bApp
-        // you cannot opt-in to the same bApp twice with the same strategy owner
+        // Check if a strategy exists for the given bApp.
+        // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (accountBAppStrategy[msg.sender][bApp] != 0) revert ICore.BAppAlreadyOptedIn();
 
-        ICore.Strategy storage strategy = strategies[strategyId];
-        if (strategy.owner != msg.sender) revert ICore.InvalidStrategyOwner(msg.sender, strategy.owner);
-
-        emit BAppOptedIn(strategyId, bApp);
+        emit BAppOptedIn(strategyId, bApp, data);
 
         _setObligations(strategyId, bApp, tokens, obligationPercentages);
 
@@ -340,7 +360,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         if (usedTokens[strategyId][address(token)] != 0) revert ICore.TokenIsUsedByTheBApp();
 
-        // Check if the user has enough balance for the selected token
         if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
@@ -449,54 +468,24 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit WithdrawalETHFinalized(strategyId, msg.sender, amount);
     }
 
-    /// @notice Set the obligation percentages for a strategy
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param tokens The list of tokens to set obligations for
-    /// @param obligationPercentages The list of obligation percentages for each token
-    function _setObligations(
-        uint256 strategyId,
-        address bApp,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages
-    ) private {
-        for (uint256 i = 0; i < tokens.length; i++) {
-            address token = tokens[i];
-            uint32 obligationPercentage = obligationPercentages[i];
-
-            if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
-
-            // obligations[strategyId][bApp][token] = obligationPercentage;
-            // obligationsCounter[strategyId][bApp] += 1;
-            // usedTokens[strategyId][token] += 1;
-
-            if (obligationPercentage != 0) {
-                usedTokens[strategyId][token] += 1;
-                obligations[strategyId][bApp][token] = obligationPercentage;
-            }
-
-            obligationsCounter[strategyId][bApp] += 1;
-
-            emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
-        }
-    }
-
     /// @notice Add a new obligation for a bApp
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function createObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external {
-        if (strategies[strategyId].owner != msg.sender) {
-            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
-        }
+    function createObligation(
+        uint256 strategyId,
+        address bApp,
+        address token,
+        uint32 obligationPercentage
+    ) external onlyStrategyOwner(strategyId) {
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligations[strategyId][bApp][token] != 0) revert ICore.ObligationAlreadySet();
 
         if (obligationsCounter[strategyId][bApp] == 0) revert ICore.BAppNotOptedIn();
 
         address[] storage bAppTokens = bApps[bApp].tokens;
-        matchToken(token, bAppTokens);
+        _matchToken(token, bAppTokens);
 
         if (obligationPercentage != 0) {
             usedTokens[strategyId][token] += 1;
@@ -519,10 +508,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address bApp,
         address token,
         uint32 obligationPercentage
-    ) external {
-        if (strategies[strategyId].owner != msg.sender) {
-            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
-        }
+    ) external onlyStrategyOwner(strategyId) {
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligationPercentage <= obligations[strategyId][bApp][token]) revert ICore.InvalidPercentage();
 
@@ -540,10 +526,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address bApp,
         address token,
         uint32 obligationPercentage
-    ) external {
-        if (strategies[strategyId].owner != msg.sender) {
-            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
-        }
+    ) external onlyStrategyOwner(strategyId) {
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
         ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][token];
@@ -564,11 +547,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy.
     /// @param bApp The address of the bApp.
     /// @param token The ERC20 token address.
-    function finalizeUpdateObligation(uint256 strategyId, address bApp, address token) external {
-        if (strategies[strategyId].owner != msg.sender) {
-            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
-        }
-
+    function finalizeUpdateObligation(
+        uint256 strategyId,
+        address bApp,
+        address token
+    ) external onlyStrategyOwner(strategyId) {
         ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][address(token)];
         uint256 requestTime = request.requestTime;
         uint32 percentage = request.percentage;
@@ -583,12 +566,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             revert ICore.UpdateObligationExpired();
         }
 
-        // Remove the usedToken from the counter but not the obligation counter
+        // Remove the usedToken from the counter, but not the obligation counter.
         if (percentage == 0) {
             usedTokens[strategyId][address(token)] -= 1;
         }
 
-        // If updating an obligation from 0 to greater then increase the usedToken counter
+        // If updating an obligation from 0 to greater then increase the usedToken counter.
         if (obligations[strategyId][bApp][address(token)] == 0) {
             usedTokens[strategyId][address(token)] += 1;
         }
@@ -603,16 +586,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Propose a new fee for a strategy
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
-    function proposeFeeUpdate(uint256 strategyId, uint32 proposedFee) external {
-        if (strategies[strategyId].owner != msg.sender) {
-            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
-        }
+    function proposeFeeUpdate(uint256 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
         if (proposedFee > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
         ICore.Strategy storage strategy = strategies[strategyId];
         uint32 fee = strategy.fee;
 
-        if (proposedFee > fee + MAX_FEE_INCREMENT) revert ICore.InvalidPercentageIncrement();
+        if (proposedFee > fee + maxFeeIncrement) revert ICore.InvalidPercentageIncrement();
         if (proposedFee == fee) revert ICore.FeeAlreadySet();
 
         strategy.feeProposed = proposedFee;
@@ -625,11 +605,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     function finalizeFeeUpdate(
         uint256 strategyId
-    ) external {
+    ) external onlyStrategyOwner(strategyId) {
         ICore.Strategy storage strategy = strategies[strategyId];
-        if (strategy.owner != msg.sender) {
-            revert ICore.InvalidStrategyOwner(msg.sender, strategy.owner);
-        }
 
         uint256 feeUpdateTime = strategy.feeUpdateTime;
 
@@ -653,16 +630,44 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ** Section: Helpers **
     // **********************
 
-    // Match the tokens of strategy with the bApp
-    // Complexity: O(n * m)
-    function matchTokens(address[] calldata tokens, address[] memory bAppTokens) internal pure {
+    /// @notice Set the obligation percentages for a strategy
+    /// @param strategyId The ID of the strategy
+    /// @param bApp The address of the bApp
+    /// @param tokens The list of tokens to set obligations for
+    /// @param obligationPercentages The list of obligation percentages for each token
+    function _setObligations(
+        uint256 strategyId,
+        address bApp,
+        address[] calldata tokens,
+        uint32[] calldata obligationPercentages
+    ) private {
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
-            matchToken(token, bAppTokens);
+            uint32 obligationPercentage = obligationPercentages[i];
+
+            if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+
+            if (obligationPercentage != 0) {
+                usedTokens[strategyId][token] += 1;
+                obligations[strategyId][bApp][token] = obligationPercentage;
+            }
+
+            obligationsCounter[strategyId][bApp] += 1;
+
+            emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
         }
     }
 
-    function matchToken(address token, address[] memory bAppTokens) internal pure {
+    // Match the tokens of strategy with the bApp
+    // Complexity: O(n * m)
+    function _matchTokens(address[] calldata tokens, address[] memory bAppTokens) private pure {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            _matchToken(token, bAppTokens);
+        }
+    }
+
+    function _matchToken(address token, address[] memory bAppTokens) private pure {
         bool matched = false;
         for (uint256 i = 0; i < bAppTokens.length; ++i) {
             address bAppToken = bAppTokens[i];

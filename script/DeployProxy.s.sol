@@ -13,8 +13,10 @@ contract DeployProxy is Script {
         // 2. Deploy the implementation contract
         BasedAppManager implementation = new BasedAppManager();
 
+        uint32 maxFeeIncrement = 500;
+
         // 3. Encode initializer data for the proxy
-        bytes memory initData = abi.encodeWithSignature("initialize()");
+        bytes memory initData = abi.encodeWithSignature("initialize(uint32)", maxFeeIncrement);
 
         // 4. Deploy the proxy and link it to the implementation
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);

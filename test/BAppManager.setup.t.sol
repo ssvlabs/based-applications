@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {Test} from "forge-std/Test.sol";
+import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 import {BasedAppManager} from "../src/BasedAppManager.sol";
@@ -47,6 +47,8 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
+    uint32 constant MAX_FEE_INCREMENT = 500;
+
     function setUp() public {
         vm.label(OWNER, "Owner");
         vm.label(USER1, "User1");
@@ -59,9 +61,12 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.startPrank(OWNER);
 
         implementation = new BasedAppManager();
-        bytes memory data = abi.encodeWithSelector(implementation.initialize.selector); // Encodes initialize() call
+        bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, MAX_FEE_INCREMENT); // Encodes initialize() call
+
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = BasedAppManager(address(proxy));
+
+        assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
 
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 

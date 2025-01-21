@@ -53,6 +53,7 @@ interface ICore {
     error InsufficientBalance();
     error InvalidAmount();
     error InvalidDelegationFee();
+    error InvalidMaxFeeIncrement();
     error InvalidPercentage();
     error InvalidPercentageIncrement();
     error InvalidStrategyOwner(address caller, address expectedOwner);
