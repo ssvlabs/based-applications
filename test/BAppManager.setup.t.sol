@@ -23,8 +23,8 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     address OWNER = makeAddr("Owner");
     address USER1 = makeAddr("User1");
-    address SERVICE1 = makeAddr("BApp1");
-    address SERVICE2 = makeAddr("BApp2");
+    address BAPP1 = makeAddr("BApp1");
+    address BAPP2 = makeAddr("BApp2");
     address ATTACKER = makeAddr("Attacker");
     address RECEIVER = makeAddr("Receiver");
     address RECEIVER2 = makeAddr("Receiver2");
@@ -56,8 +56,8 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.label(ATTACKER, "Attacker");
         vm.label(RECEIVER, "Receiver");
         vm.label(RECEIVER2, "Receiver2");
-        vm.label(SERVICE1, "BApp1");
-        vm.label(SERVICE2, "BApp2");
+        vm.label(BAPP1, "BApp1");
+        vm.label(BAPP2, "BApp2");
 
         vm.startPrank(OWNER);
 
