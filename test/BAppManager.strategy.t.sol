@@ -119,6 +119,24 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         vm.stopPrank();
     }
 
+    function testRevert_InvalidFastWithdrawalEth() public {
+        test_CreateStrategyAndSingleDepositAndSingleWithdrawal();
+        vm.startPrank(USER1);
+        proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
+        proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(ETH_ADDRESS), 50_000);
+        vm.stopPrank();
+    }
+
+    function testRevert_InvalidFastWithdrawalEthWithNonOwnerAddress() public {
+        test_CreateStrategyAndSingleDepositAndSingleWithdrawal();
+        vm.startPrank(ATTACKER);
+        proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
+        proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(ETH_ADDRESS), 50_000);
+        vm.stopPrank();
+    }
+
     function testRevert_InvalidFastWithdrawalWithZeroAmount() public {
         test_CreateStrategyAndSingleDepositAndSingleWithdrawal();
         vm.startPrank(USER1);
