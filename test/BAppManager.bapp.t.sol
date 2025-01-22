@@ -4,6 +4,8 @@ pragma solidity 0.8.28;
 import "./BAppManager.setup.t.sol";
 
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
+    string metadataURI = "http://metadata.com";
+
     function test_RegisterBApp() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
@@ -118,6 +120,25 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         tokensInput[1] = address(ETH_ADDRESS);
         vm.expectRevert(abi.encodeWithSelector(ICore.TokenAlreadyAddedToBApp.selector, address(erc20mock)));
         proxiedManager.addTokensToBApp(SERVICE1, tokensInput);
+        vm.stopPrank();
+    }
+
+    function test_UpdateBAppMetadata() public {
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+
+        vm.expectEmit(true, false, false, false);
+        emit IBasedAppManager.BAppUpdateMetadataURI(SERVICE1, metadataURI);
+
+        proxiedManager.updateMetadataURI(SERVICE1, metadataURI);
+        vm.stopPrank();
+    }
+
+    function testRevert_UpdateBAppMetadataWithWrongOwner() public {
+        test_RegisterBApp();
+        vm.startPrank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidBAppOwner.selector, address(ATTACKER), address(USER1)));
+        proxiedManager.updateMetadataURI(SERVICE1, metadataURI);
         vm.stopPrank();
     }
 }

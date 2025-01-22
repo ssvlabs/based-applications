@@ -20,7 +20,7 @@ interface IBasedAppManager {
         uint256 indexed strategyId, address indexed account, address indexed token, uint32 percentage
     );
     event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
-    event StrategyCreated(uint256 indexed strategyId, address indexed owner);
+    event StrategyCreated(uint256 indexed strategyId, address indexed owner, uint32 fee);
     event StrategyDeposit(
         uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
     );

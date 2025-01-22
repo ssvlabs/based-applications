@@ -262,6 +262,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit BAppRegistered(bAppAddress, owner, msg.sender, metadataURI);
     }
 
+    /// @notice Function to update the metadata URI of the Based Application
+    /// @param bAppAddress The address of the bApp
+    /// @param metadataURI The new metadata URI
     function updateMetadataURI(address bAppAddress, string calldata metadataURI) external onlyBAppOwner(bAppAddress) {
         emit BAppUpdateMetadataURI(bAppAddress, metadataURI);
     }
@@ -308,7 +311,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         newStrategy.owner = msg.sender;
         newStrategy.fee = fee;
 
-        emit StrategyCreated(strategyId, msg.sender);
+        emit StrategyCreated(strategyId, msg.sender, fee);
     }
 
     /// @notice Opt-in to a bApp with a list of tokens and obligation percentages

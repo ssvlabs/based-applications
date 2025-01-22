@@ -6,6 +6,7 @@ import "forge-std/console.sol";
 
 import {BasedAppManager} from "../src/BasedAppManager.sol";
 import {ICore} from "../src/interfaces/ICore.sol";
+import {IBasedAppManager} from "../src/interfaces/IBasedAppManager.sol";
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
