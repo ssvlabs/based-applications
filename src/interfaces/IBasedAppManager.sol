@@ -11,7 +11,8 @@ interface IBasedAppManager {
         uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
     );
     event BAppOptedIn(uint256 indexed strategyId, address indexed bApp, bytes32 data);
-    event BAppRegistered(address indexed bAppAddress, address indexed owner, address from);
+    event BAppRegistered(address indexed bAppAddress, address indexed owner, address from, string metadataURI);
+    event BAppUpdateMetadataURI(address indexed bAppAddress, string metadataURI);
     event BAppTokensUpdated(address indexed bAppAddress, address[] tokens);
     event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
     event MaxFeeIncrementSet(uint32 indexed newMaxFeeIncrement);
@@ -61,8 +62,11 @@ interface IBasedAppManager {
         address owner,
         address bAppAddress,
         address[] calldata tokens,
-        uint32 sharedRiskLevel
+        uint32 sharedRiskLevel,
+        string calldata metadataURI
     ) external;
+
+    function updateMetadataURI(address bAppAddress, string calldata metadataURI) external;
 
     function addTokensToBApp(address bAppAddress, address[] calldata tokens) external;
 

@@ -148,6 +148,15 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         _;
     }
 
+    modifier onlyBAppOwner(
+        address bApp
+    ) {
+        if (bApps[bApp].owner != msg.sender) {
+            revert ICore.InvalidBAppOwner(msg.sender, bApps[bApp].owner);
+        }
+        _;
+    }
+
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
@@ -236,7 +245,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address owner,
         address bAppAddress,
         address[] calldata tokens,
-        uint32 sharedRiskLevel
+        uint32 sharedRiskLevel,
+        string calldata metadataURI
     ) external {
         ICore.BApp storage bApp = bApps[bAppAddress];
         if (bApp.owner != address(0)) {
@@ -249,7 +259,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             bApp.tokens.push(tokens[i]);
         }
 
-        emit BAppRegistered(bAppAddress, owner, msg.sender);
+        emit BAppRegistered(bAppAddress, owner, msg.sender, metadataURI);
+    }
+
+    function updateMetadataURI(address bAppAddress, string calldata metadataURI) external onlyBAppOwner(bAppAddress) {
+        emit BAppUpdateMetadataURI(bAppAddress, metadataURI);
     }
 
     /// @notice Function to add tokens to a bApp

@@ -9,7 +9,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, "");
         (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
@@ -25,7 +25,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(erc20mock2);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, "");
         (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
@@ -42,7 +42,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = ETH_ADDRESS;
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, "");
         (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
@@ -58,7 +58,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         tokensInput[0] = ETH_ADDRESS;
         tokensInput[1] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, "");
         (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
@@ -75,9 +75,9 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, "");
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
-        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, 2);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, 2, "");
         vm.stopPrank();
     }
 
@@ -86,7 +86,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput);
+        proxiedManager.registerBApp(USER1, SERVICE1, tokensInput, sharedRiskLevelInput, "");
         (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(SERVICE1);
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
@@ -96,7 +96,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
         vm.startPrank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
-        proxiedManager.registerBApp(ATTACKER, SERVICE1, tokensInput, 2);
+        proxiedManager.registerBApp(ATTACKER, SERVICE1, tokensInput, 2, "");
         vm.stopPrank();
     }
 
