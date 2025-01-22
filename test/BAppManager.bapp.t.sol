@@ -127,7 +127,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         test_RegisterBApp();
         vm.startPrank(USER1);
         vm.expectEmit(true, false, false, false);
-        emit IBasedAppManager.BAppUpdateMetadataURI(BAPP1, metadataURI);
+        emit IBasedAppManager.BAppMetadataURIUpdated(BAPP1, metadataURI);
         proxiedManager.updateMetadataURI(BAPP1, metadataURI);
         vm.stopPrank();
     }

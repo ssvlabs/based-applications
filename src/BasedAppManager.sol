@@ -185,7 +185,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         delegations[msg.sender][receiver] = percentage;
         totalDelegatedPercentage[msg.sender] += percentage;
 
-        emit DelegatedBalance(msg.sender, receiver, percentage);
+        emit DelegationCreated(msg.sender, receiver, percentage);
     }
 
     /// @notice Function to update the delegated validator balance percentage to another account
@@ -213,7 +213,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         delegations[msg.sender][receiver] = percentage;
         totalDelegatedPercentage[msg.sender] = newTotalPercentage;
 
-        emit DelegatedBalance(msg.sender, receiver, percentage);
+        emit DelegationUpdated(msg.sender, receiver, percentage);
     }
 
     /// @notice Function to remove delegation from an account
@@ -229,7 +229,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         delegations[msg.sender][receiver] = 0;
         totalDelegatedPercentage[msg.sender] -= percentage;
 
-        emit RemoveDelegatedBalance(msg.sender, receiver);
+        emit DelegationRemoved(msg.sender, receiver);
     }
 
     // ********************
@@ -259,14 +259,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             bApp.tokens.push(tokens[i]);
         }
 
-        emit BAppRegistered(bAppAddress, owner, msg.sender, metadataURI);
+        emit BAppRegistered(bAppAddress, owner, msg.sender, metadataURI, tokens);
     }
 
     /// @notice Function to update the metadata URI of the Based Application
     /// @param bAppAddress The address of the bApp
     /// @param metadataURI The new metadata URI
     function updateMetadataURI(address bAppAddress, string calldata metadataURI) external onlyBAppOwner(bAppAddress) {
-        emit BAppUpdateMetadataURI(bAppAddress, metadataURI);
+        emit BAppMetadataURIUpdated(bAppAddress, metadataURI);
     }
 
     /// @notice Function to add tokens to a bApp
@@ -319,6 +319,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to opt-in with
     /// @param obligationPercentages The list of obligation percentages for each token
+    /// @param data Optional parameter that could be required by the service
     function optInToBApp(
         uint256 strategyId,
         address bApp,
@@ -335,7 +336,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (accountBAppStrategy[msg.sender][bApp] != 0) revert ICore.BAppAlreadyOptedIn();
 
-        emit BAppOptedIn(strategyId, bApp, data);
+        emit BAppOptedInByStrategy(strategyId, bApp, data);
 
         _setObligations(strategyId, bApp, tokens, obligationPercentages);
 
@@ -379,11 +380,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
 
+        if (address(token) == ETH_ADDRESS) revert ICore.InvalidToken();
+
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
 
         token.safeTransfer(msg.sender, amount);
 
-        emit StrategyWithdrawal(strategyId, msg.sender, address(token), amount);
+        emit StrategyWithdrawal(strategyId, msg.sender, address(token), amount, true);
     }
 
     /// @notice Withdraw ETH from the strategy
@@ -400,7 +403,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         payable(msg.sender).transfer(amount);
 
-        emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount);
+        emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount, true);
     }
 
     /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
@@ -419,7 +422,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         request.amount = amount;
         request.requestTime = block.timestamp;
 
-        emit WithdrawalProposed(
+        emit StrategyWithdrawalProposed(
             strategyId, msg.sender, address(token), amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD
         );
     }
@@ -443,7 +446,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         token.safeTransfer(msg.sender, amount);
 
-        emit WithdrawalFinalized(strategyId, msg.sender, address(token), amount);
+        emit StrategyWithdrawal(strategyId, msg.sender, address(token), amount, false);
     }
 
     /// @notice Propose an ETH withdrawal from the strategy.
@@ -459,7 +462,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         request.amount = amount;
         request.requestTime = block.timestamp;
 
-        emit WithdrawalETHProposed(strategyId, msg.sender, amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD);
+        emit StrategyWithdrawalProposed(
+            strategyId, msg.sender, ETH_ADDRESS, amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD
+        );
     }
 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
@@ -482,7 +487,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         payable(msg.sender).transfer(amount);
 
-        emit WithdrawalETHFinalized(strategyId, msg.sender, amount);
+        emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount, false);
     }
 
     /// @notice Add a new obligation for a bApp
@@ -512,7 +517,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
         obligationsCounter[strategyId][bApp] += 1;
 
-        emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
+        emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
     }
 
     /// @notice Fast set obligation ratio higher for a bApp
@@ -531,7 +536,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         obligations[strategyId][bApp][token] = obligationPercentage;
 
-        emit BAppObligationUpdated(strategyId, bApp, token, obligationPercentage);
+        emit ObligationUpdated(strategyId, bApp, token, obligationPercentage, true);
     }
 
     /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
@@ -595,7 +600,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         obligations[strategyId][bApp][address(token)] = percentage;
 
-        emit ObligationUpdateFinalized(strategyId, msg.sender, address(token), percentage);
+        emit ObligationUpdated(strategyId, msg.sender, address(token), percentage, false);
 
         delete obligationRequests[strategyId][bApp][address(token)];
     }
@@ -615,7 +620,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         strategy.feeProposed = proposedFee;
         strategy.feeUpdateTime = block.timestamp + FEE_TIMELOCK_PERIOD;
 
-        emit StrategyFeeUpdateRequested(strategyId, msg.sender, proposedFee, fee, strategy.feeUpdateTime);
+        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee, strategy.feeUpdateTime);
     }
 
     /// @notice Finalize the fee update for a strategy
@@ -671,7 +676,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
             obligationsCounter[strategyId][bApp] += 1;
 
-            emit BAppObligationSet(strategyId, bApp, token, obligationPercentage);
+            emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
         }
     }
 

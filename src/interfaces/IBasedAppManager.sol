@@ -4,50 +4,46 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBasedAppManager {
-    event BAppObligationSet(
-        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
+    event BAppMetadataURIUpdated(address indexed bAppAddress, string metadataURI);
+    event BAppOptedInByStrategy(uint256 indexed strategyId, address indexed bApp, bytes32 data);
+    event BAppRegistered(
+        address indexed bAppAddress, address indexed owner, address from, string metadataURI, address[] tokens
     );
-    event BAppObligationUpdated(
-        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
-    );
-    event BAppOptedIn(uint256 indexed strategyId, address indexed bApp, bytes32 data);
-    event BAppRegistered(address indexed bAppAddress, address indexed owner, address from, string metadataURI);
-    event BAppUpdateMetadataURI(address indexed bAppAddress, string metadataURI);
     event BAppTokensUpdated(address indexed bAppAddress, address[] tokens);
-    event DelegatedBalance(address indexed delegator, address indexed receiver, uint32 percentage);
+    event DelegationCreated(address indexed delegator, address indexed receiver, uint32 percentage);
+    event DelegationRemoved(address indexed delegator, address indexed receiver);
+    event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);
     event MaxFeeIncrementSet(uint32 indexed newMaxFeeIncrement);
-    event ObligationUpdateFinalized(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint32 percentage
+    event ObligationCreated(
+        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
     );
-    event RemoveDelegatedBalance(address indexed delegator, address indexed receiver);
-    event StrategyCreated(uint256 indexed strategyId, address indexed owner, uint32 fee);
-    event StrategyDeposit(
-        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
+    event ObligationUpdated(
+        uint256 indexed strategyId,
+        address indexed bApp,
+        address indexed token,
+        uint256 obligationPercentage,
+        bool isFast
     );
-    event StrategyWithdrawal(
-        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
-    );
-
-    event StrategyFeeUpdateRequested(
-        uint256 indexed strategyId, address owner, uint32 proposedFee, uint32 fee, uint256 expirationTime
-    );
-    event StrategyFeeUpdated(uint256 indexed strategyId, address owner, uint32 fee, uint32 oldFee);
-    event WithdrawalProposed(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount, uint256 finalizeTime
-    );
-    event WithdrawalFinalized(
-        uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount
-    );
-    event WithdrawalETHProposed(
-        uint256 indexed strategyId, address indexed account, uint256 amount, uint256 finalizeTime
-    );
-    event WithdrawalETHFinalized(uint256 indexed strategyId, address indexed account, uint256 amount);
     event ObligationUpdateProposed(
         uint256 indexed strategyId,
         address indexed account,
         address indexed token,
         uint32 percentage,
         uint256 finalizeTime
+    );
+    event StrategyCreated(uint256 indexed strategyId, address indexed owner, uint32 fee);
+    event StrategyDeposit(
+        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount
+    );
+    event StrategyFeeUpdateProposed(
+        uint256 indexed strategyId, address owner, uint32 proposedFee, uint32 fee, uint256 expirationTime
+    );
+    event StrategyFeeUpdated(uint256 indexed strategyId, address owner, uint32 fee, uint32 oldFee);
+    event StrategyWithdrawal(
+        uint256 indexed strategyId, address indexed contributor, address indexed token, uint256 amount, bool isFast
+    );
+    event StrategyWithdrawalProposed(
+        uint256 indexed strategyId, address indexed account, address indexed token, uint256 amount, uint256 finalizeTime
     );
 
     function delegateBalance(address receiver, uint32 percentage) external;
