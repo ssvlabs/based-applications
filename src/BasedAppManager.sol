@@ -11,7 +11,7 @@ import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
 
 /**
  * @title BasedAppManager
- * @notice Core contract to manage strategies, bApps, and obligations for SSV Based Apps.
+ * @notice The Core Contract to manage Based Applications, Delegations & Strategies for SSV Based Applications Platform.
  *
  * **************
  * ** GLOSSARY **
@@ -20,18 +20,29 @@ import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
  *
  * - **Account**: An Ethereum address that can:
  *   1. Delegate its balance to another address.
- *   2. Create a strategy.
- *   3. Create a bApp.
+ *   2. Create and manage a strategy.
+ *   3. Create and manage a bApp.
  *
- * - **Delegator**: An Ethereum address that delegates its balance to a receiver.
- *   The delegator can be equal to the receiver, meaning the delegator delegates its balance to itself.
+ * - **Based Application**: or bApp.
+ *   The entity that requests validation services from operators. On-chain is represented by an Ethereum address.
+ *   A bApp can be created by registering to this Core Contract, specifying the risk level.
+ *   The bApp can also specify one or many tokens as slashable capital to be provided by strategies.
+ *   During the bApp registration, the bApp owner can set the shared risk level and optionally a metadata URI, to be used in the SSV bApp marketplace.
  *
- * - **Strategy**: A component that manages the delegated ERC20 tokens and has obligations to bApps.
+ * - **Delegator**: An Ethereum address that has Ethereum Validator Balance of Staked ETH within the SSV platform. This capital delegated is non-slashable.
+ *   The delegator can decide to delegate its balance to itself or/and to a single or many receiver accounts.
+ *   The delegator has to set its address as the receiver account, when the delegator wants to delegate its balance to itself.
+ *   The delegated balance goes to an account and not to a strategy. This receiver account can manage only a single strategy.
  *
- * - **Obligation**: A percentage of the strategy's balance in ERC20 (or ETH) that is reserved for securing a bApp.
+ * - **Strategy**: The entity that manages the slashable assets bounded to based apps.
+ *   The strategy has its own balance, accounted in this core contract.
+ *   The strategy can be created by an account that becomes its owner.
+ *   The assets can be ERC20 tokens or Native ETH tokens, that can be deposited or withdrawn by the participants.
+ *   The strategy can manage its assets via obligations to one or many bApps.
  *
- * - **BApp**: Accountable Validator BApp (AVS).
- *   A bApp is an entity that requests validation from strategies, requiring a minimum balance to operate.
+ * - **Obligation**: A percentage of the strategy's balance of ERC20 (or Native ETH), that is reserved for securing a bApp.
+ *   The obligation is set exclusively by the strategy owner and can be updated by the strategy owner.
+ *   The tokens specified in an obligation needs to match the tokens specified in the bApp.
  *
  * *************
  * ** AUTHORS **
@@ -49,10 +60,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     uint256 public constant FEE_TIMELOCK_PERIOD = 7 days;
     uint256 public constant FEE_EXPIRE_TIME = 1 days;
-
     uint256 public constant WITHDRAWAL_TIMELOCK_PERIOD = 5 days;
     uint256 public constant WITHDRAWAL_EXPIRE_TIME = 1 days;
-
     uint256 public constant OBLIGATION_TIMELOCK_PERIOD = 7 days;
     uint256 public constant OBLIGATION_EXPIRE_TIME = 1 days;
 
@@ -76,12 +85,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      */
     mapping(address account => mapping(address bApp => uint256 strategyId)) public accountBAppStrategy;
     /**
-     * @notice Tracks the percentage of validator balance a delegator has delegated to a specific receiver
+     * @notice Tracks the percentage of validator balance a delegator has delegated to a specific receiver account
      * @dev Each delegator can allocate a portion of their validator balance to multiple accounts including itself
      */
     mapping(address delegator => mapping(address account => uint32 percentage)) public delegations;
     /**
-     * @notice Tracks the total percentage of validator balance a delegator has delegated across all receivers
+     * @notice Tracks the total percentage of validator balance a delegator has delegated across all receiver accounts
      * @dev Ensures that a delegator cannot delegate more than 100% of their validator balance
      */
     mapping(address delegator => uint32 totalPercentage) public totalDelegatedPercentage;
@@ -118,27 +127,33 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      */
     mapping(uint256 strategyId => mapping(address token => mapping(address bApp => ICore.ObligationRequest))) public
         obligationRequests;
-
+    /**
+     * @notice Tracks all the obligation created in a strategy.
+     * @dev This value is never decremented. It is used to avoid a new opt in for an obligation that was created before and set to zero.
+     */
     mapping(uint256 strategyId => mapping(address bApp => uint32 numberOfObligations)) public obligationsCounter;
 
+    /// @notice Prevents the initialization of the implementation contract itself during deployment
     constructor() {
         _disableInitializers();
     }
 
+    /// @notice Initialize the contract
+    /// @param _maxFeeIncrement The maximum fee increment
     function initialize(
         uint32 _maxFeeIncrement
     ) public initializer {
         if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) {
             revert ICore.InvalidMaxFeeIncrement();
         }
-
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
-
         maxFeeIncrement = _maxFeeIncrement;
         emit MaxFeeIncrementSet(maxFeeIncrement);
     }
 
+    /// @notice Allow the function to be called only by the strategy owner
+    /// @param strategyId The ID of the strategy
     modifier onlyStrategyOwner(
         uint256 strategyId
     ) {
@@ -148,15 +163,17 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         _;
     }
 
+    /// @notice Allow the function to be called only by the bApp owner
+    /// @param bApp The address of the bApp
     modifier onlyBAppOwner(
         address bApp
     ) {
-        if (bApps[bApp].owner != msg.sender) {
-            revert ICore.InvalidBAppOwner(msg.sender, bApps[bApp].owner);
-        }
+        if (bApps[bApp].owner != msg.sender) revert ICore.InvalidBAppOwner(msg.sender, bApps[bApp].owner);
         _;
     }
 
+    /// @notice Defines who can authorize the upgrade
+    /// @param newImplementation The address of the new implementation
     function _authorizeUpgrade(
         address newImplementation
     ) internal override onlyOwner {}
@@ -166,70 +183,54 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // *****************************************
 
     /// @notice Function to delegate a percentage of the account's balance to another account
-    /// @param receiver The address of the account to delegate to
+    /// @param account The address of the account to delegate to
     /// @param percentage The percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
-    function delegateBalance(address receiver, uint32 percentage) external {
-        if (percentage == 0 || percentage > MAX_PERCENTAGE) {
-            revert ICore.InvalidPercentage();
-        }
-
-        if (delegations[msg.sender][receiver] != 0) {
-            revert ICore.DelegationAlreadyExists();
-        }
-
+    function delegateBalance(address account, uint32 percentage) external {
+        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+        if (delegations[msg.sender][account] != 0) revert ICore.DelegationAlreadyExists();
         if (totalDelegatedPercentage[msg.sender] + percentage > MAX_PERCENTAGE) {
             revert ICore.ExceedingPercentageUpdate();
         }
 
-        delegations[msg.sender][receiver] = percentage;
+        delegations[msg.sender][account] = percentage;
         totalDelegatedPercentage[msg.sender] += percentage;
 
-        emit DelegationCreated(msg.sender, receiver, percentage);
+        emit DelegationCreated(msg.sender, account, percentage);
     }
 
     /// @notice Function to update the delegated validator balance percentage to another account
-    /// @param receiver The address of the account to delegate to
+    /// @param account The address of the account to delegate to
     /// @param percentage The updated percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
-    function updateDelegatedBalance(address receiver, uint32 percentage) external {
-        if (percentage == 0 || percentage > MAX_PERCENTAGE) {
-            revert ICore.InvalidPercentage();
-        }
+    function updateDelegatedBalance(address account, uint32 percentage) external {
+        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
-        uint32 existingPercentage = delegations[msg.sender][receiver];
-        if (existingPercentage == percentage) {
-            revert ICore.DelegationExistsWithSameValue();
-        }
-        if (existingPercentage == 0) {
-            revert ICore.DelegationDoesNotExist();
-        }
+        uint32 existingPercentage = delegations[msg.sender][account];
+        if (existingPercentage == percentage) revert ICore.DelegationExistsWithSameValue();
+        if (existingPercentage == 0) revert ICore.DelegationDoesNotExist();
 
         uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
-        if (newTotalPercentage > MAX_PERCENTAGE) {
-            revert ICore.ExceedingPercentageUpdate();
-        }
+        if (newTotalPercentage > MAX_PERCENTAGE) revert ICore.ExceedingPercentageUpdate();
 
-        delegations[msg.sender][receiver] = percentage;
+        delegations[msg.sender][account] = percentage;
         totalDelegatedPercentage[msg.sender] = newTotalPercentage;
 
-        emit DelegationUpdated(msg.sender, receiver, percentage);
+        emit DelegationUpdated(msg.sender, account, percentage);
     }
 
     /// @notice Function to remove delegation from an account
-    /// @param receiver The address of the account to remove delegation from
+    /// @param account The address of the account to remove delegation from
     function removeDelegatedBalance(
-        address receiver
+        address account
     ) external {
-        uint32 percentage = delegations[msg.sender][receiver];
-        if (percentage == 0) {
-            revert ICore.DelegationDoesNotExist();
-        }
+        uint32 percentage = delegations[msg.sender][account];
+        if (percentage == 0) revert ICore.DelegationDoesNotExist();
 
-        delegations[msg.sender][receiver] = 0;
+        delegations[msg.sender][account] = 0;
         totalDelegatedPercentage[msg.sender] -= percentage;
 
-        emit DelegationRemoved(msg.sender, receiver);
+        emit DelegationRemoved(msg.sender, account);
     }
 
     // ********************
@@ -239,7 +240,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Function to register a bApp
     /// @param owner The address of the owner
     /// @param bAppAddress The address of the bApp
-    /// @param tokens The list of tokens the bApp accepts
+    /// @param tokens The list of tokens the bApp accepts, can also be empty.
     /// @param sharedRiskLevel The shared risk level of the bApp
     function registerBApp(
         address owner,
@@ -249,9 +250,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         string calldata metadataURI
     ) external {
         ICore.BApp storage bApp = bApps[bAppAddress];
-        if (bApp.owner != address(0)) {
-            revert ICore.BAppAlreadyRegistered();
-        }
+        if (bApp.owner != address(0)) revert ICore.BAppAlreadyRegistered();
+
         bApp.owner = owner;
         bApp.sharedRiskLevel = sharedRiskLevel;
 
@@ -276,9 +276,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         ICore.BApp storage bApp = bApps[bAppAddress];
         for (uint256 i = 0; i < tokens.length; i++) {
             for (uint256 j = 0; j < bApp.tokens.length; j++) {
-                if (bApp.tokens[j] == tokens[i]) {
-                    revert ICore.TokenAlreadyAddedToBApp(tokens[i]);
-                }
+                if (bApp.tokens[j] == tokens[i]) revert ICore.TokenAlreadyAddedToBApp(tokens[i]);
             }
             bApp.tokens.push(tokens[i]);
         }
@@ -302,9 +300,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function createStrategy(
         uint32 fee
     ) external returns (uint256 strategyId) {
-        if (fee > MAX_PERCENTAGE) {
-            revert ICore.InvalidDelegationFee();
-        }
+        if (fee > MAX_PERCENTAGE) revert ICore.InvalidDelegationFee();
+
         strategyId = ++_strategyCounter;
 
         ICore.Strategy storage newStrategy = strategies[strategyId];
@@ -375,11 +372,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param amount The amount to withdraw
     function fastWithdrawERC20(uint256 strategyId, IERC20 token, uint256 amount) external {
         if (amount == 0) revert ICore.InvalidAmount();
-
         if (usedTokens[strategyId][address(token)] != 0) revert ICore.TokenIsUsedByTheBApp();
-
         if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
-
         if (address(token) == ETH_ADDRESS) revert ICore.InvalidToken();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
@@ -394,9 +388,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param amount The amount to withdraw
     function fastWithdrawETH(uint256 strategyId, uint256 amount) external {
         if (amount == 0) revert ICore.InvalidAmount();
-
         if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert ICore.TokenIsUsedByTheBApp();
-
         if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
@@ -412,9 +404,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param amount The amount to withdraw.
     function proposeWithdrawal(uint256 strategyId, address token, uint256 amount) external {
         if (amount == 0) revert ICore.InvalidAmount();
-
         if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
-
         if (token == ETH_ADDRESS) revert ICore.InvalidToken();
 
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
@@ -454,7 +444,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param amount The amount of ETH to withdraw.
     function proposeWithdrawalETH(uint256 strategyId, uint256 amount) external {
         if (amount == 0) revert ICore.InvalidAmount();
-
         if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
 
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
@@ -503,7 +492,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     ) external onlyStrategyOwner(strategyId) {
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligations[strategyId][bApp][token] != 0) revert ICore.ObligationAlreadySet();
-
         if (obligationsCounter[strategyId][bApp] == 0) revert ICore.BAppNotOptedIn();
 
         address[] storage bAppTokens = bApps[bApp].tokens;
@@ -579,7 +567,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint32 percentage = request.percentage;
 
         if (requestTime == 0) revert ICore.NoPendingObligationUpdate();
-
         if (block.timestamp < request.requestTime + OBLIGATION_TIMELOCK_PERIOD) {
             revert ICore.ObligationTimelockNotElapsed();
         }
@@ -633,9 +620,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint256 feeUpdateTime = strategy.feeUpdateTime;
 
         if (feeUpdateTime == 0) revert ICore.NoPendingFeeUpdate();
-
         if (block.timestamp < feeUpdateTime) revert ICore.FeeTimelockNotElapsed();
-
         if (block.timestamp > feeUpdateTime + FEE_EXPIRE_TIME) {
             revert ICore.FeeUpdateExpired();
         }
@@ -680,8 +665,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         }
     }
 
-    // Match the tokens of strategy with the bApp
-    // Complexity: O(n * m)
+    /// @notice Match the tokens of strategy with the bApp
+    /// Complexity: O(n * m)
+    /// @param tokens The list of strategy tokens
+    /// @param bAppTokens The list of bApp tokens
     function _matchTokens(address[] calldata tokens, address[] memory bAppTokens) private pure {
         for (uint256 i = 0; i < tokens.length; i++) {
             address token = tokens[i];
@@ -689,6 +676,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         }
     }
 
+    /// @notice Match the single token of strategy with the bApp token list
+    /// @param token The strategy token
+    /// @param bAppTokens The list of bApp tokens
     function _matchToken(address token, address[] memory bAppTokens) private pure {
         bool matched = false;
         for (uint256 i = 0; i < bAppTokens.length; ++i) {
