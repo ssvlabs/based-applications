@@ -54,6 +54,18 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
+    function test_RegisterBAppWithNoTokens() public {
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](0);
+        uint32 sharedRiskLevelInput = 102;
+        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "http://metadata.com");
+        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
+        assertEq(owner, USER1, "BApp owner");
+        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
+        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
+        assertEq(tokens.length, 0, "BApp token");
+    }
+
     function test_RegisterBAppWithETHAndErc20() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](2);

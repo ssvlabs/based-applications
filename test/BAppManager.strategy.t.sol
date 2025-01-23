@@ -230,6 +230,27 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         vm.stopPrank();
     }
 
+    function test_optInToBAppWithNoTokensWithNoTokens() public {
+        test_CreateStrategies();
+        test_RegisterBAppWithNoTokens();
+        vm.startPrank(USER1);
+        proxiedManager.optInToBApp(1, BAPP1, new address[](0), new uint32[](0), 0x00);
+        vm.stopPrank();
+    }
+
+    function testRevert_optInToBAppWithNoTokensWithAToken() public {
+        test_CreateStrategies();
+        test_RegisterBAppWithNoTokens();
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = 10;
+        vm.expectRevert(abi.encodeWithSelector(ICore.TokenNoTSupportedByBApp.selector, address(erc20mock)));
+        proxiedManager.optInToBApp(1, BAPP1, tokensInput, obligationPercentagesInput, 0x00);
+        vm.stopPrank();
+    }
+
     function testRevert_InvalidFastWithdrawalWithUsedToken(
         uint32 amount
     ) public {
