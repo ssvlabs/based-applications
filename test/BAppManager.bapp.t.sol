@@ -79,7 +79,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         assertEq(owner, USER1, "BApp owner");
         assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
         address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-            assertEq(tokens[0], address(erc20mock2), "BApp token");
+        assertEq(tokens[0], address(erc20mock2), "BApp token");
         for (uint256 i = 1; i < 20; i++) {
             assertEq(tokens[i], address(erc20mock), "BApp token");
             assertEq(tokensInput[i], address(erc20mock), "BApp token");
