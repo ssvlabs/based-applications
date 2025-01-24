@@ -322,7 +322,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address bApp,
         address[] calldata tokens,
         uint32[] calldata obligationPercentages,
-        bytes32 data
+        bytes calldata data
     ) external onlyStrategyOwner(strategyId) {
         if (tokens.length != obligationPercentages.length) revert ICore.TokensLengthNotMatchingPercentages();
 

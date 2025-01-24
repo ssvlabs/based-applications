@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBasedAppManager {
     event BAppMetadataURIUpdated(address indexed bAppAddress, string metadataURI);
-    event BAppOptedInByStrategy(uint256 indexed strategyId, address indexed bApp, bytes32 data);
+    event BAppOptedInByStrategy(uint256 indexed strategyId, address indexed bApp, bytes data);
     event BAppRegistered(
         address indexed bAppAddress, address indexed owner, address from, string metadataURI, address[] tokens
     );
@@ -79,7 +79,7 @@ interface IBasedAppManager {
         address bApp,
         address[] calldata tokens,
         uint32[] calldata obligationPercentages,
-        bytes32 data
+        bytes calldata data
     ) external;
 
     function depositERC20(uint256 strategyId, IERC20 token, uint256 amount) external;
