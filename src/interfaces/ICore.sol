@@ -2,16 +2,6 @@
 pragma solidity 0.8.28;
 
 interface ICore {
-    /// @notice Represents an AVS
-    struct BApp {
-        /// @dev The owner of the bApp
-        address owner;
-        /// @dev The erc20 tokens the bApp accepts (can accept multiple)
-        address[] tokens;
-        /// @dev beta parameter
-        uint32 sharedRiskLevel;
-    }
-
     /// @notice Represents a Strategy
     struct Strategy {
         /// @dev The owner of the strategy
@@ -65,10 +55,12 @@ interface ICore {
     error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
     error ObligationTimelockNotElapsed();
+    error PercentageAlreadySet();
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();
     error TokenNoTSupportedByBApp(address token);
     error TokensLengthNotMatchingPercentages();
+    error TokensLengthNotMatchingRiskLevels();
     error UpdateObligationExpired();
     error WithdrawalExpired();
     error WithdrawalTimelockNotElapsed();

@@ -5,9 +5,15 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBasedAppManager {
     event BAppMetadataURIUpdated(address indexed bAppAddress, string metadataURI);
-    event BAppOptedInByStrategy(uint256 indexed strategyId, address indexed bApp, bytes data);
+    event BAppOptedInByStrategy(
+        uint256 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages
+    );
     event BAppRegistered(
-        address indexed bAppAddress, address indexed owner, address from, string metadataURI, address[] tokens
+        address indexed bAppAddress,
+        address indexed owner,
+        address[] tokens,
+        uint32[] sharedRiskLevel,
+        string metadataURI
     );
     event BAppTokensUpdated(address indexed bAppAddress, address[] tokens);
     event DelegationCreated(address indexed delegator, address indexed receiver, uint32 percentage);
@@ -55,20 +61,19 @@ interface IBasedAppManager {
     ) external;
 
     function registerBApp(
-        address owner,
         address bAppAddress,
         address[] calldata tokens,
-        uint32 sharedRiskLevel,
+        uint32[] calldata sharedRiskLevels,
         string calldata metadataURI
     ) external;
 
     function updateMetadataURI(address bAppAddress, string calldata metadataURI) external;
 
-    function addTokensToBApp(address bAppAddress, address[] calldata tokens) external;
-
-    function getBAppTokens(
-        address bAppAddress
-    ) external view returns (address[] memory);
+    function addTokensToBApp(
+        address bAppAddress,
+        address[] calldata tokens,
+        uint32[] calldata sharedRiskLevels
+    ) external;
 
     function createStrategy(
         uint32 fee

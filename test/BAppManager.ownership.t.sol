@@ -39,24 +39,24 @@ contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest {
     function testRevert_TryToCallInitializeAgainFromAttacker() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(ATTACKER);
-        proxiedManager.initialize(10);
+        proxiedManager.initialize(address(OWNER), 10);
     }
 
     function testRevert_TryToCallInitializeAgainFromOwner() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(OWNER);
-        proxiedManager.initialize(10);
+        proxiedManager.initialize(address(OWNER), 10);
     }
 
     function testRevert_InitializeWithZeroFee() public {
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
-        bytes memory initData = abi.encodeWithSignature("initialize(uint32)", 0);
+        bytes memory initData = abi.encodeWithSignature("initialize(address,uint32)", address(OWNER), 0);
         proxy = new ERC1967Proxy(address(implementation), initData);
     }
 
     function testRevert_InitializeWithExcessiveFee() public {
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
-        bytes memory initData = abi.encodeWithSignature("initialize(uint32)", 10_001);
+        bytes memory initData = abi.encodeWithSignature("initialize(address,uint32)", address(OWNER), 10_001);
         proxy = new ERC1967Proxy(address(implementation), initData);
     }
 }

@@ -6,84 +6,97 @@ import "./BAppManager.setup.t.sol";
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     string metadataURI = "http://metadata.com";
 
+    function createSingleTokenAndSingleRiskLevel(
+        address token
+    ) private pure returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
+        tokensInput = new address[](1);
+        tokensInput[0] = token;
+        sharedRiskLevelInput = new uint32[](1);
+        sharedRiskLevelInput[0] = 102;
+    }
+
+    function createTwoTokenAndRiskInputs()
+        private
+        view
+        returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
+    {
+        tokensInput = new address[](2);
+        sharedRiskLevelInput = new uint32[](2);
+        tokensInput[0] = address(erc20mock);
+        tokensInput[1] = address(erc20mock2);
+        sharedRiskLevelInput[0] = 102;
+        sharedRiskLevelInput[1] = 103;
+    }
+
+    function createFiveTokenAndRiskInputs()
+        private
+        view
+        returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
+    {
+        tokensInput = new address[](5);
+        sharedRiskLevelInput = new uint32[](5);
+        tokensInput[0] = address(erc20mock);
+        tokensInput[1] = address(erc20mock2);
+        tokensInput[2] = address(erc20mock3);
+        tokensInput[3] = address(erc20mock4);
+        tokensInput[4] = address(erc20mock5);
+        sharedRiskLevelInput[0] = 102;
+        sharedRiskLevelInput[1] = 103;
+        sharedRiskLevelInput[2] = 104;
+        sharedRiskLevelInput[3] = 105;
+        sharedRiskLevelInput[4] = 106;
+    }
+
+    function checkBAppInfo(address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) public view {
+        address owner = proxiedManager.bAppOwners(BAPP1);
+        assertEq(tokensInput.length, sharedRiskLevelInput.length, "BApp tokens and sharedRiskLevel length");
+        assertEq(owner, USER1, "BApp owner");
+        for (uint256 i = 0; i < tokensInput.length; i++) {
+            uint32 sharedRiskLevel = proxiedManager.bAppTokens(BAPP1, tokensInput[i]);
+            assertEq(sharedRiskLevelInput[i], sharedRiskLevel, "BApp sharedRiskLevel");
+            assertNotEq(sharedRiskLevel, 0);
+        }
+    }
+
     function test_RegisterBApp() public {
         vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "");
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
-        assertEq(owner, USER1, "BApp owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        assertEq(tokens[0], address(erc20mock), "BApp token");
-        assertEq(tokensInput[0], address(erc20mock), "BApp token");
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(address(erc20mock));
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
     function test_RegisterBAppWith2Tokens() public {
         vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](2);
-        tokensInput[0] = address(erc20mock);
-        tokensInput[1] = address(erc20mock2);
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "");
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
-        assertEq(owner, USER1, "BApp owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        assertEq(tokens[0], address(erc20mock), "BApp token");
-        assertEq(tokensInput[0], address(erc20mock), "BApp token");
-        assertEq(tokens[1], address(erc20mock2), "BApp token 2");
-        assertEq(tokensInput[1], address(erc20mock2), "BApp token 2");
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndRiskInputs();
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
     function test_RegisterBAppWithETH() public {
         vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](2);
-        tokensInput[0] = ETH_ADDRESS;
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "");
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
-        assertEq(owner, USER1, "BApp owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        assertEq(tokens[0], ETH_ADDRESS, "BApp token");
-        assertEq(tokensInput[0], ETH_ADDRESS, "BApp token input");
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(ETH_ADDRESS);
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
     function test_RegisterBAppWithNoTokens() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](0);
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "http://metadata.com");
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
-        assertEq(owner, USER1, "BApp owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        assertEq(tokens.length, 0, "BApp token");
+        uint32[] memory sharedRiskLevelInput = new uint32[](0);
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "http://metadata.com");
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
     }
 
-    function test_RegisterBAppWithTwentyToken() public {
+    function test_RegisterBAppWithFiveTokens() public {
         vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](20);
-        tokensInput[0] = address(erc20mock2);
-        for (uint256 i = 1; i < 20; i++) {
-            tokensInput[i] = address(erc20mock);
-        }
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "");
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
-        assertEq(owner, USER1, "BApp owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        assertEq(tokens[0], address(erc20mock2), "BApp token");
-        for (uint256 i = 1; i < 20; i++) {
-            assertEq(tokens[i], address(erc20mock), "BApp token");
-            assertEq(tokensInput[i], address(erc20mock), "BApp token");
-        }
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createFiveTokenAndRiskInputs();
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
     }
 
     function test_RegisterBAppWithETHAndErc20() public {
@@ -91,16 +104,11 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = ETH_ADDRESS;
         tokensInput[1] = address(erc20mock);
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "");
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
-        assertEq(owner, USER1, "BApp owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        assertEq(tokens[0], ETH_ADDRESS, "BApp token");
-        assertEq(tokensInput[0], ETH_ADDRESS, "BApp token input");
-        assertEq(tokens[1], address(erc20mock), "BApp token");
-        assertEq(tokensInput[1], address(erc20mock), "BApp token input");
+        uint32[] memory sharedRiskLevelInput = new uint32[](2);
+        sharedRiskLevelInput[0] = 102;
+        sharedRiskLevelInput[1] = 102;
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
@@ -108,10 +116,11 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "");
+        uint32[] memory sharedRiskLevelInput = new uint32[](1);
+        sharedRiskLevelInput[0] = 102;
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, 2, "");
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }
 
@@ -119,18 +128,14 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
-        uint32 sharedRiskLevelInput = 102;
-        proxiedManager.registerBApp(USER1, BAPP1, tokensInput, sharedRiskLevelInput, "");
-        (address owner, uint32 sharedRiskLevel) = proxiedManager.bApps(BAPP1);
-        assertEq(owner, USER1, "BApp owner");
-        assertEq(sharedRiskLevelInput, sharedRiskLevel, "BApp sharedRiskLevel");
-        address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        assertEq(tokens[0], address(erc20mock), "BApp token");
-        assertEq(tokensInput[0], address(erc20mock), "BApp token");
+        uint32[] memory sharedRiskLevelInput = new uint32[](1);
+        sharedRiskLevelInput[0] = 102;
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
         vm.startPrank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
-        proxiedManager.registerBApp(ATTACKER, BAPP1, tokensInput, 2, "");
+        proxiedManager.registerBApp(BAPP1, tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }
 
@@ -140,7 +145,11 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = address(erc20mock2);
         tokensInput[1] = address(ETH_ADDRESS);
-        proxiedManager.addTokensToBApp(BAPP1, tokensInput);
+        uint32[] memory sharedRiskLevelInput = new uint32[](2);
+        sharedRiskLevelInput[0] = 102;
+        sharedRiskLevelInput[1] = 103;
+        proxiedManager.addTokensToBApp(BAPP1, tokensInput, sharedRiskLevelInput);
+        // todo use a more andvanced check for the new ones: checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
@@ -150,8 +159,11 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(ETH_ADDRESS);
+        uint32[] memory sharedRiskLevelInput = new uint32[](2);
+        sharedRiskLevelInput[0] = 102;
+        sharedRiskLevelInput[1] = 103;
         vm.expectRevert(abi.encodeWithSelector(ICore.TokenAlreadyAddedToBApp.selector, address(erc20mock)));
-        proxiedManager.addTokensToBApp(BAPP1, tokensInput);
+        proxiedManager.addTokensToBApp(BAPP1, tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
