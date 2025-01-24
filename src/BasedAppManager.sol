@@ -519,6 +519,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address token,
         uint32 obligationPercentage
     ) external onlyStrategyOwner(strategyId) {
+        if (obligationsCounter[strategyId][bApp] == 0) revert ICore.BAppNotOptedIn();
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligationPercentage <= obligations[strategyId][bApp][token]) revert ICore.InvalidPercentage();
 
@@ -537,6 +538,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         address token,
         uint32 obligationPercentage
     ) external onlyStrategyOwner(strategyId) {
+        if (obligationsCounter[strategyId][bApp] == 0) revert ICore.BAppNotOptedIn();
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
         ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][token];
