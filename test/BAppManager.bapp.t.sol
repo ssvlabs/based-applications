@@ -153,6 +153,19 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
+    function testRevert_UpdateBAppWithNotMatchingLengths() public {
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](2);
+        tokensInput[0] = address(erc20mock2);
+        tokensInput[1] = address(ETH_ADDRESS);
+        uint32[] memory sharedRiskLevelInput = new uint32[](1);
+        sharedRiskLevelInput[0] = 102;
+        vm.expectRevert(abi.encodeWithSelector(ICore.TokensLengthNotMatchingRiskLevels.selector));
+        proxiedManager.addTokensToBApp(BAPP1, tokensInput, sharedRiskLevelInput);
+        vm.stopPrank();
+    }
+
     function testRevert_UpdateBAppWithAlreadyPresentTokensRevert() public {
         test_RegisterBApp();
         vm.startPrank(USER1);

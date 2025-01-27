@@ -498,38 +498,30 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
 
     function testRevert_InvalidFastWithdrawalETHWithUsedToken() public {
         test_CreateStrategyETHAndDepositETH();
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.TokenIsUsedByTheBApp.selector));
         proxiedManager.fastWithdrawETH(STRATEGY1, 0.5 ether);
-        vm.stopPrank();
     }
 
     function testRevert_InvalidFastWithdrawalETHWithInvalidAmount() public {
         test_StrategyOptInToBApp(9000);
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
         proxiedManager.fastWithdrawETH(STRATEGY1, 100 ether);
-        vm.stopPrank();
     }
 
     function testRevert_ObligationHigherThanMaxPercentage() public {
         test_StrategyOptInToBApp(9000);
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.createObligation(1, BAPP1, address(erc20mock2), 10_001);
-        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock2));
-        assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
-        vm.stopPrank();
     }
 
     function testRevert_CreateObligationToNonExistingBApp() public {
         test_StrategyOptInToBApp(9000);
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotOptedIn.selector));
         proxiedManager.createObligation(1, BAPP2, address(erc20mock), 100);
-        uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(1, USER1, address(erc20mock));
-        assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
-        vm.stopPrank();
     }
 
     function testRevert_CreateObligationToNonExistingStrategy() public {
@@ -554,10 +546,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
     function test_CreateNewObligationSuccessful() public {
         test_StrategyOptInToBAppWithMultipleTokens(9000);
         vm.startPrank(USER1);
-        // address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        // assertEq(tokens[0], address(erc20mock), "BApp token");
-        // assertEq(tokens[1], address(erc20mock2), "BApp token 2");
-        // assertEq(tokens.length, 2, "BApp token length");
         proxiedManager.createObligation(STRATEGY1, BAPP1, address(erc20mock2), 10_000);
         // todo check obligation
         uint32 percentage = proxiedManager.obligations(STRATEGY1, BAPP1, address(erc20mock2));
@@ -567,14 +555,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
 
     function testRevert_CreateObligationFailCauseAlreadySet() public {
         test_CreateNewObligationSuccessful();
-        vm.startPrank(USER1);
-        //address[] memory tokens = proxiedManager.getBAppTokens(BAPP1);
-        //assertEq(tokens[0], address(erc20mock), "BApp token");
-        //assertEq(tokens[1], address(erc20mock2), "BApp token 2");
-        //assertEq(tokens.length, 2, "BApp token length");
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.ObligationAlreadySet.selector));
         proxiedManager.createObligation(STRATEGY1, BAPP1, address(erc20mock2), 10_000);
-        vm.stopPrank();
     }
 
     function test_FastWithdrawErc20FromStrategy() public {
@@ -609,19 +592,23 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         vm.stopPrank();
     }
 
-    function test_FastUpdateObligation(
-        uint32 obligationPercentage
-    ) public {
-        vm.assume(obligationPercentage <= 10_000 && obligationPercentage > 0);
+    function test_FastUpdateObligation() public {
         test_StrategyOptInToBApp(9000);
         vm.startPrank(USER1);
-        uint32 strategyId = 1;
-        proxiedManager.fastUpdateObligation(strategyId, BAPP1, address(erc20mock), 10_000);
-        obligationPercentage = proxiedManager.obligations(strategyId, BAPP1, address(erc20mock));
+        proxiedManager.fastUpdateObligation(STRATEGY1, BAPP1, address(erc20mock), 10_000);
+        uint32 obligationPercentage = proxiedManager.obligations(STRATEGY1, BAPP1, address(erc20mock));
         assertEq(obligationPercentage, 10_000, "Obligation percentage");
-        uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
         assertEq(usedTokens, 1, "Used tokens");
         vm.stopPrank();
+    }
+
+    function testRevert_FastUpdateObligationBAppNotOptedIn() public {
+        test_CreateStrategies();
+        test_RegisterBApp();
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotOptedIn.selector));
+        proxiedManager.fastUpdateObligation(STRATEGY1, BAPP1, address(erc20mock), 10_000);
     }
 
     function testRevert_FastUpdateObligationFailWithNonOwner() public {
@@ -1182,17 +1169,40 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
 
     function test_updateObligationFromZeroToHigher() public {
         test_CreateObligationETHWithZeroPercentage();
-        uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, ETH_ADDRESS);
-        assertEq(usedTokens, 0, "Used ETH");
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, BAPP1, ETH_ADDRESS, 5000);
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, BAPP1, ETH_ADDRESS);
         uint256 obligationPercentage = proxiedManager.obligations(STRATEGY1, BAPP1, ETH_ADDRESS);
         assertEq(obligationPercentage, 5000, "Obligation percentage");
-        //  usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
-        // assertEq(usedTokens, 0, "Used tokens");
-        usedTokens = proxiedManager.usedTokens(STRATEGY1, ETH_ADDRESS);
+        uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, ETH_ADDRESS);
         assertEq(usedTokens, 1, "Used ETH");
+        vm.stopPrank();
+    }
+
+    function test_fastUpdateObligationETHFromZeroToHigher() public {
+        test_CreateObligationETHWithZeroPercentage();
+        vm.prank(USER1);
+        proxiedManager.fastUpdateObligation(STRATEGY1, BAPP1, ETH_ADDRESS, 5000);
+        uint256 obligationPercentage = proxiedManager.obligations(STRATEGY1, BAPP1, ETH_ADDRESS);
+        assertEq(obligationPercentage, 5000, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, ETH_ADDRESS);
+        assertEq(usedTokens, 1, "Used ETH");
+    }
+
+    function testRevert_proposeUpdateObligationWithBAppNotOptedIN() public {
+        test_CreateStrategies();
+        test_RegisterBApp();
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotOptedIn.selector));
+        proxiedManager.proposeUpdateObligation(STRATEGY1, BAPP1, ETH_ADDRESS, 5000);
+    }
+
+    function testRevert_proposeUpdateObligationWithSamePercentage() public {
+        test_CreateObligationETH(10_000);
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.PercentageAlreadySet.selector));
+        proxiedManager.proposeUpdateObligation(STRATEGY1, BAPP1, ETH_ADDRESS, 10_000);
+        vm.stopPrank();
     }
 }
