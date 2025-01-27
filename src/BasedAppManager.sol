@@ -323,7 +323,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     ) external onlyStrategyOwner(strategyId) {
         if (tokens.length != obligationPercentages.length) revert ICore.TokensLengthNotMatchingPercentages();
 
-        //ICore.BApp storage existingBApp = bApps[bApp];
         _matchTokens(tokens, bApp);
 
         // Check if a strategy exists for the given bApp.
@@ -650,16 +649,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             address token = tokens[i];
             uint32 obligationPercentage = obligationPercentages[i];
 
-            // todo check the bapp mapping and reject if the token is not available
-
             if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
 
             if (obligationPercentage != 0) {
                 usedTokens[strategyId][token] += 1;
                 obligations[strategyId][bApp][token] = obligationPercentage;
             }
-
-            // obligationsCounter[strategyId][bApp] += 1;
 
             emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
         }
