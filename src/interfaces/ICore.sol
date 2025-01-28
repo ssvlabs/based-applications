@@ -1,15 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
 interface ICore {
     /// @notice Represents an AVS
-    struct Service {
-        /// @dev The owner of the service
+    struct BApp {
+        /// @dev The owner of the bApp
         address owner;
-        /// @dev The erc20 tokens the service accepts (can accept multiple)
+        /// @dev The erc20 tokens the bApp accepts (can accept multiple)
         address[] tokens;
-        /// @dev alpha parameter
-        uint32 slashingCorrelationPenalty;
         /// @dev beta parameter
         uint32 sharedRiskLevel;
     }
@@ -41,4 +39,37 @@ interface ICore {
         /// @dev The block time when the request was sent
         uint256 requestTime;
     }
+
+    error BAppAlreadyOptedIn();
+    error BAppAlreadyRegistered();
+    error BAppNotOptedIn();
+    error DelegationAlreadyExists();
+    error DelegationDoesNotExist();
+    error DelegationExistsWithSameValue();
+    error ExceedingPercentageUpdate();
+    error FeeAlreadySet();
+    error FeeTimelockNotElapsed();
+    error FeeUpdateExpired();
+    error InsufficientBalance();
+    error InvalidAmount();
+    error InvalidDelegationFee();
+    error InvalidMaxFeeIncrement();
+    error InvalidPercentage();
+    error InvalidPercentageIncrement();
+    error InvalidStrategyOwner(address caller, address expectedOwner);
+    error InvalidBAppOwner(address caller, address expectedOwner);
+    error InvalidToken();
+    error NoPendingFeeUpdate();
+    error NoPendingObligationUpdate();
+    error NoPendingWithdrawal();
+    error NoPendingWithdrawalETH();
+    error ObligationAlreadySet();
+    error ObligationTimelockNotElapsed();
+    error TokenAlreadyAddedToBApp(address token);
+    error TokenIsUsedByTheBApp();
+    error TokenNoTSupportedByBApp(address token);
+    error TokensLengthNotMatchingPercentages();
+    error UpdateObligationExpired();
+    error WithdrawalExpired();
+    error WithdrawalTimelockNotElapsed();
 }

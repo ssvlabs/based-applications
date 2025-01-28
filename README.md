@@ -4,6 +4,12 @@
 
 &nbsp;
 
+## :office:  _Architecture_
+
+![alt text](images/architecture.png "Title")
+
+&nbsp;
+
 ## :page_with_curl:  _Instructions_
 
 **1)** Fire up your favorite console & clone this repo somewhere:

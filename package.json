@@ -1,19 +1,13 @@
 {
   "name": "based-applications",
   "version": "0.0.0",
-  "description": "Based Applications Contracts SSV",
-  "license": "GPL-3.0",
-  "scripts": {
-    "build": "forge fmt && forge build",
-    "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
-    "format": "forge fmt",
-    "gas-report": "forge test -vvvv --gas-report",
-    "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs --overwrite",
-    "prepare": "husky",
-    "test": "forge test -vvvv",
-    "test-coverage": "forge coverage",
-    "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY"
+  "description": "SSV Based Applications",
+  "author": "SSV.Network",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ssvlabs/based-applications.git"
   },
+  "license": "GPL-3.0",
   "keywords": [
     "Based",
     "BApps",
@@ -23,7 +17,21 @@
     "Marco Tabasco <marco@ssvlabs.io>",
     "Riccardo Persiani <r.persiani92@gmail.com>"
   ],
+  "scripts": {
+    "build": "forge fmt && forge build",
+    "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
+    "format": "forge fmt",
+    "gas-report": "forge test --gas-report",
+    "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs --overwrite",
+    "prepare": "husky",
+    "lint:solhint": "solhint './src/**/*.sol'",
+    "test": "forge test",
+    "test-coverage": "forge coverage --no-match-coverage \"(script|test)\"",
+    "test-coverage-report": "forge coverage --no-match-coverage \"(script|test)\" --report lcov && genhtml lcov.info -o report --branch-coverage",
+    "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY"
+  },
   "devDependencies": {
+    "@openzeppelin/contracts-upgradeable": "^5.1.0",
     "husky": "^9.1.7"
   }
 }

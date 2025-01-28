@@ -1,3 +1,15 @@
 {
-  "extends": "solhint:default"
+  "extends": "solhint:recommended",
+  "rules": {
+    "compiler-version": ["error", "0.8.28"],
+    "no-inline-assembly": "off",
+    "no-unused-import": "error",
+    "func-named-parameters": "off",
+    "func-visibility": ["error", { "ignoreConstructors": true }],
+    "reason-string": ["warn", { "maxLength": 64 }],
+    "immutable-vars-naming": ["error", { "immutablesAsConstants": true }],
+    "var-name-mixedcase": "error",
+    "custom-errors": "error",
+    "func-name-mixedcase": "error"
+  }
 }

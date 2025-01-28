@@ -1,5 +1,5 @@
 npm run format
 
-solhint 'src/**/*.sol'
+npm run lint:solhint
 
 npm run test-coverage

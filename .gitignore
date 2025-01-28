@@ -16,3 +16,8 @@ docs/
 
 node_modules/
 package-lock.json
+
+# Coverage
+coverage/
+report/
+lcov.info
