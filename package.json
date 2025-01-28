@@ -2,6 +2,7 @@
   "name": "based-applications",
   "version": "0.0.0",
   "description": "Based Applications Contracts SSV",
+  "license": "GPL-3.0",
   "scripts": {
     "build": "forge fmt && forge build",
     "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
@@ -22,7 +23,6 @@
     "Marco Tabasco <marco@ssvlabs.io>",
     "Riccardo Persiani <r.persiani92@gmail.com>"
   ],
-  "license": "UNLICENSED",
   "devDependencies": {
     "husky": "^9.1.7"
   }
