@@ -343,7 +343,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (accountBAppStrategy[msg.sender][bApp] != 0) revert ICore.BAppAlreadyOptedIn();
 
         _setObligations(strategyId, bApp, tokens, obligationPercentages);
-        
+
         accountBAppStrategy[msg.sender][bApp] = strategyId;
 
         emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
@@ -718,6 +718,4 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
         }
     }
-
-
 }
