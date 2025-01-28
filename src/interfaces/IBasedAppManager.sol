@@ -15,7 +15,8 @@ interface IBasedAppManager {
         uint32[] sharedRiskLevel,
         string metadataURI
     );
-    event BAppTokensUpdated(address indexed bAppAddress, address[] tokens);
+    event BAppTokensCreated(address indexed bAppAddress, address[] tokens, uint32[] sharedRiskLevels);
+    event BAppTokensUpdated(address indexed bAppAddress, address[] tokens, uint32[] sharedRiskLevels);
     event DelegationCreated(address indexed delegator, address indexed receiver, uint32 percentage);
     event DelegationRemoved(address indexed delegator, address indexed receiver);
     event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);

@@ -11,10 +11,6 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {ICore} from "./interfaces/ICore.sol";
 import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
 
-// TODO assumption that sharedRiskLevel can not be 0 when it's set
-// todo should check that is not 0, otherwise use a fixed value to identify the "0 value".
-// if max cap is 10000, then "0 value" could be 10001
-
 /**
  * @title BasedAppManager
  * @notice The Core Contract to manage Based Applications, Delegations & Strategies for SSV Based Applications Platform.
@@ -61,6 +57,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_PERCENTAGE = 1e4;
+    uint32 public constant MAX_SHARED_RISK_LEVEL = 1e5;
 
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -84,7 +81,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @notice Tracks the tokens supported by the bApps
      * @dev The bApp is identified with its address
      */
-    mapping(address bApp => mapping(address token => uint32 sharedRiskLevel)) public bAppTokens;
+    mapping(address bApp => mapping(address token => ICore.SharedRiskLevel)) public bAppTokens;
     /**
      * @notice Tracks the strategies created
      * @dev The strategy ID is incremental and unique
@@ -243,48 +240,66 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ********************
 
     /// @notice Function to register a bApp
-    /// @param bAppAddress The address of the bApp
+    /// @param bApp The address of the bApp
     /// @param tokens The list of tokens the bApp accepts, can also be empty.
     /// @param sharedRiskLevels The shared risk level of the bApp
     /// @param metadataURI The metadata URI of the bApp
+    /// @dev Allow to create a bApp with an empty token list
     function registerBApp(
-        address bAppAddress,
+        address bApp,
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels,
         string calldata metadataURI
     ) external {
-        if (bAppOwners[bAppAddress] != address(0)) revert ICore.BAppAlreadyRegistered();
-        bAppOwners[bAppAddress] = msg.sender;
+        if (bAppOwners[bApp] != address(0)) revert ICore.BAppAlreadyRegistered();
+        else bAppOwners[bApp] = msg.sender;
 
-        for (uint256 i = 0; i < tokens.length; i++) {
-            bAppTokens[bAppAddress][tokens[i]] = sharedRiskLevels[i];
-        }
+        _addNewTokens(bApp, tokens, sharedRiskLevels);
 
-        emit BAppRegistered(bAppAddress, msg.sender, tokens, sharedRiskLevels, metadataURI);
+        emit BAppRegistered(bApp, msg.sender, tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Function to update the metadata URI of the Based Application
-    /// @param bAppAddress The address of the bApp
+    /// @param bApp The address of the bApp
     /// @param metadataURI The new metadata URI
-    function updateMetadataURI(address bAppAddress, string calldata metadataURI) external onlyBAppOwner(bAppAddress) {
-        emit BAppMetadataURIUpdated(bAppAddress, metadataURI);
+    function updateMetadataURI(address bApp, string calldata metadataURI) external onlyBAppOwner(bApp) {
+        emit BAppMetadataURIUpdated(bApp, metadataURI);
     }
 
-    /// @notice Function to add tokens to a bApp
-    /// @param bAppAddress The address of the bApp
+    /// @notice Function to add tokens to an existing bApp
+    /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to add
+    /// @param sharedRiskLevels The shared risk levels of the tokens
     function addTokensToBApp(
-        address bAppAddress,
+        address bApp,
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels
-    ) external onlyBAppOwner(bAppAddress) {
-        if (tokens.length != sharedRiskLevels.length) revert ICore.TokensLengthNotMatchingRiskLevels();
+    ) external onlyBAppOwner(bApp) {
+        if (tokens.length == 0) revert ICore.EmptyTokenList();
+        _addNewTokens(bApp, tokens, sharedRiskLevels);
+        emit BAppTokensCreated(bApp, tokens, sharedRiskLevels);
+    }
+
+    /// @notice Function to update the shared risk levels of the tokens for a bApp
+    /// @param bApp The address of the bApp
+    /// @param tokens The list of tokens to update
+    /// @param sharedRiskLevels The shared risk levels of the tokens
+    function updateBAppTokens(
+        address bApp,
+        address[] calldata tokens,
+        uint32[] calldata sharedRiskLevels
+    ) external onlyBAppOwner(bApp) {
+        if (tokens.length == 0) revert ICore.EmptyTokenList();
+        _validateArraysLength(tokens, sharedRiskLevels);
         for (uint256 i = 0; i < tokens.length; i++) {
-            // todo if (sharedRiskLevels[i] == 0 || sharedRiskLevels[i] > MAX_RISK_VALUE) revert ICore.InvalidPercentage();
-            if (bAppTokens[bAppAddress][tokens[i]] != 0) revert ICore.TokenAlreadyAddedToBApp(tokens[i]);
-            bAppTokens[bAppAddress][tokens[i]] = sharedRiskLevels[i];
+            _validateTokenAndRiskLevelInput(tokens[i], sharedRiskLevels[i]);
+            if (!bAppTokens[bApp][tokens[i]].isSet) revert ICore.TokenNoTSupportedByBApp(tokens[i]);
+            if (bAppTokens[bApp][tokens[i]].value == sharedRiskLevels[i]) {
+                revert ICore.SharedRiskLevelAlreadySet();
+            }
+            _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
         }
-        emit BAppTokensUpdated(bAppAddress, tokens);
+        emit BAppTokensUpdated(bApp, tokens, sharedRiskLevels);
     }
 
     // ***********************
@@ -296,7 +311,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function createStrategy(
         uint32 fee
     ) external returns (uint256 strategyId) {
-        if (fee > MAX_PERCENTAGE) revert ICore.InvalidDelegationFee();
+        if (fee > MAX_PERCENTAGE) revert ICore.InvalidStrategyFee();
 
         strategyId = ++_strategyCounter;
 
@@ -321,19 +336,17 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint32[] calldata obligationPercentages,
         bytes calldata data
     ) external onlyStrategyOwner(strategyId) {
-        if (tokens.length != obligationPercentages.length) revert ICore.TokensLengthNotMatchingPercentages();
-
-        _matchTokens(tokens, bApp);
+        if (tokens.length != obligationPercentages.length) revert ICore.LengthsNotMatching();
 
         // Check if a strategy exists for the given bApp.
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (accountBAppStrategy[msg.sender][bApp] != 0) revert ICore.BAppAlreadyOptedIn();
 
-        emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
-
         _setObligations(strategyId, bApp, tokens, obligationPercentages);
-
+        
         accountBAppStrategy[msg.sender][bApp] = strategyId;
+
+        emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
     }
 
     /// @notice Deposit ERC20 tokens into the strategy
@@ -490,7 +503,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (obligations[strategyId][bApp][token] != 0) revert ICore.ObligationAlreadySet();
         if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
 
-        if (bAppTokens[bApp][token] == 0) revert ICore.TokenNoTSupportedByBApp(token);
+        if (bAppTokens[bApp][token].isSet == false) revert ICore.TokenNoTSupportedByBApp(token);
 
         if (obligationPercentage != 0) {
             usedTokens[strategyId][token] += 1;
@@ -646,27 +659,65 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint32[] calldata obligationPercentages
     ) private {
         for (uint256 i = 0; i < tokens.length; i++) {
-            address token = tokens[i];
-            uint32 obligationPercentage = obligationPercentages[i];
-
-            if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
-
-            if (obligationPercentage != 0) {
-                usedTokens[strategyId][token] += 1;
-                obligations[strategyId][bApp][token] = obligationPercentage;
-            }
-
-            emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
+            _setSingleObligation(strategyId, bApp, tokens[i], obligationPercentages[i]);
         }
     }
 
-    /// @notice Match the tokens of strategy with the bApp
-    /// Complexity: O(n)
-    /// @param tokens The list of strategy tokens
-    /// @param bApp The bApp address
-    function _matchTokens(address[] calldata tokens, address bApp) private view {
+    function _setSingleObligation(
+        uint256 strategyId,
+        address bApp,
+        address token,
+        uint32 obligationPercentage
+    ) private {
+        if (!bAppTokens[bApp][token].isSet) revert ICore.TokenNoTSupportedByBApp(token);
+        if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+
+        if (obligationPercentage != 0) {
+            usedTokens[strategyId][token] += 1;
+            obligations[strategyId][bApp][token] = obligationPercentage;
+        }
+
+        bAppTokens[bApp][token].isSet = true;
+
+        emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
+    }
+
+    /// @notice Validate the length of two arrays
+    /// @param tokens The list of tokens
+    /// @param uint32Array The list of uint32 values
+    function _validateArraysLength(address[] calldata tokens, uint32[] calldata uint32Array) internal pure {
+        if (tokens.length != uint32Array.length) revert ICore.LengthsNotMatching();
+    }
+
+    /// @notice Internal function to validate the token and shared risk level
+    /// @param token The token address to be validated
+    /// @param sharedRiskLevel The shared risk level to be validated
+    function _validateTokenAndRiskLevelInput(address token, uint32 sharedRiskLevel) internal pure {
+        if (sharedRiskLevel > MAX_SHARED_RISK_LEVEL) revert ICore.InvalidSharedRiskLevel();
+        if (token == address(0)) revert ICore.ZeroAddressNotAllowed();
+    }
+
+    /// @notice Internal function to set the shared risk level for a token
+    /// @param bApp The address of the bApp
+    /// @param token The address of the token
+    /// @param sharedRiskLevel The shared risk level
+    function _setTokenRiskLevel(address bApp, address token, uint32 sharedRiskLevel) internal {
+        bAppTokens[bApp][token].value = sharedRiskLevel;
+        bAppTokens[bApp][token].isSet = true;
+    }
+
+    /// @notice Function to add tokens to a bApp
+    /// @param bApp The address of the bApp
+    /// @param tokens The list of tokens to add
+    /// @param sharedRiskLevels The shared risk levels of the tokens
+    function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
+        _validateArraysLength(tokens, sharedRiskLevels);
         for (uint256 i = 0; i < tokens.length; i++) {
-            if (bAppTokens[bApp][tokens[i]] == 0) revert ICore.TokenNoTSupportedByBApp(tokens[i]);
+            _validateTokenAndRiskLevelInput(tokens[i], sharedRiskLevels[i]);
+            if (bAppTokens[bApp][tokens[i]].isSet) revert ICore.TokenAlreadyAddedToBApp(tokens[i]);
+            _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
         }
     }
+
+
 }

@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-interface ICore {
+interface ICore {    
+    /// @notice Represents a SharedRiskLevel
+    struct SharedRiskLevel {
+        /// @dev The shared risk level
+        uint32 value;
+        /// @dev if the shared risk level is set
+        bool isSet;
+    }
+
     /// @notice Represents a Strategy
     struct Strategy {
         /// @dev The owner of the strategy
@@ -36,16 +44,18 @@ interface ICore {
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();
+    error EmptyTokenList();
     error ExceedingPercentageUpdate();
     error FeeAlreadySet();
     error FeeTimelockNotElapsed();
     error FeeUpdateExpired();
     error InsufficientBalance();
     error InvalidAmount();
-    error InvalidDelegationFee();
+    error InvalidStrategyFee();
     error InvalidMaxFeeIncrement();
     error InvalidPercentage();
     error InvalidPercentageIncrement();
+    error InvalidSharedRiskLevel();
     error InvalidStrategyOwner(address caller, address expectedOwner);
     error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidToken();
@@ -56,12 +66,13 @@ interface ICore {
     error ObligationAlreadySet();
     error ObligationTimelockNotElapsed();
     error PercentageAlreadySet();
+    error SharedRiskLevelAlreadySet();
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();
     error TokenNoTSupportedByBApp(address token);
-    error TokensLengthNotMatchingPercentages();
-    error TokensLengthNotMatchingRiskLevels();
+    error LengthsNotMatching();
     error UpdateObligationExpired();
     error WithdrawalExpired();
     error WithdrawalTimelockNotElapsed();
+    error ZeroAddressNotAllowed();
 }

@@ -31,7 +31,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
 
     function testRevert_CreateStrategyWithTooHighFee() public {
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidDelegationFee.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyFee.selector));
         proxiedManager.createStrategy(10_001);
         vm.stopPrank();
     }
@@ -232,7 +232,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         test_CreateStrategies();
         test_RegisterBAppWithNoTokens();
         vm.startPrank(USER1);
-        proxiedManager.optInToBApp(1, BAPP1, new address[](0), new uint32[](0), abi.encodePacked("0x00"));
+        proxiedManager.optInToBApp(STRATEGY1, BAPP1, new address[](0), new uint32[](0), abi.encodePacked("0x00"));
+        uint256 strategyId = proxiedManager.accountBAppStrategy(USER1, BAPP1);
+        assertEq(strategyId, STRATEGY1, "Strategy id");
         vm.stopPrank();
     }
 
@@ -389,7 +391,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         tokensInput[1] = address(erc20mock2);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = proxiedManager.MAX_PERCENTAGE(); // 100%
-        vm.expectRevert(abi.encodeWithSelector(ICore.TokensLengthNotMatchingPercentages.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.LengthsNotMatching.selector));
         proxiedManager.optInToBApp(1, BAPP1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         vm.stopPrank();
     }
