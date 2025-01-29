@@ -1234,6 +1234,20 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         proxiedManager.proposeUpdateObligation(STRATEGY1, BAPP1, ETH_ADDRESS, 10_000);
     }
 
+    function testRevert_proposeUpdateObligationNotCreated() public {
+        test_CreateObligationETH(10_000);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.ObligationHasNotBeenCreated.selector));
+        proxiedManager.proposeUpdateObligation(STRATEGY1, BAPP1, address(erc20mock2), 8000);
+    }
+
+    function testRevert_fastUpdateObligationNotCreated() public {
+        test_CreateObligationETH(10_000);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(ICore.ObligationHasNotBeenCreated.selector));
+        proxiedManager.fastUpdateObligation(STRATEGY1, BAPP1, address(erc20mock2), 10_000);
+    }
+
     function test_updateUsedTokensCorrectly() public {
         test_CreateNewObligationSuccessful();
         vm.startPrank(USER1);
