@@ -367,7 +367,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     function depositETH(
         uint256 strategyId
-    ) external payable nonReentrant {
+    ) external payable {
         if (msg.value == 0) revert ICore.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
