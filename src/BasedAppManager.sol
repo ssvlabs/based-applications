@@ -353,7 +353,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     /// @param token The ERC20 token address
     /// @param amount The amount to deposit
-    function depositERC20(uint256 strategyId, IERC20 token, uint256 amount) external {
+    function depositERC20(uint256 strategyId, IERC20 token, uint256 amount) external nonReentrant {
         if (amount == 0) revert ICore.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] += amount;
@@ -367,7 +367,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     function depositETH(
         uint256 strategyId
-    ) external payable {
+    ) external payable nonReentrant {
         if (msg.value == 0) revert ICore.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
