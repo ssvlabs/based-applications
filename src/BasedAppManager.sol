@@ -518,6 +518,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
+    /// @dev The used tokens counter cannot be decreased as the fast update can only bring the percentage up
     function fastUpdateObligation(
         uint256 strategyId,
         address bApp,
@@ -582,7 +583,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (block.timestamp < request.requestTime + OBLIGATION_TIMELOCK_PERIOD) {
             revert ICore.ObligationTimelockNotElapsed();
         }
-
         if (block.timestamp > request.requestTime + OBLIGATION_TIMELOCK_PERIOD + OBLIGATION_EXPIRE_TIME) {
             revert ICore.UpdateObligationExpired();
         }
