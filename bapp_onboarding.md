@@ -93,6 +93,8 @@ $$c_{\text{final}} = \left( \sum_{\text{strategy}} \frac{1}{\frac{2/3}{W_{\text{
 
 ### 3.1 Fecthing obligated balances, validator balances, and risks
 
+In this subsection, we detail how the data for computing the participants' weights can be read from the chain state.
+
 **Map of obligation balances**
 
 ```r
