@@ -150,7 +150,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         sharedRiskLevelInput[0] = 102;
         sharedRiskLevelInput[1] = 103;
         proxiedManager.addTokensToBApp(BAPP1, tokensInput, sharedRiskLevelInput);
-        // todo use a more andvanced check for the new ones: checkBAppInfo(tokensInput, sharedRiskLevelInput);
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
