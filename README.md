@@ -8,10 +8,6 @@
 
 [Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
 
-## :office:  _Architecture_
-
-![alt text](images/architecture.png "Title")
-
 &nbsp;
 
 ## :page_with_curl:  _Instructions_
