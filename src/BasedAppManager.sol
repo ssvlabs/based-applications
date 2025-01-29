@@ -221,8 +221,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         emit DelegationUpdated(msg.sender, account, percentage);
     }
 
-    /// @notice Function to remove delegation from an account
-    /// @param account The address of the account to remove delegation from
+    /// @notice Removes delegation from an account.
+    /// @param account The address of the account whose delegation is being removed.
     function removeDelegatedBalance(
         address account
     ) external {
@@ -239,12 +239,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ** Section: bApps **
     // ********************
 
-    /// @notice Function to register a bApp
-    /// @param bApp The address of the bApp
-    /// @param tokens The list of tokens the bApp accepts, can also be empty.
-    /// @param sharedRiskLevels The shared risk level of the bApp
-    /// @param metadataURI The metadata URI of the bApp
-    /// @dev Allow to create a bApp with an empty token list
+    /// @notice Registers a bApp.
+    /// @param bApp The address of the bApp.
+    /// @param tokens The list of tokens the bApp accepts; can be empty.
+    /// @param sharedRiskLevels The shared risk level of the bApp.
+    /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
+    /// to a JSON file containing metadata such as the name, description, logo, etc.
+    /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(
         address bApp,
         address[] calldata tokens,
