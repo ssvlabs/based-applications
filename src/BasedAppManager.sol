@@ -57,7 +57,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_PERCENTAGE = 1e4;
-    uint32 public constant MAX_SHARED_RISK_LEVEL = 1e5;
 
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -293,7 +292,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (tokens.length == 0) revert ICore.EmptyTokenList();
         _validateArraysLength(tokens, sharedRiskLevels);
         for (uint256 i = 0; i < tokens.length; i++) {
-            _validateTokenAndRiskLevelInput(tokens[i], sharedRiskLevels[i]);
+            _validateTokenInput(tokens[i]);
             if (!bAppTokens[bApp][tokens[i]].isSet) revert ICore.TokenNoTSupportedByBApp(tokens[i]);
             if (bAppTokens[bApp][tokens[i]].value == sharedRiskLevels[i]) {
                 revert ICore.SharedRiskLevelAlreadySet();
@@ -637,9 +636,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     /// @notice Internal function to validate the token and shared risk level
     /// @param token The token address to be validated
-    /// @param sharedRiskLevel The shared risk level to be validated
-    function _validateTokenAndRiskLevelInput(address token, uint32 sharedRiskLevel) internal pure {
-        if (sharedRiskLevel > MAX_SHARED_RISK_LEVEL) revert ICore.InvalidSharedRiskLevel();
+    function _validateTokenInput(
+        address token
+    ) internal pure {
         if (token == address(0)) revert ICore.ZeroAddressNotAllowed();
     }
 
@@ -659,7 +658,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
         _validateArraysLength(tokens, sharedRiskLevels);
         for (uint256 i = 0; i < tokens.length; i++) {
-            _validateTokenAndRiskLevelInput(tokens[i], sharedRiskLevels[i]);
+            _validateTokenInput(tokens[i]);
             if (bAppTokens[bApp][tokens[i]].isSet) revert ICore.TokenAlreadyAddedToBApp(tokens[i]);
             _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
         }
