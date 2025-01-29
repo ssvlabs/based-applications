@@ -10,6 +10,14 @@ interface ICore {
         bool isSet;
     }
 
+    /// @notice Represents an Obligation
+    struct Obligation {
+        /// @dev The obligation percentage
+        uint32 percentage;
+        /// @dev if the obligation is set
+        bool isSet;
+    }
+
     /// @notice Represents a Strategy
     struct Strategy {
         /// @dev The owner of the strategy
@@ -17,7 +25,7 @@ interface ICore {
         /// @dev The fee in percentage
         uint32 fee;
         /// @dev The proposed fee
-        uint32 feeProposed; // TODO: here is transparent, but could be moved outside in a separate mapping?
+        uint32 feeProposed;
         /// @dev The proposed fee expiration time
         uint256 feeUpdateTime;
     }
@@ -64,6 +72,7 @@ interface ICore {
     error NoPendingWithdrawal();
     error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
+    error ObligationHasNotBeenCreated();
     error ObligationTimelockNotElapsed();
     error PercentageAlreadySet();
     error SharedRiskLevelAlreadySet();
