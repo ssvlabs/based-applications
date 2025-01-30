@@ -6,7 +6,7 @@ import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgrade
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 
 import {ICore} from "./interfaces/ICore.sol";
 import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
@@ -53,7 +53,7 @@ import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
  * Marco Tabasco
  * Riccardo Persiani
  */
-contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuard, IBasedAppManager {
+contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, IBasedAppManager {
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_PERCENTAGE = 1e4;
@@ -429,7 +429,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Finalize the ERC20 withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
-    function finalizeWithdrawal(uint256 strategyId, IERC20 token) external {
+    function finalizeWithdrawal(uint256 strategyId, IERC20 token) nonReentrant external {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
         uint256 requestTime = request.requestTime;
 
@@ -469,7 +469,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(
         uint256 strategyId
-    ) external {
+    ) nonReentrant external  {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
         uint256 requestTime = request.requestTime;
 
