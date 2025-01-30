@@ -19,7 +19,7 @@ function registerBApp(
 )
 ```
 - `metadataURI`: Additional information about your bApp (e.g., a website).
-4. **Update Configuration**: After registratering, the bApp configuration can be updated by the `owner` account.
+4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account.
 
 ## 2. Securing the bApp
 
