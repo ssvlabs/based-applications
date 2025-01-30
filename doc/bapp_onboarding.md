@@ -19,7 +19,7 @@ function registerBApp(
 )
 ```
 - `metadataURI`: A JSON object containing additional details about your bApp, such as its name, description, logo, and website.
-4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account.
+4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account. Namely, more tokens can be added with [`addTokensToBApp`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L279), the tokens' shared risk levels updated with [`updateBAppTokens`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L293), and the metadata updated with [`updateMetadataURI`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L271).
 
 ## 2. Securing the bApp
 
@@ -43,13 +43,15 @@ function optInToBApp(
 
 For example, if `tokens = [SSV]` and `obligationPercentages = [50%]`, then 50% of the strategy's `SSV` balance will be obligated to the bApp.
 
-The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation.
+The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation. Obligations can be increased instantly ([`fastUpdateObligation`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L519)), but decreasing obligations requires a timelock ([`proposeUpdateObligation`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L537) → [`finalizeUpdateObligation`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L563)) to ensure slashable capital can’t be pulled out instantly.
 
 ### 2.2 Strategy's Funds
 
 To compose their balances, strategies:
 1. receive ERC20 (or ETH) via [**deposits**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L376) from accounts.
 2. inherent the non-slashable validator balance from its owner account. Accounts [**delegate**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L201) validator balances between themselves, and the strategy inherits its owner's non-delegated balance plus the received balances from other accounts.
+
+If a token is allocated to a bApp ([`usedTokens[strategyId][token] != 0`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L127)), accounts need to propose a withdrawal and wait a timelock before finalizing it, ensuring the slashable collateral cannot be removed instantly.
 
 ## 3. Participant Weight
 
