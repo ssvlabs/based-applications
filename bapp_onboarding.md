@@ -213,7 +213,7 @@ function Risks(bApp)
 
 **API Calls**
 
-For reference, we list the API calls used in the above snippets along with the chain state variables that should be read for each call.
+For reference, we list the API calls used in the above snippets along with the chain state variables that should be read for each call:
 - `GetbAppTokens(bApp)`: [`bAppTokens`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L84)
 - `GetStrategies()`: [`strategies`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L89)
 - `StrategyOptedInToBApp(strategy, bApp)`: [`accountBAppStrategy`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L94)
