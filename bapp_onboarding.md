@@ -18,7 +18,7 @@ function registerBApp(
    string calldata metadataURI
 )
 ```
-- `metadataURI`: Additional information about your bApp (e.g., a website).
+- `metadataURI`: A JSON object containing additional details about your bApp, such as its name, description, logo, and website.
 4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account.
 
 ## 2. Securing the bApp
@@ -43,6 +43,8 @@ function optInToBApp(
 
 For example, if `tokens = [SSV]` and `obligationPercentages = [50%]`, then 50% of the strategy's `SSV` balance will be obligated to the bApp.
 
+The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation.
+
 ### 2.2 Strategy's Funds
 
 To compose their balances, strategies:
@@ -55,15 +57,15 @@ bApp clients track the weight of each participant in the bApp. For that, clients
 
 1. **Gather Obligated Balances**: First, for each token used by the bApp, it should get the obligated balance from each strategy.
 ```go
-ObligatedBalance map[Token]map[Strategy]Amount
+ObligatedBalance mapping(Token -> Strategy -> Amount)
 ```
 2. **Sum Obligations**: From `ObligatedBalance`, it can sum all obligations and compute the total amount obligated to the bApp by all strategies.
 ```go
-TotalBAppBalance map[Token]Amount
+TotalBAppBalance mapping(Token -> Amount)
 ```
 3. **Calculate Risk**: For each token, it should get the risk (token-over usage) of each strategy.
 ```go
-Risk map[Token]map[Strategy]float64
+Risk mapping(Token -> Strategy -> Float)
 ```
 4. **Compute Risk-Aware Weights**: With this information, it can compute the weight of a participant for a certain token by
 
@@ -109,7 +111,7 @@ function ObligatedBalances(bApp)
    for strategy in strategies do
 
       # Check if strategy participates in the bApp
-      if !api.StrategyOptedInToBApp(strategy, bApp) then
+      if !api.HasStrategyOptedInToBApp(strategy, bApp) then
          # If not, continue
          continue
 
@@ -135,7 +137,7 @@ function ValidatorBalances(bApp)
    for strategy in strategies do
 
       # Check if strategy participates in the bApp
-      if !api.StrategyOptedInToBApp(strategy, bApp) then
+      if !api.HasStrategyOptedInToBApp(strategy, bApp) then
          # If not, continue
          continue
 
@@ -201,7 +203,7 @@ function Risks(bApp)
    for strategy in strategies do
 
       # Check if strategy participates in the bApp
-      if !api.StrategyOptedInToBApp(strategy, bApp) then
+      if !api.HasStrategyOptedInToBApp(strategy, bApp) then
          # If not, continue
          continue
 
@@ -216,7 +218,7 @@ function Risks(bApp)
 For reference, we list the API calls used in the above snippets along with the chain state variables that should be read for each call:
 - `GetbAppTokens(bApp)`: [`bAppTokens`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L84)
 - `GetStrategies()`: [`strategies`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L89)
-- `StrategyOptedInToBApp(strategy, bApp)`: [`accountBAppStrategy`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L94)
+- `HasStrategyOptedInToBApp(strategy, bApp)`: [`accountBAppStrategy`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L94)
 - `GetStrategyBalance(strategy)`: [`strategyTokenBalances`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L109)
 - `GetObligation(strategy, bApp, token)`: [`obligations`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L115)
 - `GetStrategyOwnerAccount(strategy)`: [`strategies`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L89)
