@@ -111,7 +111,8 @@ function ObligatedBalances(bApp)
    for strategy in strategies do
 
       # Check if strategy participates in the bApp
-      if !api.HasStrategyOptedInToBApp(strategy, bApp) then
+      ownerAccount := api.GetStrategyOwnerAccount(strategy)
+      if api.GetStrategyOptedInToBApp(ownerAccount, bApp) != strategy then
          # If not, continue
          continue
 
@@ -136,13 +137,13 @@ function ValidatorBalances(bApp)
    strategies = api.GetStrategies()
    for strategy in strategies do
 
-      # Check if strategy participates in the bApp
-      if !api.HasStrategyOptedInToBApp(strategy, bApp) then
-         # If not, continue
-         continue
-
       # Get account that owns the strategy
       ownerAccount = api.GetStrategyOwnerAccount(strategy)
+
+      # Check if strategy participates in the bApp
+      if api.GetStrategyOptedInToBApp(ownerAccount, bApp) != strategy then
+         # If not, continue
+         continue
 
       # Store validator balance
       validatorBalances[strategy] = ComputeEffectiveValidatorBalance(ownerAccount)
@@ -203,7 +204,8 @@ function Risks(bApp)
    for strategy in strategies do
 
       # Check if strategy participates in the bApp
-      if !api.HasStrategyOptedInToBApp(strategy, bApp) then
+      ownerAccount := api.GetStrategyOwnerAccount(strategy)
+      if api.GetStrategyOptedInToBApp(ownerAccount, bApp) != strategy then
          # If not, continue
          continue
 
@@ -218,7 +220,7 @@ function Risks(bApp)
 For reference, we list the API calls used in the above snippets along with the chain state variables that should be read for each call:
 - `GetbAppTokens(bApp)`: [`bAppTokens`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L84)
 - `GetStrategies()`: [`strategies`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L89)
-- `HasStrategyOptedInToBApp(strategy, bApp)`: [`accountBAppStrategy`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L94)
+- `GetStrategyOptedInToBApp(account, bApp)`: [`accountBAppStrategy`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L94)
 - `GetStrategyBalance(strategy)`: [`strategyTokenBalances`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L109)
 - `GetObligation(strategy, bApp, token)`: [`obligations`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L115)
 - `GetStrategyOwnerAccount(strategy)`: [`strategies`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L89)
