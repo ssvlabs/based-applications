@@ -45,7 +45,7 @@ For example, if `tokens = [SSV]` and `obligationPercentages = [50%]`, then 50% o
 
 ### 2.2 Strategy's Funds
 
-To compose the their balances, strategies:
+To compose their balances, strategies:
 1. receive ERC20 (or ETH) via [**deposits**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L376) from accounts.
 2. inherent the non-slashable validator balance from its owner account. Accounts [**delegate**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L201) validator balances between themselves, and the strategy inherits its owner's non-delegated balance plus the received balances from other accounts.
 
