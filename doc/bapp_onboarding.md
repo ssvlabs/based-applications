@@ -49,7 +49,7 @@ The strategy’s owner can later update its obligations by modifying existing on
 
 To compose their balances, strategies:
 1. receive ERC20 (or ETH) via [**deposits**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L376) from accounts.
-2. inherent the non-slashable validator balance from its owner account. Accounts [**delegate**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L201) validator balances between themselves, and the strategy inherits its owner's non-delegated balance plus the received balances from other accounts.
+2. inherent the non-slashable validator balance from its owner account. Accounts [**delegate**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L201) validator balances between themselves, and the strategy inherits all balances delegated to its owner.
 
 If a token is allocated to a bApp ([`usedTokens[strategyId][token] != 0`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L127)), accounts need to propose a withdrawal and wait a timelock before finalizing it, ensuring the slashable collateral cannot be removed instantly.
 
@@ -156,13 +156,6 @@ function ValidatorBalances(bApp)
 function ComputeEffectiveValidatorBalance(account)
 
    total = 0
-
-   # Gets the percentage that the account delegated to others
-   percentageDelegatedToOthers = api.GetTotalDelegation(account)
-
-   # Add non-delegated validator balance
-   accountsOriginalValidatorBalance = GetOriginalValidatorBalance(account)
-   total += accountsOriginalValidatorBalance * (1 - percentageDelegatedToOthers)
 
    # Get all other accounts that delegated to it along with the percentages
    delegatorsToAccount = New(Map<Account, Percentage>)
