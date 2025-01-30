@@ -27,7 +27,7 @@ Once the bApp is registered, strategies can join it and allocate capital to secu
 
 ### 2.1 Opting in
 
-The strategy opts in to the bApp by using the [`optInToBApp`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L333) function of the smart contract:
+The strategy opts-in to the bApp by using the [`optInToBApp`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L333) function of the smart contract:
 ```solidity
 function optInToBApp(
    uint256 strategyId,
