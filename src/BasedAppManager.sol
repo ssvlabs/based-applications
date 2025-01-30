@@ -53,7 +53,13 @@ import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
  * Marco Tabasco
  * Riccardo Persiani
  */
-contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, IBasedAppManager {
+contract BasedAppManager is
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable,
+    ReentrancyGuardTransient,
+    IBasedAppManager
+{
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_PERCENTAGE = 1e4;
@@ -429,7 +435,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Finalize the ERC20 withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
-    function finalizeWithdrawal(uint256 strategyId, IERC20 token) nonReentrant external {
+    function finalizeWithdrawal(uint256 strategyId, IERC20 token) external nonReentrant {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
         uint256 requestTime = request.requestTime;
 
@@ -469,7 +475,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(
         uint256 strategyId
-    ) nonReentrant external  {
+    ) external nonReentrant {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
         uint256 requestTime = request.requestTime;
 
