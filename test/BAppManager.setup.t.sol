@@ -63,8 +63,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.startPrank(OWNER);
 
         implementation = new BasedAppManager();
-        bytes memory data =
-            abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
+        bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
 
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = BasedAppManager(address(proxy));

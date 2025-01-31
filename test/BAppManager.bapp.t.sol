@@ -6,10 +6,11 @@ import "./BAppManager.setup.t.sol";
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     string metadataURI = "http://metadata.com";
 
-    function createSingleTokenAndSingleRiskLevel(
-        address token,
-        uint32 sharedRiskLevel
-    ) private pure returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
+    function createSingleTokenAndSingleRiskLevel(address token, uint32 sharedRiskLevel)
+        private
+        pure
+        returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
+    {
         tokensInput = new address[](1);
         tokensInput[0] = token;
         sharedRiskLevelInput = new uint32[](1);

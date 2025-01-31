@@ -53,13 +53,7 @@ import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
  * Marco Tabasco
  * Riccardo Persiani
  */
-contract BasedAppManager is
-    Initializable,
-    OwnableUpgradeable,
-    UUPSUpgradeable,
-    ReentrancyGuardTransient,
-    IBasedAppManager
-{
+contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, IBasedAppManager {
     using SafeERC20 for IERC20;
 
     uint32 public constant MAX_PERCENTAGE = 1e4;
@@ -117,8 +111,7 @@ contract BasedAppManager is
      * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
      */
-    mapping(uint256 strategyId => mapping(address bApp => mapping(address token => ICore.Obligation))) public
-        obligations;
+    mapping(uint256 strategyId => mapping(address bApp => mapping(address token => ICore.Obligation))) public obligations;
     /**
      * @notice Tracks unallocated tokens in a strategy.
      * @dev Count the number of bApps that have one obligation set for the token.
@@ -161,9 +154,7 @@ contract BasedAppManager is
 
     /// @notice Allow the function to be called only by the strategy owner
     /// @param strategyId The ID of the strategy
-    modifier onlyStrategyOwner(
-        uint256 strategyId
-    ) {
+    modifier onlyStrategyOwner(uint256 strategyId) {
         if (strategies[strategyId].owner != msg.sender) {
             revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
         }
@@ -172,18 +163,14 @@ contract BasedAppManager is
 
     /// @notice Allow the function to be called only by the bApp owner
     /// @param bApp The address of the bApp
-    modifier onlyBAppOwner(
-        address bApp
-    ) {
+    modifier onlyBAppOwner(address bApp) {
         if (bAppOwners[bApp] != msg.sender) revert ICore.InvalidBAppOwner(msg.sender, bAppOwners[bApp]);
         _;
     }
 
     /// @notice Defines who can authorize the upgrade
     /// @param newImplementation The address of the new implementation
-    function _authorizeUpgrade(
-        address newImplementation
-    ) internal override onlyOwner {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // *****************************************
     // ** Section: Delegate Validator Balance **
@@ -228,9 +215,7 @@ contract BasedAppManager is
 
     /// @notice Removes delegation from an account.
     /// @param account The address of the account whose delegation is being removed.
-    function removeDelegatedBalance(
-        address account
-    ) external {
+    function removeDelegatedBalance(address account) external {
         uint32 percentage = delegations[msg.sender][account];
         if (percentage == 0) revert ICore.DelegationDoesNotExist();
 
@@ -276,11 +261,10 @@ contract BasedAppManager is
     /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to add
     /// @param sharedRiskLevels The shared risk levels of the tokens
-    function addTokensToBApp(
-        address bApp,
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels
-    ) external onlyBAppOwner(bApp) {
+    function addTokensToBApp(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels)
+        external
+        onlyBAppOwner(bApp)
+    {
         if (tokens.length == 0) revert ICore.EmptyTokenList();
         _addNewTokens(bApp, tokens, sharedRiskLevels);
         emit BAppTokensCreated(bApp, tokens, sharedRiskLevels);
@@ -290,11 +274,10 @@ contract BasedAppManager is
     /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to update
     /// @param sharedRiskLevels The shared risk levels of the tokens
-    function updateBAppTokens(
-        address bApp,
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels
-    ) external onlyBAppOwner(bApp) {
+    function updateBAppTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels)
+        external
+        onlyBAppOwner(bApp)
+    {
         if (tokens.length == 0) revert ICore.EmptyTokenList();
         _validateArraysLength(tokens, sharedRiskLevels);
         for (uint256 i = 0; i < tokens.length; i++) {
@@ -314,9 +297,7 @@ contract BasedAppManager is
 
     /// @notice Function to create a new Strategy
     /// @return strategyId The ID of the new Strategy
-    function createStrategy(
-        uint32 fee
-    ) external returns (uint256 strategyId) {
+    function createStrategy(uint32 fee) external returns (uint256 strategyId) {
         if (fee > MAX_PERCENTAGE) revert ICore.InvalidStrategyFee();
 
         strategyId = ++_strategyCounter;
@@ -371,9 +352,7 @@ contract BasedAppManager is
 
     /// @notice Deposit ETH into the strategy
     /// @param strategyId The ID of the strategy
-    function depositETH(
-        uint256 strategyId
-    ) external payable {
+    function depositETH(uint256 strategyId) external payable {
         if (msg.value == 0) revert ICore.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
@@ -425,11 +404,9 @@ contract BasedAppManager is
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
 
         request.amount = amount;
-        request.requestTime = block.timestamp;
+        request.requestTime = uint64(block.timestamp);
 
-        emit StrategyWithdrawalProposed(
-            strategyId, msg.sender, address(token), amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD
-        );
+        emit StrategyWithdrawalProposed(strategyId, msg.sender, address(token), amount);
     }
 
     /// @notice Finalize the ERC20 withdrawal after the timelock period has passed.
@@ -461,18 +438,14 @@ contract BasedAppManager is
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
 
         request.amount = amount;
-        request.requestTime = block.timestamp;
+        request.requestTime = uint64(block.timestamp);
 
-        emit StrategyWithdrawalProposed(
-            strategyId, msg.sender, ETH_ADDRESS, amount, block.timestamp + WITHDRAWAL_TIMELOCK_PERIOD
-        );
+        emit StrategyWithdrawalProposed(strategyId, msg.sender, ETH_ADDRESS, amount);
     }
 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
-    function finalizeWithdrawalETH(
-        uint256 strategyId
-    ) external nonReentrant {
+    function finalizeWithdrawalETH(uint256 strategyId) external nonReentrant {
         ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
         uint256 requestTime = request.requestTime;
 
@@ -493,12 +466,10 @@ contract BasedAppManager is
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function createObligation(
-        uint256 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) external onlyStrategyOwner(strategyId) {
+    function createObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage)
+        external
+        onlyStrategyOwner(strategyId)
+    {
         if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
 
         _createSingleObligation(strategyId, bApp, token, obligationPercentage);
@@ -510,12 +481,10 @@ contract BasedAppManager is
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     /// @dev The used tokens counter cannot be decreased as the fast update can only bring the percentage up
-    function fastUpdateObligation(
-        uint256 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) external onlyStrategyOwner(strategyId) {
+    function fastUpdateObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage)
+        external
+        onlyStrategyOwner(strategyId)
+    {
         if (obligationPercentage <= obligations[strategyId][bApp][token].percentage) revert ICore.InvalidPercentage();
 
         _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage);
@@ -528,33 +497,25 @@ contract BasedAppManager is
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
     /// @param obligationPercentage The new percentage of the obligation
-    function proposeUpdateObligation(
-        uint256 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) external onlyStrategyOwner(strategyId) {
+    function proposeUpdateObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage)
+        external
+        onlyStrategyOwner(strategyId)
+    {
         _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage);
 
         ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][token];
 
         request.percentage = obligationPercentage;
-        request.requestTime = block.timestamp;
+        request.requestTime = uint64(block.timestamp);
 
-        emit ObligationUpdateProposed(
-            strategyId, bApp, address(token), obligationPercentage, request.requestTime + OBLIGATION_TIMELOCK_PERIOD
-        );
+        emit ObligationUpdateProposed(strategyId, bApp, address(token), obligationPercentage);
     }
 
     /// @notice Finalize the withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     /// @param bApp The address of the bApp.
     /// @param token The ERC20 token address.
-    function finalizeUpdateObligation(
-        uint256 strategyId,
-        address bApp,
-        address token
-    ) external onlyStrategyOwner(strategyId) {
+    function finalizeUpdateObligation(uint256 strategyId, address bApp, address token) external onlyStrategyOwner(strategyId) {
         ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][address(token)];
         uint256 requestTime = request.requestTime;
         uint32 percentage = request.percentage;
@@ -586,16 +547,14 @@ contract BasedAppManager is
         if (proposedFee == fee) revert ICore.FeeAlreadySet();
 
         strategy.feeProposed = proposedFee;
-        strategy.feeRequestTime = block.timestamp;
+        strategy.feeRequestTime = uint64(block.timestamp);
 
-        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee, strategy.feeRequestTime);
+        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee);
     }
 
     /// @notice Finalize the fee update for a strategy
     /// @param strategyId The ID of the strategy
-    function finalizeFeeUpdate(
-        uint256 strategyId
-    ) external onlyStrategyOwner(strategyId) {
+    function finalizeFeeUpdate(uint256 strategyId) external onlyStrategyOwner(strategyId) {
         ICore.Strategy storage strategy = strategies[strategyId];
 
         uint256 feeRequestTime = strategy.feeRequestTime;
@@ -624,9 +583,7 @@ contract BasedAppManager is
 
     /// @notice Internal function to validate the token and shared risk level
     /// @param token The token address to be validated
-    function _validateTokenInput(
-        address token
-    ) internal pure {
+    function _validateTokenInput(address token) internal pure {
         if (token == address(0)) revert ICore.ZeroAddressNotAllowed();
     }
 
@@ -673,12 +630,7 @@ contract BasedAppManager is
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function _createSingleObligation(
-        uint256 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) private {
+    function _createSingleObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) private {
         if (!bAppTokens[bApp][token].isSet) revert ICore.TokenNoTSupportedByBApp(token);
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligations[strategyId][bApp][token].isSet) revert ICore.ObligationAlreadySet();
@@ -698,12 +650,10 @@ contract BasedAppManager is
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function _validateObligationUpdateInput(
-        uint256 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) private view {
+    function _validateObligationUpdateInput(uint256 strategyId, address bApp, address token, uint32 obligationPercentage)
+        private
+        view
+    {
         if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
         if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         if (obligationPercentage == obligations[strategyId][bApp][token].percentage) {
@@ -728,8 +678,8 @@ contract BasedAppManager is
     /// @param timelockPeriod The timelock period
     /// @param expireTime The expire time
     function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) private view {
-        if (block.timestamp < requestTime + timelockPeriod) revert ICore.TimelockNotElapsed();
-        if (block.timestamp > requestTime + timelockPeriod + expireTime) {
+        if (uint64(block.timestamp) < requestTime + timelockPeriod) revert ICore.TimelockNotElapsed();
+        if (uint64(block.timestamp) > requestTime + timelockPeriod + expireTime) {
             revert ICore.RequestTimeExpired();
         }
     }
