@@ -5,7 +5,7 @@ interface ICore {
     /// @notice Represents a SharedRiskLevel
     struct SharedRiskLevel {
         /// @dev The shared risk level
-        /// Encoding: The value is stored as a uint32. However, it represents a real (float) value. To get the actual real value (decode), divide by 10^6 (i.e. value / 1_000_000).
+        /// Encoding: The value is stored as a uint32. However, it represents a real (float) value. To get the actual real value (decode), divide by 10^6.
         uint32 value;
         /// @dev if the shared risk level is set
         bool isSet;
