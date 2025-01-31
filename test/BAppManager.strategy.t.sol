@@ -727,7 +727,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(owner, USER1, "Strategy owner");
         assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
         assertEq(feeProposed, 20, "Strategy fee proposed");
-        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        assertEq(feeUpdateTime, 1, "Strategy fee update time");
         vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() + timeBeforeLimit);
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
         (owner, fee, feeProposed, feeUpdateTime) = proxiedManager.strategies(STRATEGY1);
@@ -749,9 +749,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(owner, USER1, "Strategy owner");
         assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
         assertEq(feeProposed, 20, "Strategy fee proposed");
-        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        assertEq(feeUpdateTime, 1, "Strategy fee update time");
         vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() + timeAfterLimit);
-        vm.expectRevert(abi.encodeWithSelector(ICore.FeeUpdateExpired.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
         vm.stopPrank();
     }
@@ -764,9 +764,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(owner, USER1, "Strategy owner");
         assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
         assertEq(feeProposed, 20, "Strategy fee proposed");
-        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        assertEq(feeUpdateTime, 1, "Strategy fee update time");
         vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() - 1 seconds);
-        vm.expectRevert(abi.encodeWithSelector(ICore.FeeTimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
         vm.stopPrank();
     }
@@ -798,7 +798,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(owner, USER1, "Strategy owner");
         assertEq(fee, STRATEGY1_INITIAL_FEE, "Strategy fee");
         assertEq(feeProposed, 20, "Strategy fee proposed");
-        assertEq(feeUpdateTime, 604_801, "Strategy fee update time");
+        assertEq(feeUpdateTime, 1, "Strategy fee update time");
         vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD());
         vm.stopPrank();
         vm.startPrank(ATTACKER);
@@ -914,7 +914,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(percentage, 1000, "Obligation percentage proposed");
         assertEq(requestTime, 1, "Obligation update time");
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD() + timeAfterLimit);
-        vm.expectRevert(abi.encodeWithSelector(ICore.UpdateObligationExpired.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
         proxiedManager.finalizeUpdateObligation(STRATEGY1, BAPP1, address(erc20mock));
         vm.stopPrank();
     }
@@ -934,7 +934,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(percentage, 1000, "Obligation percentage proposed");
         assertEq(requestTime, 1, "Obligation update time");
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD() - timeToLimit);
-        vm.expectRevert(abi.encodeWithSelector(ICore.ObligationTimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
         proxiedManager.finalizeUpdateObligation(STRATEGY1, BAPP1, address(erc20mock));
         vm.stopPrank();
     }
@@ -1058,7 +1058,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(requestTime, block.timestamp, "Request time");
         assertEq(amount, withdrawalAmount, "Request amount");
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() - 1 seconds);
-        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalTimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
     }
@@ -1082,7 +1082,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
             block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() + proxiedManager.WITHDRAWAL_EXPIRE_TIME()
                 + 1 seconds
         );
-        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalExpired.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
     }
@@ -1111,7 +1111,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(requestTime, block.timestamp, "Request time");
         assertEq(amount, 1000, "Request amount");
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() - 1 seconds);
-        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalTimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
     }
@@ -1132,7 +1132,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
             block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() + proxiedManager.WITHDRAWAL_EXPIRE_TIME()
                 + 1 seconds
         );
-        vm.expectRevert(abi.encodeWithSelector(ICore.WithdrawalExpired.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
     }

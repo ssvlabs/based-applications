@@ -26,15 +26,15 @@ interface ICore {
         uint32 fee;
         /// @dev The proposed fee
         uint32 feeProposed;
-        /// @dev The proposed fee expiration time
-        uint256 feeUpdateTime;
+        /// @dev The block time when the fee update request was sent
+        uint256 feeRequestTime;
     }
 
     /// @notice Represents a request for a withdrawal from a participant of a strategy
     struct WithdrawalRequest {
         /// @dev The amount requested to withdraw
         uint256 amount;
-        /// @dev The block time when the request was sent
+        /// @dev The block time when the withdrawal request was sent
         uint256 requestTime;
     }
 
@@ -42,7 +42,7 @@ interface ICore {
     struct ObligationRequest {
         /// @dev The new obligation percentage
         uint32 percentage;
-        /// @dev The block time when the request was sent
+        /// @dev The block time when the update obligation request was sent
         uint256 requestTime;
     }
 
@@ -55,33 +55,30 @@ interface ICore {
     error EmptyTokenList();
     error ExceedingPercentageUpdate();
     error FeeAlreadySet();
-    error FeeTimelockNotElapsed();
-    error FeeUpdateExpired();
     error InsufficientBalance();
     error InvalidAmount();
-    error InvalidStrategyFee();
+    error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidMaxFeeIncrement();
     error InvalidPercentage();
     error InvalidPercentageIncrement();
     error InvalidSharedRiskLevel();
+    error InvalidStrategyFee();
     error InvalidStrategyOwner(address caller, address expectedOwner);
-    error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidToken();
+    error LengthsNotMatching();
     error NoPendingFeeUpdate();
     error NoPendingObligationUpdate();
     error NoPendingWithdrawal();
     error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
     error ObligationHasNotBeenCreated();
-    error ObligationTimelockNotElapsed();
     error PercentageAlreadySet();
+    error RequestTimeExpired();
     error SharedRiskLevelAlreadySet();
+    error TimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();
     error TokenNoTSupportedByBApp(address token);
-    error LengthsNotMatching();
     error UpdateObligationExpired();
-    error WithdrawalExpired();
-    error WithdrawalTimelockNotElapsed();
     error ZeroAddressNotAllowed();
 }

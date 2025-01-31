@@ -440,10 +440,7 @@ contract BasedAppManager is
         uint256 requestTime = request.requestTime;
 
         if (requestTime == 0) revert ICore.NoPendingWithdrawal();
-        if (block.timestamp < requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.WithdrawalTimelockNotElapsed();
-        if (block.timestamp > requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
-            revert ICore.WithdrawalExpired();
-        }
+        _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
@@ -480,10 +477,7 @@ contract BasedAppManager is
         uint256 requestTime = request.requestTime;
 
         if (requestTime == 0) revert ICore.NoPendingWithdrawalETH();
-        if (block.timestamp < requestTime + WITHDRAWAL_TIMELOCK_PERIOD) revert ICore.WithdrawalTimelockNotElapsed();
-        if (block.timestamp > requestTime + WITHDRAWAL_TIMELOCK_PERIOD + WITHDRAWAL_EXPIRE_TIME) {
-            revert ICore.WithdrawalExpired();
-        }
+        _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
@@ -570,12 +564,7 @@ contract BasedAppManager is
         uint32 percentage = request.percentage;
 
         if (requestTime == 0) revert ICore.NoPendingObligationUpdate();
-        if (block.timestamp < request.requestTime + OBLIGATION_TIMELOCK_PERIOD) {
-            revert ICore.ObligationTimelockNotElapsed();
-        }
-        if (block.timestamp > request.requestTime + OBLIGATION_TIMELOCK_PERIOD + OBLIGATION_EXPIRE_TIME) {
-            revert ICore.UpdateObligationExpired();
-        }
+        _checkTimelocks(requestTime, OBLIGATION_TIMELOCK_PERIOD, OBLIGATION_EXPIRE_TIME);
 
         if (percentage == 0 && obligations[strategyId][bApp][address(token)].percentage > 0) {
             usedTokens[strategyId][address(token)] -= 1;
@@ -601,9 +590,9 @@ contract BasedAppManager is
         if (proposedFee == fee) revert ICore.FeeAlreadySet();
 
         strategy.feeProposed = proposedFee;
-        strategy.feeUpdateTime = block.timestamp + FEE_TIMELOCK_PERIOD;
+        strategy.feeRequestTime = block.timestamp;
 
-        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee, strategy.feeUpdateTime);
+        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee, strategy.feeRequestTime);
     }
 
     /// @notice Finalize the fee update for a strategy
@@ -613,18 +602,15 @@ contract BasedAppManager is
     ) external onlyStrategyOwner(strategyId) {
         ICore.Strategy storage strategy = strategies[strategyId];
 
-        uint256 feeUpdateTime = strategy.feeUpdateTime;
+        uint256 feeRequestTime = strategy.feeRequestTime;
 
-        if (feeUpdateTime == 0) revert ICore.NoPendingFeeUpdate();
-        if (block.timestamp < feeUpdateTime) revert ICore.FeeTimelockNotElapsed();
-        if (block.timestamp > feeUpdateTime + FEE_EXPIRE_TIME) {
-            revert ICore.FeeUpdateExpired();
-        }
+        if (feeRequestTime == 0) revert ICore.NoPendingFeeUpdate();
+        _checkTimelocks(feeRequestTime, FEE_TIMELOCK_PERIOD, FEE_EXPIRE_TIME);
 
         uint32 oldFee = strategy.fee;
         strategy.fee = strategy.feeProposed;
         strategy.feeProposed = 0;
-        strategy.feeUpdateTime = 0;
+        strategy.feeRequestTime = 0;
 
         emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee, oldFee);
     }
@@ -739,5 +725,16 @@ contract BasedAppManager is
             usedTokens[strategyId][token] += 1;
         }
         obligations[strategyId][bApp][token].percentage = obligationPercentage;
+    }
+
+    /// @notice Check the timelocks
+    /// @param requestTime The time of the request
+    /// @param timelockPeriod The timelock period
+    /// @param expireTime The expire time
+    function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) private view {
+        if (block.timestamp < requestTime + timelockPeriod) revert ICore.TimelockNotElapsed();
+        if (block.timestamp > requestTime + timelockPeriod + expireTime) {
+            revert ICore.RequestTimeExpired();
+        }
     }
 }
