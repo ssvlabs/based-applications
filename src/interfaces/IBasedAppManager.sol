@@ -22,21 +22,13 @@ interface IBasedAppManager {
     event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);
     event MaxFeeIncrementSet(uint32 indexed newMaxFeeIncrement);
     event ObligationCreated(
-        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 obligationPercentage
+        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 percentage
     );
     event ObligationUpdated(
-        uint256 indexed strategyId,
-        address indexed bApp,
-        address indexed token,
-        uint256 obligationPercentage,
-        bool isFast
+        uint256 indexed strategyId, address indexed bApp, address indexed token, uint256 percentage, bool isFast
     );
     event ObligationUpdateProposed(
-        uint256 indexed strategyId,
-        address indexed account,
-        address indexed token,
-        uint32 percentage,
-        uint256 finalizeTime
+        uint256 indexed strategyId, address indexed bApp, address indexed token, uint32 percentage, uint256 finalizeTime
     );
     event StrategyCreated(uint256 indexed strategyId, address indexed owner, uint32 fee);
     event StrategyDeposit(

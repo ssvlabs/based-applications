@@ -542,11 +542,7 @@ contract BasedAppManager is
         request.requestTime = block.timestamp;
 
         emit ObligationUpdateProposed(
-            strategyId,
-            msg.sender,
-            address(token),
-            obligationPercentage,
-            request.requestTime + OBLIGATION_TIMELOCK_PERIOD
+            strategyId, bApp, address(token), obligationPercentage, request.requestTime + OBLIGATION_TIMELOCK_PERIOD
         );
     }
 
