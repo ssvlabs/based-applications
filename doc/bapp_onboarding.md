@@ -18,7 +18,7 @@ function registerBApp(
    string calldata metadataURI
 )
 ```
-- `metadataURI`: A JSON object containing additional details about your bApp, such as its name, description, logo, and website.
+- `metadataURI`: A link to a JSON file containing additional details about your bApp, such as its name, description, logo, and website.
 4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account. Namely, more tokens can be added with [`addTokensToBApp`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L279), the tokens' shared risk levels updated with [`updateBAppTokens`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L293), and the metadata updated with [`updateMetadataURI`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L271).
 
 ## 2. Securing the bApp
