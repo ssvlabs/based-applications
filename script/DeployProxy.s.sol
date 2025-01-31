@@ -16,7 +16,7 @@ contract DeployProxy is Script {
         uint32 maxFeeIncrement = 500;
 
         // 3. Encode initializer data for the proxy
-        bytes memory initData = abi.encodeWithSignature("initialize(uint32)", maxFeeIncrement);
+        bytes memory initData = abi.encodeWithSignature("initialize(address,uint32)", msg.sender, maxFeeIncrement);
 
         // 4. Deploy the proxy and link it to the implementation
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);

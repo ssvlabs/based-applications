@@ -4,9 +4,9 @@
 
 &nbsp;
 
-## :office:  _Architecture_
+## :page_facing_up: _Whitepaper_
 
-![alt text](images/architecture.png "Title")
+[Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
 
 &nbsp;
 

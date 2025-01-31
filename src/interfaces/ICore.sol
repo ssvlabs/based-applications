@@ -2,14 +2,21 @@
 pragma solidity 0.8.28;
 
 interface ICore {
-    /// @notice Represents an AVS
-    struct BApp {
-        /// @dev The owner of the bApp
-        address owner;
-        /// @dev The erc20 tokens the bApp accepts (can accept multiple)
-        address[] tokens;
-        /// @dev beta parameter
-        uint32 sharedRiskLevel;
+    /// @notice Represents a SharedRiskLevel
+    struct SharedRiskLevel {
+        /// @dev The shared risk level
+        /// Encoding: The value is stored as a uint32. However, it represents a real (float) value. To get the actual real value (decode), divide by 10^6.
+        uint32 value;
+        /// @dev if the shared risk level is set
+        bool isSet;
+    }
+
+    /// @notice Represents an Obligation
+    struct Obligation {
+        /// @dev The obligation percentage
+        uint32 percentage;
+        /// @dev if the obligation is set
+        bool isSet;
     }
 
     /// @notice Represents a Strategy
@@ -19,25 +26,25 @@ interface ICore {
         /// @dev The fee in percentage
         uint32 fee;
         /// @dev The proposed fee
-        uint32 feeProposed; // TODO: here is transparent, but could be moved outside in a separate mapping?
-        /// @dev The proposed fee expiration time
-        uint256 feeUpdateTime;
+        uint32 feeProposed;
+        /// @dev The block time when the fee update request was sent
+        uint64 feeRequestTime;
     }
 
     /// @notice Represents a request for a withdrawal from a participant of a strategy
     struct WithdrawalRequest {
         /// @dev The amount requested to withdraw
         uint256 amount;
-        /// @dev The block time when the request was sent
-        uint256 requestTime;
+        /// @dev The block time when the withdrawal request was sent
+        uint64 requestTime;
     }
 
     /// @notice Represents a change in the obligation in a strategy. Only the owner can submit one.
     struct ObligationRequest {
         /// @dev The new obligation percentage
         uint32 percentage;
-        /// @dev The block time when the request was sent
-        uint256 requestTime;
+        /// @dev The block time when the update obligation request was sent
+        uint64 requestTime;
     }
 
     error BAppAlreadyOptedIn();
@@ -46,30 +53,33 @@ interface ICore {
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();
+    error EmptyTokenList();
     error ExceedingPercentageUpdate();
     error FeeAlreadySet();
-    error FeeTimelockNotElapsed();
-    error FeeUpdateExpired();
     error InsufficientBalance();
     error InvalidAmount();
-    error InvalidDelegationFee();
+    error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidMaxFeeIncrement();
     error InvalidPercentage();
     error InvalidPercentageIncrement();
+    error InvalidSharedRiskLevel();
+    error InvalidStrategyFee();
     error InvalidStrategyOwner(address caller, address expectedOwner);
-    error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidToken();
+    error LengthsNotMatching();
     error NoPendingFeeUpdate();
     error NoPendingObligationUpdate();
     error NoPendingWithdrawal();
     error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
-    error ObligationTimelockNotElapsed();
+    error ObligationHasNotBeenCreated();
+    error PercentageAlreadySet();
+    error RequestTimeExpired();
+    error SharedRiskLevelAlreadySet();
+    error TimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();
     error TokenNoTSupportedByBApp(address token);
-    error TokensLengthNotMatchingPercentages();
     error UpdateObligationExpired();
-    error WithdrawalExpired();
-    error WithdrawalTimelockNotElapsed();
+    error ZeroAddressNotAllowed();
 }

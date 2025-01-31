@@ -20,6 +20,9 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
+    IERC20 public erc20mock3;
+    IERC20 public erc20mock4;
+    IERC20 public erc20mock5;
 
     address OWNER = makeAddr("Owner");
     address USER1 = makeAddr("User1");
@@ -37,9 +40,6 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     uint32 STRATEGY2_INITIAL_FEE = 0;
     uint32 STRATEGY3_INITIAL_FEE = 1000;
     uint32 STRATEGY1_UPDATE_FEE = 10;
-
-    address ERC20_ADDRESS1 = address(erc20mock);
-    address ERC20_ADDRESS2 = address(erc20mock2);
 
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 constant INITIAL_USER1_BALANCE_ETH = 10 ether;
@@ -63,7 +63,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.startPrank(OWNER);
 
         implementation = new BasedAppManager();
-        bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, MAX_FEE_INCREMENT); // Encodes initialize() call
+        bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
 
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = BasedAppManager(address(proxy));
@@ -83,6 +83,10 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         erc20mock2 = new ERC20Mock();
         erc20mock2.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
         erc20mock2.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
+
+        erc20mock3 = new ERC20Mock();
+        erc20mock4 = new ERC20Mock();
+        erc20mock5 = new ERC20Mock();
 
         vm.stopPrank();
     }
