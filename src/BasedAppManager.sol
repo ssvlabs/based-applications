@@ -529,7 +529,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         _updateObligation(strategyId, bApp, address(token), percentage);
 
-        emit ObligationUpdated(strategyId, msg.sender, address(token), percentage, false);
+        emit ObligationUpdated(strategyId, bApp, address(token), percentage, false);
 
         delete obligationRequests[strategyId][bApp][address(token)];
     }
