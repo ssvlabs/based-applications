@@ -6,10 +6,10 @@ This guide outlines the steps for based applications developers looking to build
 
 1. **Define core attributes**:
 - `bApp`: a unique 20-byte EVM address that uniquely identifies the bApp.
-- `tokens`:  A list of ERC-20 tokens to be used in the bApp's security mechanism. For the native ETH token, use the special address [`0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L62).
+- `tokens`:  A list of ERC-20 tokens to be used in the bApp's security mechanism. For the native ETH token, use the special address [`0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F1).
 - `sharedRiskLevels`: a list of $\beta$ values, one for each token, representing the bApp's tolerance for risk (token over-usage). Each $\beta$ value ranges from 0 to 4,294.967295. Since it's encoded in as a `uint32`, its first six digits represent decimal places. For example, a stored value of 1_000_000 corresponds to a real value of 1.0.
 2. **Optional Non-Slashable Validator Balance**: If the bApp uses non-slashable validator balance, it should be configured off-chain, in the bApp's network.
-3. **Register the bApp**: Use the [`registerBApp`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L249) function of the smart contract:
+3. **Register the bApp**: Use the [`registerBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F20) function of the smart contract:
 ```solidity
 function registerBApp(
    address bApp,
@@ -19,7 +19,7 @@ function registerBApp(
 )
 ```
 - `metadataURI`: A link to a JSON file containing additional details about your bApp, such as its name, description, logo, and website.
-4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account. Namely, more tokens can be added with [`addTokensToBApp`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L279), the tokens' shared risk levels updated with [`updateBAppTokens`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L293), and the metadata updated with [`updateMetadataURI`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L271).
+4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account. Namely, more tokens can be added with [`addTokensToBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F1), the tokens' shared risk levels updated with [`updateBAppTokens`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F24), and the metadata updated with [`updateMetadataURI`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F26).
 
 ## 2. Securing the bApp
 
@@ -27,7 +27,7 @@ Once the bApp is registered, strategies can join it and allocate capital to secu
 
 ### 2.1 Opting in
 
-The strategy opts-in to the bApp by using the [`optInToBApp`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L333) function of the smart contract:
+The strategy opts-in to the bApp by using the [`optInToBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F15) function of the smart contract:
 ```solidity
 function optInToBApp(
    uint256 strategyId,
@@ -43,15 +43,15 @@ function optInToBApp(
 
 For example, if `tokens = [SSV]` and `obligationPercentages = [50%]`, then 50% of the strategy's `SSV` balance will be obligated to the bApp.
 
-The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation. Obligations can be increased instantly ([`fastUpdateObligation`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L519)), but decreasing obligations requires a timelock ([`proposeUpdateObligation`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L537) → [`finalizeUpdateObligation`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L563)) to ensure slashable capital can’t be pulled out instantly.
+The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation. Obligations can be increased instantly ([`fastUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F7)), but decreasing obligations requires a timelock ([`proposeUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F17) → [`finalizeUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F11)) to ensure slashable capital can’t be pulled out instantly.
 
 ### 2.2 Strategy's Funds
 
 To compose their balances, strategies:
-1. receive ERC20 (or ETH) via [**deposits**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L376) from accounts.
-2. inherent the non-slashable validator balance from its owner account. Accounts [**delegate**](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L201) validator balances between themselves, and the strategy inherits all balances delegated to its owner.
+1. receive ERC20 (or ETH) via [**deposits**](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F5) from accounts.
+2. inherent the non-slashable validator balance from its owner account. Accounts [**delegate**](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F4) validator balances between themselves, and the strategy inherits all balances delegated to its owner.
 
-If a token is allocated to a bApp ([`usedTokens[strategyId][token] != 0`](https://github.com/ssvlabs/based-applications/blob/bd55fb02e517c52a7151d516f174f3c1562be502/src/BasedAppManager.sol#L127)), accounts need to propose a withdrawal and wait a timelock before finalizing it, ensuring the slashable collateral cannot be removed instantly.
+If a token is allocated to a bApp ([`usedTokens[strategyId][token] != 0`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F22)), accounts need to propose a withdrawal and wait a timelock before finalizing it, ensuring the slashable collateral cannot be removed instantly.
 
 ## 3. Participant Weight
 
@@ -213,14 +213,14 @@ function Risks(bApp)
 **API Calls**
 
 For reference, we list the API calls used in the above snippets along with the chain state variables that should be read for each call:
-- `GetbAppTokens(bApp)`: [`bAppTokens`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L84)
-- `GetStrategies()`: [`strategies`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L89)
-- `GetStrategyOptedInToBApp(account, bApp)`: [`accountBAppStrategy`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L94)
-- `GetStrategyBalance(strategy)`: [`strategyTokenBalances`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L109)
-- `GetObligation(strategy, bApp, token)`: [`obligations`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L115)
-- `GetStrategyOwnerAccount(strategy)`: [`strategies`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L89)
-- `GetTotalDelegation(account)`: [`totalDelegatedPercentage`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L104)
-- `GetDelegatorsToAccount(account)`: [`delegations`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L99)
+- `GetbAppTokens(bApp)`: [`bAppTokens`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F12)
+- `GetStrategies()`: [`strategies`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F19)
+- `GetStrategyOptedInToBApp(account, bApp)`: [`accountBAppStrategy`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F10)
+- `GetStrategyBalance(strategy)`: [`strategyTokenBalances`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F20)
+- `GetObligation(strategy, bApp, token)`: [`obligations`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F16)
+- `GetStrategyOwnerAccount(strategy)`: [`strategies`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F19)
+- `GetTotalDelegation(account)`: [`totalDelegatedPercentage`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F21)
+- `GetDelegatorsToAccount(account)`: [`delegations`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F13)
 
 
 ## Appendix
