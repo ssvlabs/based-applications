@@ -14,9 +14,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function test_DelegatePartialBalance(
-        uint32 percentageAmount
-    ) public {
+    function test_DelegatePartialBalance(uint32 percentageAmount) public {
         vm.assume(percentageAmount > 0 && percentageAmount < 10_000);
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, percentageAmount);
@@ -43,9 +41,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         proxiedManager.delegateBalance(RECEIVER, 0);
     }
 
-    function testRevert_DelegateBalanceTooHigh(
-        uint32 highBalance
-    ) public {
+    function testRevert_DelegateBalanceTooHigh(uint32 highBalance) public {
         vm.assume(highBalance > proxiedManager.MAX_PERCENTAGE());
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
@@ -72,9 +68,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_TotalDelegatePercentageOverMax(
-        uint32 percentage1
-    ) public {
+    function testRevert_TotalDelegatePercentageOverMax(uint32 percentage1) public {
         vm.assume(percentage1 > 0 && percentage1 <= proxiedManager.MAX_PERCENTAGE());
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
@@ -86,9 +80,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
         assertEq(delegatedAmount, percentage1, "First delegated amount should be set");
         assertEq(delegatedAmount2, 0, "Second delegated amount should be not set");
-        assertEq(
-            totalDelegatedPercentage, percentage1, "Total delegated percentage should be equal to the first delegation"
-        );
+        assertEq(totalDelegatedPercentage, percentage1, "Total delegated percentage should be equal to the first delegation");
         vm.stopPrank();
     }
 
