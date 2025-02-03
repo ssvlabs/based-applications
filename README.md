@@ -2,6 +2,21 @@
 
 :construction: CAUTION: This repo is currently under **heavy development!** :construction:
 
+[![CI Tests](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml/badge.svg)](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml)
+[![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
+
+:book: Description
+
+This repository contains the core Based Applications Contracts, including UUPS upgradeable contracts for managing delegations, creating strategies, and registering bApps on the SSV Based-Applications Platform. 
+
+### **Main Contracts**
+
+- **`BasedAppManager.sol`** – Core contract managing bApps, delegations, and strategies.
+  
+- **`IBasedAppManager.sol`** – Interface for the Based Application Manager.
+  
+- **`ICore.sol`** – Core interface defining key structs for staking and obligation mechanisms.
+  
 &nbsp;
 
 ## :page_facing_up: _Whitepaper_
@@ -30,35 +45,14 @@ __`❍ forge test`__
 
 &nbsp;
 
-## :page_with_curl:  _Generate Docs_
+## :rocket: _Deployments_
 
-**1)** Enter this directory & install node dependencies:
+### Public Testnet
 
-__`❍ npm install`__
+| Name | Proxy | Implementation | Notes |
+| -------- | -------- | -------- | -------- | 
+| [`BasedApplications`](https://github.com/ssvlabs/based-applications/blob/main/src/BasedAppManager.sol) | [`0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A) | [`0x9a09A49870353867b0ce9901B44E84C32B2A47AC`](https://holesky.etherscan.io/address/0x9a09A49870353867b0ce9901B44E84C32B2A47AC) | Proxy: [`UUPS@5.1.0`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.1.0/contracts/proxy/utils/UUPSUpgradeable.sol) |
 
-**2)** Compile the contracts:
-
-__`❍ npm run generate-docs`__
-
-**3)** You can find the newly generated docs with `@natspec` in `docs`
-
-&nbsp;
-
-## :runner: __Run Github Workflows locally:__
-
-**Pre-flight.** Make sure you have Docker and Act installed: 
-
-**`❍ brew install docker act`**
-
-**1.** Go into the ms-contracts folder and set the environment:
-
-**`❍ act -P ubuntu-latest=nektos/act-environments-ubuntu:22.04`**
-
-**2.** Run simulation:
-
-**`❍ act push`**
-
-&nbsp;
 
 ## License
 

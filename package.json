@@ -31,7 +31,7 @@
     "verify-implementation": "forge verify-contract --chain holesky $IMPLEMENTATION_ADDRESS src/BasedAppManager.sol:BasedAppManager --etherscan-api-key $ETHERSCAN_API_KEY"
   },
   "devDependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.1.0",
+    "@openzeppelin/contracts-upgradeable": "^5.2.0",
     "husky": "^9.1.7"
   }
 }
