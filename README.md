@@ -5,7 +5,7 @@
 [![CI Tests](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml/badge.svg)](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-## :book: Description
+## :book: _Description_
 
 This repository contains the core Based Applications Contracts, including UUPS upgradeable contracts for managing delegations, creating strategies, and registering bApps on the SSV Based-Applications Platform. 
 
@@ -25,7 +25,7 @@ This repository contains the core Based Applications Contracts, including UUPS u
 
 &nbsp;
 
-## :page_with_curl:  _Instructions_
+## :page_with_curl: _Instructions_
 
 **1)** Fire up your favorite console & clone this repo somewhere:
 
