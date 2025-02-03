@@ -19,7 +19,7 @@ function registerBApp(
 )
 ```
 - `metadataURI`: A link to a JSON file containing additional details about your bApp, such as its name, description, logo, and website.
-4. **Update Configuration**: After registratering, the bApp configuration can be updated only by the `owner` account. Namely, more tokens can be added with [`addTokensToBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F1), the tokens' shared risk levels updated with [`updateBAppTokens`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F24), and the metadata updated with [`updateMetadataURI`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F26).
+4. **Update Configuration**: After registering, the bApp configuration can be updated only by the `owner` account. Namely, more tokens can be added with [`addTokensToBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F1), the tokens' shared risk levels updated with [`updateBAppTokens`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F24), and the metadata updated with [`updateMetadataURI`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F26).
 
 ## 2. Securing the bApp
 
@@ -49,7 +49,7 @@ The strategy’s owner can later update its obligations by modifying existing on
 
 To compose their balances, strategies:
 1. receive ERC20 (or ETH) via [**deposits**](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F5) from accounts.
-2. inherent the non-slashable validator balance from its owner account. Accounts [**delegate**](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F4) validator balances between themselves, and the strategy inherits all balances delegated to its owner.
+2. inherit the non-slashable validator balance from its owner account. Accounts [**delegate**](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F4) validator balances between themselves, and the strategy inherits all balances delegated to its owner.
 
 If a token is allocated to a bApp ([`usedTokens[strategyId][token] != 0`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F22)), accounts need to propose a withdrawal and wait a timelock before finalizing it, ensuring the slashable collateral cannot be removed instantly.
 
