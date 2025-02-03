@@ -5,7 +5,9 @@
 [![CI Tests](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml/badge.svg)](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
-:book: Description
+&nbsp;
+
+## :book: _Description_
 
 This repository contains the core Based Applications Contracts, including UUPS upgradeable contracts for managing delegations, creating strategies, and registering bApps on the SSV Based-Applications Platform. 
 
@@ -25,7 +27,7 @@ This repository contains the core Based Applications Contracts, including UUPS u
 
 &nbsp;
 
-## :page_with_curl:  _Instructions_
+## :page_with_curl: _Instructions_
 
 **1)** Fire up your favorite console & clone this repo somewhere:
 
@@ -53,6 +55,7 @@ __`❍ forge test`__
 | -------- | -------- | -------- | -------- | 
 | [`BasedApplications`](https://github.com/ssvlabs/based-applications/blob/main/src/BasedAppManager.sol) | [`0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A) | [`0x9a09A49870353867b0ce9901B44E84C32B2A47AC`](https://holesky.etherscan.io/address/0x9a09A49870353867b0ce9901B44E84C32B2A47AC) | Proxy: [`UUPS@5.1.0`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.1.0/contracts/proxy/utils/UUPSUpgradeable.sol) |
 
+&nbsp;
 
 ## License
 
