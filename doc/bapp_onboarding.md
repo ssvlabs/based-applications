@@ -7,7 +7,7 @@ This guide outlines the steps for based applications developers looking to build
 1. **Define core attributes**:
 - `bApp`: a unique 20-byte EVM address that uniquely identifies the bApp.
 - `tokens`:  A list of ERC-20 tokens to be used in the bApp's security mechanism. For the native ETH token, use the special address [`0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L62).
-- `sharedRiskLevels`: a list with $\beta$ values, one for each token, representing the bApp's tolerance for risk (token over-usage).
+- `sharedRiskLevels`: a list of $\beta$ values, one for each token, representing the bApp's tolerance for risk (token over-usage). Each $\beta$ value ranges from 0 to 4,294.967295. Since it's encoded in as a `uint32`, its first six digits represent decimal places. For example, a stored value of 1_000_000 corresponds to a real value of 1.0.
 2. **Optional Non-Slashable Validator Balance**: If the bApp uses non-slashable validator balance, it should be configured off-chain, in the bApp's network.
 3. **Register the bApp**: Use the [`registerBApp`](https://github.com/ssvlabs/based-applications/blob/92a5d3d276148604e3fc087c1c121f78b136a741/src/BasedAppManager.sol#L249) function of the smart contract:
 ```solidity
@@ -38,7 +38,7 @@ function optInToBApp(
 )
 ```
 - `tokens`: List of tokens to obligate to the bApp.
-- `obligationPercentages`: The proportion of each token's balance to commit to the bApp.
+- `obligationPercentages`: The proportion of each token's balance to commit to the bApp. Though it's encoded as a uint32, its first two digits represent decimal places of a percentage value. For example, a stored value of 5000 corresponds to 50.00%.
 - `data`: An extra optional field for off-chain information required by the bApp for participation.
 
 For example, if `tokens = [SSV]` and `obligationPercentages = [50%]`, then 50% of the strategy's `SSV` balance will be obligated to the bApp.
@@ -88,7 +88,7 @@ $$c_{\text{token}} = \left( \sum_{\text{strategy}} \frac{ObligatedBalance[\text{
 
 **Example**: Let's consider a bApp that uses tokens $A$ and $B$, and considers $A$ to be twice as important as $B$. Then, it could use the following weighted harmonic mean as its combination function:
 
-$$W^{\text{final}}_{\text{strategy}} = c_{\text{final}} \times \frac{1}{\frac{2/3}{W_{\text{strategy, A}}} + \frac{1/3}{W_{\text{strategy, B}}}}$$
+$$W_{\text{strategy}}^{\text{final}} = c_{\text{final}} \times \frac{1}{\frac{2/3}{W_{\text{strategy, A}}} + \frac{1/3}{W_{\text{strategy, B}}}}$$
 
 where $c_{\text{final}}$ is a normalization constant computed as
 
