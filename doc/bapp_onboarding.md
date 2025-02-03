@@ -236,7 +236,7 @@ Consider a bApp with the following configuration:
 | `Tokens`                     | [SSV]              |
 | `SharedRiskLevels` ($\beta$) | [2]                |
 | Uses validator balance       | True |
-| Final weight combination function       | $W^{\text{final}}_{\text{strategy}} = c_{\text{final}} \times \frac{1}{\frac{2/3}{W_{\text{strategy, SSV}}} + \frac{1/3}{W_{\text{strategy, VB}}}}$ |
+| Final weight combination function       | $W_{\text{strategy}}^{\text{final}} = c_{\text{final}} \times \frac{1}{\frac{2/3}{W_{\text{strategy, SSV}}} + \frac{1/3}{W_{\text{strategy, VB}}}}$ |
 
 This setup means:
 - The only slashable token in use is SSV, with $\beta = 2$.
