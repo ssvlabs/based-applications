@@ -8,8 +8,6 @@ on:
 
 jobs:
   compare_gas_reports:
-    permissions:
-      pull-requests: write  # This grants write access to PRs
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
