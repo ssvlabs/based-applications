@@ -1,5 +1,7 @@
 # :construction_worker: :closed_lock_with_key: __Based Applications Contracts__
 
+### Intro | [bApp Onboarding Guide](./doc/bapp_onboarding.md) 
+
 :construction: CAUTION: This repo is currently under **heavy development!** :construction:
 
 [![CI Tests](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml/badge.svg)](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml)
