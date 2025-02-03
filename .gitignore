@@ -21,3 +21,5 @@ package-lock.json
 coverage/
 report/
 lcov.info
+
+.gas-snapshot
