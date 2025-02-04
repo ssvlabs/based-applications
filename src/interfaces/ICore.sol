@@ -24,7 +24,7 @@ interface ICore {
         /// @dev The owner of the strategy
         address owner;
         /// @dev The fee in percentage
-        uint32 fee; // 4 bytes
+        uint32 fee;
         /// @dev The proposed fee
         uint32 feeProposed;
         /// @dev The block time when the fee update request was sent

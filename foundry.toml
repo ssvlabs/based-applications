@@ -4,7 +4,7 @@ out = "out"
 libs = ["lib"]
 solc = "0.8.28"
 optimizer = true
-optimizer_runs = 2000
+optimizer_runs = 20000
 gas_reports = ["BasedAppManager"]
 
 [fmt]
@@ -17,4 +17,4 @@ quote_style = "double"
 tab_width = 4
 
 [fuzz]
-runs = 256
+runs = 1000
