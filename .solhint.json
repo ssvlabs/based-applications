@@ -9,7 +9,6 @@
     "reason-string": ["warn", { "maxLength": 64 }],
     "immutable-vars-naming": ["error", { "immutablesAsConstants": true }],
     "var-name-mixedcase": "error",
-    "custom-errors": "error",
     "func-name-mixedcase": "error"
   }
 }
