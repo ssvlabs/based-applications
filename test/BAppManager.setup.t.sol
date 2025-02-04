@@ -66,7 +66,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
 
         proxy = new ERC1967Proxy(address(implementation), data);
-        proxiedManager = BasedAppManager(address(proxy));
+        proxiedManager = BasedAppManager(payable(address(proxy)));
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
 
