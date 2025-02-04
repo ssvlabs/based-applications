@@ -22,7 +22,7 @@
     "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
     "format": "forge fmt",
     "gas-report": "forge test --gas-report",
-    "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs --overwrite",
+    "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/BasedAppManager.sol --output-dir ./docs/natspec --overwrite",
     "prepare": "husky",
     "lint:solhint": "solhint './src/**/*.sol'",
     "test": "forge test",
