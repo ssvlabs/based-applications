@@ -1,6 +1,6 @@
 # bApp Onboarding Guide
 
-### [Intro]((../README.md)) | bApp Onboarding Guide 
+### [Intro](../README.md) | bApp Onboarding Guide 
 
 This guide outlines the steps for based applications developers looking to build on the bApps platform.
 
