@@ -23,12 +23,6 @@ This repository contains the core Based Applications Contracts, including UUPS u
   
 &nbsp;
 
-## :page_facing_up: _Whitepaper_
-
-[Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
-
-&nbsp;
-
 ## :page_with_curl: _Instructions_
 
 **1)** Fire up your favorite console & clone this repo somewhere:
@@ -46,6 +40,18 @@ __`❍ forge build`__
 **4)** Set the tests going!
 
 __`❍ forge test`__
+
+&nbsp;
+
+## :page_facing_up: _Whitepaper_
+
+[Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
+
+&nbsp;
+
+## :page_facing_up: _More Resources_
+
+[Based Apps Onboarding Guide](./doc/bapp_onboarding.md) 
 
 &nbsp;
 
