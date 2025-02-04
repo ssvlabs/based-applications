@@ -24,11 +24,11 @@ interface ICore {
         /// @dev The owner of the strategy
         address owner;
         /// @dev The fee in percentage
-        uint32 fee;
+        uint32 fee; // 4 bytes
         /// @dev The proposed fee
         uint32 feeProposed;
         /// @dev The block time when the fee update request was sent
-        uint64 feeRequestTime;
+        uint32 feeRequestTime;
     }
 
     /// @notice Represents a request for a withdrawal from a participant of a strategy
@@ -36,7 +36,7 @@ interface ICore {
         /// @dev The amount requested to withdraw
         uint256 amount;
         /// @dev The block time when the withdrawal request was sent
-        uint64 requestTime;
+        uint32 requestTime;
     }
 
     /// @notice Represents a change in the obligation in a strategy. Only the owner can submit one.
@@ -44,7 +44,7 @@ interface ICore {
         /// @dev The new obligation percentage
         uint32 percentage;
         /// @dev The block time when the update obligation request was sent
-        uint64 requestTime;
+        uint32 requestTime;
     }
 
     error BAppAlreadyOptedIn();
