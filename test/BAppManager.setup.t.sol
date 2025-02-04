@@ -32,10 +32,10 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     address RECEIVER = makeAddr("Receiver");
     address RECEIVER2 = makeAddr("Receiver2");
 
-    uint256 STRATEGY1 = 1;
-    uint256 STRATEGY2 = 2;
-    uint256 STRATEGY3 = 3;
-    uint256 STRATEGY4 = 4;
+    uint32 STRATEGY1 = 1;
+    uint32 STRATEGY2 = 2;
+    uint32 STRATEGY3 = 3;
+    uint32 STRATEGY4 = 4;
     uint32 STRATEGY1_INITIAL_FEE = 5;
     uint32 STRATEGY2_INITIAL_FEE = 0;
     uint32 STRATEGY3_INITIAL_FEE = 1000;
@@ -66,7 +66,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
 
         proxy = new ERC1967Proxy(address(implementation), data);
-        proxiedManager = BasedAppManager(address(proxy));
+        proxiedManager = BasedAppManager(payable(address(proxy)));
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
 

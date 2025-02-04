@@ -11,17 +11,17 @@ interface IBasedAppManager {
     event DelegationRemoved(address indexed delegator, address indexed receiver);
     event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);
     event MaxFeeIncrementSet(uint32 newMaxFeeIncrement);
-    event ObligationCreated(uint256 indexed strategyId, address indexed bApp, address token, uint256 percentage);
-    event ObligationUpdated(uint256 indexed strategyId, address indexed bApp, address token, uint256 percentage, bool isFast);
-    event ObligationUpdateProposed(uint256 indexed strategyId, address indexed bApp, address token, uint32 percentage);
-    event StrategyCreated(uint256 indexed strategyId, address indexed owner, uint32 fee);
-    event StrategyDeposit(uint256 indexed strategyId, address indexed account, address token, uint256 amount);
-    event StrategyFeeUpdated(uint256 indexed strategyId, address owner, uint32 fee, uint32 oldFee);
-    event StrategyFeeUpdateProposed(uint256 indexed strategyId, address owner, uint32 proposedFee, uint32 fee);
-    event StrategyWithdrawal(uint256 indexed strategyId, address indexed account, address token, uint256 amount, bool isFast);
-    event StrategyWithdrawalProposed(uint256 indexed strategyId, address indexed account, address token, uint256 amount);
+    event ObligationCreated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
+    event ObligationUpdated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage, bool isFast);
+    event ObligationUpdateProposed(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
+    event StrategyCreated(uint32 indexed strategyId, address indexed owner, uint32 fee);
+    event StrategyDeposit(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
+    event StrategyFeeUpdated(uint32 indexed strategyId, address owner, uint32 fee, uint32 oldFee);
+    event StrategyFeeUpdateProposed(uint32 indexed strategyId, address owner, uint32 proposedFee, uint32 fee);
+    event StrategyWithdrawal(uint32 indexed strategyId, address indexed account, address token, uint256 amount, bool isFast);
+    event StrategyWithdrawalProposed(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
     event BAppOptedInByStrategy(
-        uint256 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages
+        uint32 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages
     );
     event BAppRegistered(
         address indexed bAppAddress, address indexed owner, address[] tokens, uint32[] sharedRiskLevel, string metadataURI
@@ -29,37 +29,37 @@ interface IBasedAppManager {
 
     function addTokensToBApp(address bAppAddress, address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
 
-    function createObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external;
+    function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
 
-    function createStrategy(uint32 fee) external returns (uint256 strategyId);
+    function createStrategy(uint32 fee) external returns (uint32 strategyId);
 
     function delegateBalance(address receiver, uint32 percentage) external;
 
-    function depositERC20(uint256 strategyId, IERC20 token, uint256 amount) external;
+    function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external;
 
-    function depositETH(uint256 strategyId) external payable;
+    function depositETH(uint32 strategyId) external payable;
 
-    function fastUpdateObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external;
+    function fastUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
 
-    function fastWithdrawERC20(uint256 strategyId, IERC20 token, uint256 amount) external;
+    function fastWithdrawERC20(uint32 strategyId, IERC20 token, uint256 amount) external;
 
-    function fastWithdrawETH(uint256 strategyId, uint256 amount) external;
+    function fastWithdrawETH(uint32 strategyId, uint256 amount) external;
 
-    function finalizeFeeUpdate(uint256 strategyId) external;
+    function finalizeFeeUpdate(uint32 strategyId) external;
 
-    function finalizeUpdateObligation(uint256 strategyId, address bApp, address token) external;
+    function finalizeUpdateObligation(uint32 strategyId, address bApp, address token) external;
 
-    function finalizeWithdrawal(uint256 strategyId, IERC20 token) external;
+    function finalizeWithdrawal(uint32 strategyId, IERC20 token) external;
 
-    function finalizeWithdrawalETH(uint256 strategyId) external;
+    function finalizeWithdrawalETH(uint32 strategyId) external;
 
-    function proposeFeeUpdate(uint256 strategyId, uint32 proposedFee) external;
+    function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external;
 
-    function proposeUpdateObligation(uint256 strategyId, address bApp, address token, uint32 obligationPercentage) external;
+    function proposeUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
 
-    function proposeWithdrawal(uint256 strategyId, address token, uint256 amount) external;
+    function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external;
 
-    function proposeWithdrawalETH(uint256 strategyId, uint256 amount) external;
+    function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
 
     function removeDelegatedBalance(address receiver) external;
 
@@ -68,7 +68,7 @@ interface IBasedAppManager {
     function updateMetadataURI(address bAppAddress, string calldata metadataURI) external;
 
     function optInToBApp(
-        uint256 strategyId,
+        uint32 strategyId,
         address bApp,
         address[] calldata tokens,
         uint32[] calldata obligationPercentages,
