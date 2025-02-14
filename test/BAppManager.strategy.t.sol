@@ -9,10 +9,10 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
         erc20mock2.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
-        uint32 strategyId1 = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE);
-        proxiedManager.createStrategy(STRATEGY2_INITIAL_FEE);
-        proxiedManager.createStrategy(STRATEGY3_INITIAL_FEE);
-        uint32 strategyId4 = proxiedManager.createStrategy(proxiedManager.MAX_PERCENTAGE());
+        uint32 strategyId1 = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE, "");
+        proxiedManager.createStrategy(STRATEGY2_INITIAL_FEE, "");
+        proxiedManager.createStrategy(STRATEGY3_INITIAL_FEE, "");
+        uint32 strategyId4 = proxiedManager.createStrategy(proxiedManager.MAX_PERCENTAGE(), "");
         assertEq(strategyId1, STRATEGY1, "Strategy id 1 was saved correctly");
         assertEq(strategyId4, STRATEGY4, "Strategy id 4 was saved correctly");
         (address owner, uint32 delegationFeeOnRewards,,) = proxiedManager.strategies(strategyId1);
@@ -23,7 +23,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
 
     function test_CreateStrategyWithZeroFee() public {
         vm.startPrank(USER1);
-        uint32 strategyId1 = proxiedManager.createStrategy(0);
+        uint32 strategyId1 = proxiedManager.createStrategy(0, "");
         (, uint32 delegationFeeOnRewards,,) = proxiedManager.strategies(strategyId1);
         assertEq(delegationFeeOnRewards, 0, "Strategy fee");
         vm.stopPrank();
@@ -32,7 +32,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
     function testRevert_CreateStrategyWithTooHighFee() public {
         vm.startPrank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyFee.selector));
-        proxiedManager.createStrategy(10_001);
+        proxiedManager.createStrategy(10_001, "");
         vm.stopPrank();
     }
 
@@ -1216,6 +1216,25 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         assertEq(isSet, true, "Obligation is set");
         usedTokens = proxiedManager.usedTokens(STRATEGY1, TOKEN);
         assertEq(usedTokens, 1, "Used tokens");
+        vm.stopPrank();
+    }
+
+    function test_UpdateStrategyMetadata() public {
+        test_CreateStrategies();
+        string memory metadataURI = "https://metadata.com";
+        vm.startPrank(USER1);
+        vm.expectEmit(true, false, false, false);
+        emit IBasedAppManager.StrategyMetadataURIUpdated(STRATEGY1, metadataURI);
+        proxiedManager.updateStrategyMetadataURI(STRATEGY1, metadataURI);
+        vm.stopPrank();
+    }
+
+    function testRevert_UpdateStrategyMetadataWithWrongOwner() public {
+        test_CreateStrategies();
+        string memory metadataURI = "https://metadata-attacker.com";
+        vm.startPrank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
+        proxiedManager.updateStrategyMetadataURI(STRATEGY1, metadataURI);
         vm.stopPrank();
     }
 }

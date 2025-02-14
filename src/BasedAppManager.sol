@@ -170,6 +170,16 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     // *****************************************
+    // *********** Section: Account ************
+    // *****************************************
+
+    /// @notice Function to update the metadata URI of the Account
+    /// @param metadataURI The new metadata URI
+    function updateAccountMetadataURI(string calldata metadataURI) external {
+        emit AccountMetadataURIUpdated(msg.sender, metadataURI);
+    }
+
+    // *****************************************
     // ** Section: Delegate Validator Balance **
     // *****************************************
 
@@ -250,7 +260,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Function to update the metadata URI of the Based Application
     /// @param bApp The address of the bApp
     /// @param metadataURI The new metadata URI
-    function updateMetadataURI(address bApp, string calldata metadataURI) external onlyBAppOwner(bApp) {
+    function updateBAppMetadataURI(address bApp, string calldata metadataURI) external onlyBAppOwner(bApp) {
         emit BAppMetadataURIUpdated(bApp, metadataURI);
     }
 
@@ -293,8 +303,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ***********************
 
     /// @notice Function to create a new Strategy
+    /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
     /// @return strategyId The ID of the new Strategy
-    function createStrategy(uint32 fee) external returns (uint32 strategyId) {
+    function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
         if (fee > MAX_PERCENTAGE) revert ICore.InvalidStrategyFee();
 
         strategyId = ++_strategyCounter;
@@ -303,7 +314,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         newStrategy.owner = msg.sender;
         newStrategy.fee = fee;
 
-        emit StrategyCreated(strategyId, msg.sender, fee);
+        emit StrategyCreated(strategyId, msg.sender, fee, metadataURI);
+    }
+
+    /// @notice Function to update the metadata URI of the Strategy
+    /// @param strategyId The id of the strategy
+    /// @param metadataURI The new metadata URI
+    function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external onlyStrategyOwner(strategyId) {
+        emit StrategyMetadataURIUpdated(strategyId, metadataURI);
     }
 
     /// @notice Opt-in to a bApp with a list of tokens and obligation percentages
