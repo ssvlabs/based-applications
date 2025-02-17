@@ -237,24 +237,26 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ********************
 
     /// @notice Registers a bApp.
-    /// @param bApp The address of the bApp.
+    /// @param owner The owner address of the bApp.
     /// @param tokens The list of tokens the bApp accepts; can be empty.
     /// @param sharedRiskLevels The shared risk level of the bApp.
     /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(
-        address bApp,
+        address owner,
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels,
         string calldata metadataURI
     ) external {
-        if (bAppOwners[bApp] != address(0)) revert ICore.BAppAlreadyRegistered();
-        else bAppOwners[bApp] = msg.sender;
+        if (bAppOwners[msg.sender] != address(0)) revert ICore.BAppAlreadyRegistered();
+        else bAppOwners[msg.sender] = owner;
 
-        _addNewTokens(bApp, tokens, sharedRiskLevels);
+        if (!_isContract(msg.sender)) revert ICore.BAppIsNotContract();
 
-        emit BAppRegistered(bApp, msg.sender, tokens, sharedRiskLevels, metadataURI);
+        _addNewTokens(msg.sender, tokens, sharedRiskLevels);
+
+        emit BAppRegistered(msg.sender, owner, tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Function to update the metadata URI of the Based Application
@@ -348,7 +350,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
+        (bool success, bytes memory returnData) =
+            bApp.call(abi.encodeWithSignature("optInToBApp(uint32,bytes)", strategyId, data));
+
+        if (!success) revert ICore.DelegateCallFailed(returnData);
+
+        emit BAppOptedInByStrategy(strategyId, bApp, returnData, tokens, obligationPercentages);
     }
 
     /// @notice Deposit ERC20 tokens into the strategy
@@ -697,5 +704,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (uint32(block.timestamp) > requestTime + timelockPeriod + expireTime) {
             revert ICore.RequestTimeExpired();
         }
+    }
+
+    function _isContract(address account) private view returns (bool) {
+        return account.code.length > 0;
     }
 }

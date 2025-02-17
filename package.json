@@ -18,6 +18,7 @@
     "Riccardo Persiani <r.persiani92@gmail.com>"
   ],
   "scripts": {
+    "compile": "forge compile",
     "build": "forge fmt && forge build",
     "deploy": "forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --broadcast",
     "format": "forge fmt",

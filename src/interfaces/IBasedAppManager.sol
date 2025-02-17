@@ -67,6 +67,8 @@ interface IBasedAppManager {
 
     function updateDelegatedBalance(address receiver, uint32 percentage) external;
 
+    function updateBAppTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
+
     function updateBAppMetadataURI(address bAppAddress, string calldata metadataURI) external;
 
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
@@ -82,7 +84,7 @@ interface IBasedAppManager {
     ) external;
 
     function registerBApp(
-        address bAppAddress,
+        address owner,
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels,
         string calldata metadataURI

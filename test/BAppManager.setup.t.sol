@@ -8,15 +8,18 @@ import {BasedAppManager} from "../src/BasedAppManager.sol";
 import {ICore} from "../src/interfaces/ICore.sol";
 import {IBasedAppManager} from "../src/interfaces/IBasedAppManager.sol";
 
+import {IERC20, ERC20Mock} from "./mocks/MockERC20.sol";
+import {BasedAppMock} from "./mocks/MockBApp.sol";
+
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
-import "./mocks/MockERC20.sol";
 
 contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     BasedAppManager public implementation;
     ERC1967Proxy proxy; // UUPS Proxy contract
     BasedAppManager proxiedManager; // Proxy interface for interaction
+    BasedAppMock bApp1;
+    BasedAppMock bApp2;
 
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
@@ -61,7 +64,6 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.label(BAPP2, "BApp2");
 
         vm.startPrank(OWNER);
-
         implementation = new BasedAppManager();
         bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
 
@@ -69,7 +71,13 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         proxiedManager = BasedAppManager(payable(address(proxy)));
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
+        vm.stopPrank();
+        vm.prank(USER1);
+        bApp1 = new BasedAppMock(address(proxiedManager), USER1);
 
+        console.log("bApp1 address: ", address(bApp1));
+        vm.startPrank(OWNER);
+        vm.label(address(bApp1), "BasedApp1");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);
