@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IBasedAppManager {
+    event AccountMetadataURIUpdated(address indexed account, string metadataURI);
     event BAppMetadataURIUpdated(address indexed bAppAddress, string metadataURI);
     event BAppTokensCreated(address indexed bAppAddress, address[] tokens, uint32[] sharedRiskLevels);
     event BAppTokensUpdated(address indexed bAppAddress, address[] tokens, uint32[] sharedRiskLevels);
@@ -14,12 +15,13 @@ interface IBasedAppManager {
     event ObligationCreated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
     event ObligationUpdated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage, bool isFast);
     event ObligationUpdateProposed(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
-    event StrategyCreated(uint32 indexed strategyId, address indexed owner, uint32 fee);
+    event StrategyCreated(uint32 indexed strategyId, address indexed owner, uint32 fee, string metadataURI);
     event StrategyDeposit(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
     event StrategyFeeUpdated(uint32 indexed strategyId, address owner, uint32 fee, uint32 oldFee);
     event StrategyFeeUpdateProposed(uint32 indexed strategyId, address owner, uint32 proposedFee, uint32 fee);
     event StrategyWithdrawal(uint32 indexed strategyId, address indexed account, address token, uint256 amount, bool isFast);
     event StrategyWithdrawalProposed(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
+    event StrategyMetadataURIUpdated(uint32 indexed strategyId, string metadataURI);
     event BAppOptedInByStrategy(
         uint32 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages
     );
@@ -31,7 +33,7 @@ interface IBasedAppManager {
 
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
 
-    function createStrategy(uint32 fee) external returns (uint32 strategyId);
+    function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId);
 
     function delegateBalance(address receiver, uint32 percentage) external;
 
@@ -65,7 +67,11 @@ interface IBasedAppManager {
 
     function updateDelegatedBalance(address receiver, uint32 percentage) external;
 
-    function updateMetadataURI(address bAppAddress, string calldata metadataURI) external;
+    function updateBAppMetadataURI(address bAppAddress, string calldata metadataURI) external;
+
+    function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
+
+    function updateAccountMetadataURI(string calldata metadataURI) external;
 
     function optInToBApp(
         uint32 strategyId,

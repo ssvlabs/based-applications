@@ -195,4 +195,13 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         proxiedManager.removeDelegatedBalance(RECEIVER);
         vm.stopPrank();
     }
+
+    function test_UpdateAccountMetadata() public {
+        string memory metadataURI = "https://account-metadata.com";
+        vm.startPrank(USER1);
+        vm.expectEmit(true, false, false, false);
+        emit IBasedAppManager.AccountMetadataURIUpdated(USER1, metadataURI);
+        proxiedManager.updateAccountMetadataURI(metadataURI);
+        vm.stopPrank();
+    }
 }

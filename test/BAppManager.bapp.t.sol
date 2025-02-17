@@ -210,7 +210,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
         vm.expectEmit(true, false, false, false);
         emit IBasedAppManager.BAppMetadataURIUpdated(BAPP1, metadataURI);
-        proxiedManager.updateMetadataURI(BAPP1, metadataURI);
+        proxiedManager.updateBAppMetadataURI(BAPP1, metadataURI);
         vm.stopPrank();
     }
 
@@ -218,7 +218,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         test_RegisterBApp();
         vm.startPrank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidBAppOwner.selector, address(ATTACKER), address(USER1)));
-        proxiedManager.updateMetadataURI(BAPP1, metadataURI);
+        proxiedManager.updateBAppMetadataURI(BAPP1, metadataURI);
         vm.stopPrank();
     }
 
