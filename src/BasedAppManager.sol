@@ -303,7 +303,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ***********************
 
     /// @notice Function to create a new Strategy
-    /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
+    /// @param metadataURI The metadata URI of the strategy
     /// @return strategyId The ID of the new Strategy
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
         if (fee > MAX_PERCENTAGE) revert ICore.InvalidStrategyFee();
