@@ -51,8 +51,6 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
 
     function checkBAppInfo(address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) public view {
         address owner = proxiedManager.bAppOwners(address(bApp1));
-        //console.log("OwnerA: ", owner);
-        // console.log("bapp address:", bApp1);
         assertEq(tokensInput.length, sharedRiskLevelInput.length, "BApp tokens and sharedRiskLevel length");
         assertEq(owner, USER1, "BApp owner");
         for (uint256 i = 0; i < tokensInput.length; i++) {
@@ -66,7 +64,6 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
-        // proxiedManager.registerBApp(address(USER1), tokensInput, sharedRiskLevelInput, "");
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, metadataURI);
         checkBAppInfo(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
