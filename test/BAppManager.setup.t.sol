@@ -29,6 +29,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     address OWNER = makeAddr("Owner");
     address USER1 = makeAddr("User1");
+    address USER2 = makeAddr("User2");
     address BAPP1 = makeAddr("BApp1");
     address BAPP2 = makeAddr("BApp2");
     address ATTACKER = makeAddr("Attacker");
@@ -42,6 +43,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     uint32 STRATEGY1_INITIAL_FEE = 5;
     uint32 STRATEGY2_INITIAL_FEE = 0;
     uint32 STRATEGY3_INITIAL_FEE = 1000;
+    uint32 STRATEGY4_INITIAL_FEE = 900;
     uint32 STRATEGY1_UPDATE_FEE = 10;
 
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;

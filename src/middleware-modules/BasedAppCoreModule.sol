@@ -50,7 +50,5 @@ abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable {
     }
 
     /// @notice Allows a BApp to opt-in to a strategy
-    function optInToBApp(uint32 strategyId, bytes calldata data) external virtual onlyManager returns (bool success) {
-        return true;
-    }
+    function optInToBApp(uint32 strategyId, bytes calldata data) external virtual onlyManager returns (bool success) {}
 }
