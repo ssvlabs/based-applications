@@ -49,6 +49,8 @@ abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable {
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(msg.sender, tokens, sharedRiskLevels, metadataURI);
     }
 
-    /// @notice Allows a BApp to opt-in to a strategy
+    /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
+    /// @param strategyId id of the strategy
+    /// @param data data to be passed to the BApp
     function optInToBApp(uint32 strategyId, bytes calldata data) external virtual onlyManager returns (bool success) {}
 }
