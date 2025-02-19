@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {BasedAppCore} from "../../src/middleware-modules/BasedAppCore.sol";
+import {BasedAppCore} from "../../src/middleware-modules/BasedAppCoreModule.sol";
 
 contract BasedAppMock is BasedAppCore {
     event OptInToBApp(uint32 strategyId, bytes data);
@@ -13,8 +13,10 @@ contract BasedAppMock is BasedAppCore {
         counter = 0;
     }
 
-    function optInToBApp(uint32 strategyId, bytes calldata data) external override onlyManager {
+    function optInToBApp(uint32 strategyId, bytes calldata data) external override onlyManager returns (bool success) {
         counter++;
         emit OptInToBApp(strategyId, data);
+        if (counter % 2 == 0) return false;
+        else return true;
     }
 }

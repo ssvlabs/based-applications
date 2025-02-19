@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import {ICore} from "./interfaces/ICore.sol";
 import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
+import {IBasedApp} from "./interfaces/IBasedApp.sol";
 
 /**
  * @title BasedAppManager
@@ -350,12 +350,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        (bool success, bytes memory returnData) =
-            bApp.call(abi.encodeWithSignature("optInToBApp(uint32,bytes)", strategyId, data));
+        bool success = IBasedApp(bApp).optInToBApp(strategyId, data);
 
-        if (!success) revert ICore.DelegateCallFailed(returnData);
+        if (!success) revert ICore.BAppOptInFailed();
 
-        emit BAppOptedInByStrategy(strategyId, bApp, returnData, tokens, obligationPercentages);
+        emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
     }
 
     /// @notice Deposit ERC20 tokens into the strategy
@@ -706,7 +705,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         }
     }
 
-    function _isContract(address account) private view returns (bool) {
-        return account.code.length > 0;
+    function _isContract(address account) private view returns (bool isContract) {
+        uint32 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
     }
 }

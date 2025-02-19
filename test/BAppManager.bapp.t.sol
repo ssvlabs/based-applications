@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import "./BAppManager.setup.t.sol";
+import {BasedAppCore} from "../src/middleware-modules/BasedAppCoreModule.sol";
 
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     string metadataURI = "http://metadata.com";
@@ -123,6 +124,17 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        vm.stopPrank();
+    }
+
+    function testRevert_RegisterBAppFromNonContract() public {
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory sharedRiskLevelInput = new uint32[](1);
+        sharedRiskLevelInput[0] = 102;
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppIsNotContract.selector));
+        proxiedManager.registerBApp(address(bApp1), tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }
 
@@ -268,5 +280,12 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         proxiedManager.updateBAppTokens(address(bApp1), tokensInput, sharedRiskLevelInput);
+    }
+
+    function testRevert_callBAppWithNoManager() public {
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(BasedAppCore.UnauthorizedCaller.selector));
+        bApp1.optInToBApp(0, "");
+        vm.stopPrank();
     }
 }
