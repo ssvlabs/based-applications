@@ -709,6 +709,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         }
     }
 
+    /// @notice Function to check if an address is a contract
+    /// @param account The address to check
+    /// @return isContract True if the address is a contract
     function _isContract(address account) private view returns (bool isContract) {
         uint32 size;
         assembly {
@@ -719,8 +722,8 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
     /// @notice Function to check if an address uses the correct bApp interface
     /// @param bApp The address of the bApp
-    /// @return bool True if the address uses the correct bApp interface
-    function _isBApp(address bApp) public view returns (bool) {
+    /// @return isBApp True if the address uses the correct bApp interface
+    function _isBApp(address bApp) public view returns (bool isBApp) {
         return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }
 }
