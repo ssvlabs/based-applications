@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 import {ICore} from "./interfaces/ICore.sol";
 import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
+import {IBasedApp} from "./interfaces/IBasedApp.sol";
 
 /**
  * @title BasedAppManager
@@ -237,24 +238,28 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ********************
 
     /// @notice Registers a bApp.
-    /// @param bApp The address of the bApp.
+    /// @param owner The owner address of the bApp.
     /// @param tokens The list of tokens the bApp accepts; can be empty.
     /// @param sharedRiskLevels The shared risk level of the bApp.
     /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(
-        address bApp,
+        address owner,
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels,
         string calldata metadataURI
     ) external {
-        if (bAppOwners[bApp] != address(0)) revert ICore.BAppAlreadyRegistered();
-        else bAppOwners[bApp] = msg.sender;
+        if (bAppOwners[msg.sender] != address(0)) revert ICore.BAppAlreadyRegistered();
+        else bAppOwners[msg.sender] = owner;
 
-        _addNewTokens(bApp, tokens, sharedRiskLevels);
+        if (_isContract(msg.sender) && !_isBApp(msg.sender)) {
+            revert ICore.BAppDoesNotSupportInterface();
+        }
 
-        emit BAppRegistered(bApp, msg.sender, tokens, sharedRiskLevels, metadataURI);
+        _addNewTokens(msg.sender, tokens, sharedRiskLevels);
+
+        emit BAppRegistered(msg.sender, owner, tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Function to update the metadata URI of the Based Application
@@ -347,6 +352,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         _createObligations(strategyId, bApp, tokens, obligationPercentages);
 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
+
+        if (_isContract(bApp)) {
+            bool success = IBasedApp(bApp).optInToBApp(strategyId, tokens, obligationPercentages, data);
+            if (!success) revert ICore.BAppOptInFailed();
+        }
 
         emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
     }
@@ -697,5 +707,23 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (uint32(block.timestamp) > requestTime + timelockPeriod + expireTime) {
             revert ICore.RequestTimeExpired();
         }
+    }
+
+    /// @notice Function to check if an address is a contract
+    /// @param account The address to check
+    /// @return isContract True if the address is a contract
+    function _isContract(address account) private view returns (bool isContract) {
+        uint32 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
+    }
+
+    /// @notice Function to check if an address uses the correct bApp interface
+    /// @param bApp The address of the bApp
+    /// @return isBApp True if the address uses the correct bApp interface
+    function _isBApp(address bApp) public view returns (bool isBApp) {
+        return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }
 }

@@ -50,9 +50,12 @@ interface ICore {
     error BAppAlreadyOptedIn();
     error BAppAlreadyRegistered();
     error BAppNotOptedIn();
+    error BAppOptInFailed();
+    error BAppDoesNotSupportInterface();
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();
+    error DelegateCallFailed(bytes returnData);
     error EmptyTokenList();
     error ExceedingPercentageUpdate();
     error FeeAlreadySet();
