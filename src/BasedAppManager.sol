@@ -6,6 +6,7 @@ import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgrade
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 import {ICore} from "./interfaces/ICore.sol";
 import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
@@ -252,7 +253,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         if (bAppOwners[msg.sender] != address(0)) revert ICore.BAppAlreadyRegistered();
         else bAppOwners[msg.sender] = owner;
 
-        if (!_isContract(msg.sender)) revert ICore.BAppIsNotContract();
+        if (_isContract(msg.sender) && !_isBApp(msg.sender)) {
+            revert ICore.BAppDoesNotSupportInterface();
+        }
 
         _addNewTokens(msg.sender, tokens, sharedRiskLevels);
 
@@ -350,9 +353,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        bool success = IBasedApp(bApp).optInToBApp(strategyId, data);
-
-        if (!success) revert ICore.BAppOptInFailed();
+        if (_isContract(bApp)) {
+            bool success = IBasedApp(bApp).optInToBApp(strategyId, tokens, obligationPercentages, data);
+            if (!success) revert ICore.BAppOptInFailed();
+        }
 
         emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
     }
@@ -711,5 +715,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             size := extcodesize(account)
         }
         return size > 0;
+    }
+
+    /// @notice Function to check if an address uses the correct bApp interface
+    /// @param bApp The address of the bApp
+    /// @return bool True if the address uses the correct bApp interface
+    function _isBApp(address bApp) public view returns (bool) {
+        return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }
 }

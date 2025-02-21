@@ -51,7 +51,7 @@ interface ICore {
     error BAppAlreadyRegistered();
     error BAppNotOptedIn();
     error BAppOptInFailed();
-    error BAppIsNotContract();
+    error BAppDoesNotSupportInterface();
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();

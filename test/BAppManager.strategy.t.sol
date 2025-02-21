@@ -215,7 +215,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
         vm.expectEmit(true, true, true, true);
-        emit BasedAppMock.OptInToBApp(STRATEGY1, abi.encodePacked("0x00"));
+        emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         proxiedManager.optInToBApp(STRATEGY1, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp1));
         assertEq(strategyId, 1, "Strategy id");

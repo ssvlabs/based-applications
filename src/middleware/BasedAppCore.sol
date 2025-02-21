@@ -6,7 +6,9 @@ import {IBasedAppManager} from "../interfaces/IBasedAppManager.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable {
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable, IERC165 {
     /// @notice Address of the SSV Based App Manager contract
     address public immutable BASED_APP_MANAGER;
 
@@ -52,5 +54,19 @@ abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable {
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
     /// @param strategyId id of the strategy
     /// @param data data to be passed to the BApp
-    function optInToBApp(uint32 strategyId, bytes calldata data) external virtual onlyManager returns (bool success) {}
+    function optInToBApp(
+        uint32 strategyId,
+        address[] calldata tokens,
+        uint32[] calldata obligationPercentages,
+        bytes calldata data
+    ) external virtual onlyManager returns (bool success) {}
+
+    /// @notice Checks if the contract supports the interface
+    /// @param interfaceId interface id
+    /// @return true if the contract supports the interface
+    function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
+        return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
+    }
 }
+
+// todo: investigate roles for managers/owners

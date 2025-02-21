@@ -4,15 +4,16 @@ pragma solidity 0.8.28;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import {BasedAppManager} from "../src/BasedAppManager.sol";
 import {ICore} from "../src/interfaces/ICore.sol";
 import {IBasedAppManager} from "../src/interfaces/IBasedAppManager.sol";
 
 import {IERC20, ERC20Mock} from "./mocks/MockERC20.sol";
 import {BasedAppMock} from "./mocks/MockBApp.sol";
-
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {NonCompliantBApp} from "./mocks/MockNonCompliantBApp.sol";
 
 contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     BasedAppManager public implementation;
@@ -20,6 +21,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     BasedAppManager proxiedManager; // Proxy interface for interaction
     BasedAppMock bApp1;
     BasedAppMock bApp2;
+    NonCompliantBApp nonCompliantBApp;
 
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
@@ -76,6 +78,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.stopPrank();
         vm.prank(USER1);
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
+        nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
 
         console.log("bApp1 address: ", address(bApp1));
         vm.startPrank(OWNER);

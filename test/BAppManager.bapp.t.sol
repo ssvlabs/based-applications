@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
+import {BasedAppCore} from "../src/middleware/BasedAppCore.sol";
+
 import "./BAppManager.setup.t.sol";
-import {BasedAppCore} from "../src/middleware-modules/BasedAppCoreModule.sol";
 
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     string metadataURI = "http://metadata.com";
@@ -127,14 +128,31 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_RegisterBAppFromNonContract() public {
+    function test_RegisterBAppFromEOA() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32[] memory sharedRiskLevelInput = new uint32[](1);
         sharedRiskLevelInput[0] = 102;
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppIsNotContract.selector));
-        proxiedManager.registerBApp(address(bApp1), tokensInput, sharedRiskLevelInput, "");
+        proxiedManager.registerBApp(USER1, tokensInput, sharedRiskLevelInput, "");
+        vm.stopPrank();
+    }
+
+    function testRevert_RegisterBAppFromNonBAppContract() public {
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory sharedRiskLevelInput = new uint32[](1);
+        sharedRiskLevelInput[0] = 102;
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppDoesNotSupportInterface.selector));
+        nonCompliantBApp.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        vm.stopPrank();
+    }
+
+    function test_isBapp() public {
+        vm.startPrank(USER1);
+        bool success = proxiedManager._isBApp(address(bApp1));
+        assertEq(success, true, "isBApp");
         vm.stopPrank();
     }
 
@@ -284,8 +302,10 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
 
     function testRevert_callBAppWithNoManager() public {
         vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
         vm.expectRevert(abi.encodeWithSelector(BasedAppCore.UnauthorizedCaller.selector));
-        bApp1.optInToBApp(0, "");
+        bApp1.optInToBApp(0, tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }
 }
