@@ -1,39 +1,88 @@
-## Explain
+# :construction_worker: :closed_lock_with_key: __Middleware Contracts__ 
 
-## have 
+## Modules & Examples for BApp Development
 
-another modules example to showcase on how to use thte data structure, called bls strategy that extend opt in function and you do the BLS signature verification (100k gas).
-30-40 operators. explain these concepts but we need to have it.
-ALSO we want ECDSA(2-3k gas)
-think these examples in terms of security. if someone provide bls data, we don't want replay attack, be careful on security. 
-in that module we need to verify that is valid but also we allow unique public key (maybe use salt). 
-if we use BLS i don't want to allow more than one strategy with the same owner/bls. just like we do on the ssv based app manager. 
+:construction: CAUTION: This repo is currently under **heavy development!** :construction:
 
-we don't weant jsut a function for verification.
+&nbsp;
 
-last function is: bapp with EOA initially, then I want to update to a contract. Viceversa? (potentially). 
+## :book: _Overview_
 
-also think about other interesting ideas, real world use cases. 
+This folder (`src/middleware/`) contains modules for developers to import and use when creating a BApp (Based Application). Additionally, it includes examples showcasing different implementations of BApps using these modules.
 
-I want next week progresses, connect with Othentic and share the progresses. 
-Get some feedback, and help them and get help. 
+### Modules vs. Examples
 
-----
+- **Modules**: Abstract components that can be imported to create BApps.
 
-// todo: whitelist strategy/ whitelist manager - these are other examples
+- **Examples**: Implementations that demonstrate the usage of these modules in real-world scenarios.
 
-// maybe this could be abstract and become a module
+&nbsp;
 
-// have modules not examples...
+## :page_with_curl: To Have: Modules
 
-// another module is capped strategies, ex: limit how much capital people can put in me. for example up to 100k SSV.
-// function opt in to bapp we hook delegate deposit. we can have see the balance.
-// pause module additional.
-// but let's try to do it on chain.
-// check on-chain hte balance.
-// some bapps don't want more that 100k ssv for example cause they don't want to pay more rewards
+**1) BLS Strategy Module**
 
+Extends the `optIn` function and performs BLS signature verification.
 
-    // TODO split this contract in modules
+Prevents replay attacks for security purposes.
 
-// instead of the owner, just go the bApp address, pass the msg.sender to whitelistManager and if true, you allow to do manager
+Ensures unique public keys (potentially using a salt).
+
+Restricts one strategy per owner/BLS, similar to the SSV Based App Manager.
+
+Security Consideration: If BLS data is provided, it must be verified to prevent unauthorized reuse (replay attacks).
+
+No simple verification function—a full module implementation is required.
+
+**2) ECDSA Strategy Module**
+
+Uses ECDSA signature verification.
+
+Lighter alternative to BLS verification.
+
+Can be used to confirm transaction authenticity with lower gas costs.
+
+Also prevents replay attacks and ensures uniqueness where needed.
+
+**3) Strategy Upgrade Module**
+
+Allows a BApp that initially used an EOA (Externally Owned Account) to upgrade to a contract.
+
+Also supports downgrading from a contract to an EOA.
+
+Ensures security in transitions between EOA and contract-based control.
+
+**4) Whitelist Strategy Module**
+
+Implements a whitelist for strategies.
+
+Restricts which strategies can participate in a BApp.
+
+**5) Roles Manager Module**
+
+Instead of relying on an owner, permissions are granted to a whitelisted manager.
+
+Allows only authorized managers to perform specific operations within the BApp.
+
+**6) Capped Strategies Module**
+
+Limits the total capital that can be allocated to a strategy (e.g., maximum 100k SSV).
+
+Hooks into the opt-in to BApp function to enforce deposit limits.
+
+Uses on-chain balance verification to ensure compliance.
+
+Ideal for BApps that want to avoid excessive reward costs.
+
+&nbsp;
+
+## :page_facing_up: To Have: Examples
+
+* **BLS Strategy Example**: Demonstrates how to implement and use the BLS verification module securely.
+
+* **ECDSA Strategy Example**: Showcases a lighter alternative using ECDSA verification.
+
+* **Capped Strategy Example**: Implements a BApp that limits deposits to 100k SSV.
+
+* **Whitelist Manager Example**: Uses whitelist-based permissions instead of owner-based control.
+
