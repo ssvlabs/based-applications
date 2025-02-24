@@ -76,7 +76,7 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI)
         external
         virtual
-    //// onlyOwner
+        onlyRole(MANAGER_ROLE)
     {
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(msg.sender, tokens, sharedRiskLevels, metadataURI);
     }

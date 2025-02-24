@@ -8,9 +8,9 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
-import {ICore} from "./interfaces/ICore.sol";
-import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
-import {IBasedApp} from "./interfaces/IBasedApp.sol";
+import {ICore} from "interfaces/ICore.sol";
+import {IBasedAppManager} from "interfaces/IBasedAppManager.sol";
+import {IBasedApp} from "interfaces/IBasedApp.sol";
 
 /**
  * @title BasedAppManager

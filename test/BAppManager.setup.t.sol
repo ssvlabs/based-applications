@@ -7,9 +7,9 @@ import "forge-std/console.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {BasedAppManager} from "../src/BasedAppManager.sol";
-import {ICore} from "../src/interfaces/ICore.sol";
-import {IBasedAppManager} from "../src/interfaces/IBasedAppManager.sol";
+import {BasedAppManager} from "src/BasedAppManager.sol";
+import {ICore} from "interfaces/ICore.sol";
+import {IBasedAppManager} from "interfaces/IBasedAppManager.sol";
 
 import {IERC20, ERC20Mock} from "./mocks/MockERC20.sol";
 import {BasedAppMock} from "./mocks/MockBApp.sol";

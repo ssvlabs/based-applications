@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {BasedAppCore} from "../BasedAppCore.sol";
+import {BasedAppCore} from "middleware/modules/core/BasedAppCore.sol";
 
 contract WhitelistBasedApp is BasedAppCore {
     error NonWhitelistedCaller();
@@ -25,7 +25,7 @@ contract WhitelistBasedApp is BasedAppCore {
         address[] calldata, /*tokens*/
         uint32[] calldata, /*obligationPercentages*/
         bytes calldata /*data*/
-    ) external view override onlyManager returns (bool success) {
+    ) external view override onlySSVBasedAppManager returns (bool success) {
         if (!isWhitelisted[msg.sender]) revert NonWhitelistedCaller();
         return true;
     }

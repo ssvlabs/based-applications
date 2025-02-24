@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {BasedAppCore} from "../src/middleware/BasedAppCore.sol";
+import {BasedAppCore} from "middleware/modules/core/BasedAppCore.sol";
 
 import "./BAppManager.setup.t.sol";
 
