@@ -17,7 +17,7 @@ This repository contains the core Based Applications Contracts, including UUPS u
   
 - **`IBasedAppManager.sol`** – Interface for the Based Application Manager.
   
-- **`ICore.sol`** – Core interface defining key structs for staking and obligation mechanisms.
+- **`IStorage.sol`** – Core interface defining key structs for staking and obligation mechanisms.
   
 &nbsp;
 

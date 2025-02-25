@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
+import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
-import {ICore} from "./interfaces/ICore.sol";
-import {IBasedAppManager} from "./interfaces/IBasedAppManager.sol";
+import {IStorage} from "interfaces/IStorage.sol";
+import {IBasedAppManager} from "interfaces/IBasedAppManager.sol";
+import {IBasedApp} from "interfaces/IBasedApp.sol";
 
 /**
  * @title BasedAppManager
@@ -77,12 +78,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @notice Tracks the tokens supported by the bApps
      * @dev The bApp is identified with its address
      */
-    mapping(address bApp => mapping(address token => ICore.SharedRiskLevel)) public bAppTokens;
+    mapping(address bApp => mapping(address token => IStorage.SharedRiskLevel)) public bAppTokens;
     /**
      * @notice Tracks the strategies created
      * @dev The strategy ID is incremental and unique
      */
-    mapping(uint32 strategyId => ICore.Strategy) public strategies;
+    mapping(uint32 strategyId => IStorage.Strategy) public strategies;
     /**
      * @notice Links an account to a single strategy for a specific bApp
      * @dev Guarantees that an account cannot have more than one strategy for a given bApp
@@ -108,7 +109,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
      */
-    mapping(uint32 strategyId => mapping(address bApp => mapping(address token => ICore.Obligation))) public obligations;
+    mapping(uint32 strategyId => mapping(address bApp => mapping(address token => IStorage.Obligation))) public obligations;
     /**
      * @notice Tracks unallocated tokens in a strategy.
      * @dev Count the number of bApps that have one obligation set for the token.
@@ -120,7 +121,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * @dev User can have only one pending withdrawal request per token.
      *  Submitting a new request will overwrite the previous one and reset the timer.
      */
-    mapping(uint32 strategyId => mapping(address account => mapping(address token => ICore.WithdrawalRequest))) public
+    mapping(uint32 strategyId => mapping(address account => mapping(address token => IStorage.WithdrawalRequest))) public
         withdrawalRequests;
     /**
      * @notice Tracks all the obligation change requests divided by token per strategy.
@@ -128,7 +129,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
      * Only the strategy owner can submit one.
      * Submitting a new request will overwrite the previous one and reset the timer.
      */
-    mapping(uint32 strategyId => mapping(address token => mapping(address bApp => ICore.ObligationRequest))) public
+    mapping(uint32 strategyId => mapping(address token => mapping(address bApp => IStorage.ObligationRequest))) public
         obligationRequests;
 
     /// @notice Prevents the initialization of the implementation contract itself during deployment
@@ -141,7 +142,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param _maxFeeIncrement The maximum fee increment
     function initialize(address owner, uint32 _maxFeeIncrement) public initializer {
         if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) {
-            revert ICore.InvalidMaxFeeIncrement();
+            revert IStorage.InvalidMaxFeeIncrement();
         }
         __Ownable_init(owner);
         __UUPSUpgradeable_init();
@@ -153,7 +154,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     modifier onlyStrategyOwner(uint32 strategyId) {
         if (strategies[strategyId].owner != msg.sender) {
-            revert ICore.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
+            revert IStorage.InvalidStrategyOwner(msg.sender, strategies[strategyId].owner);
         }
         _;
     }
@@ -161,7 +162,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Allow the function to be called only by the bApp owner
     /// @param bApp The address of the bApp
     modifier onlyBAppOwner(address bApp) {
-        if (bAppOwners[bApp] != msg.sender) revert ICore.InvalidBAppOwner(msg.sender, bAppOwners[bApp]);
+        if (bAppOwners[bApp] != msg.sender) revert IStorage.InvalidBAppOwner(msg.sender, bAppOwners[bApp]);
         _;
     }
 
@@ -188,10 +189,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param percentage The percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function delegateBalance(address account, uint32 percentage) external {
-        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
-        if (delegations[msg.sender][account] != 0) revert ICore.DelegationAlreadyExists();
+        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
+        if (delegations[msg.sender][account] != 0) revert IStorage.DelegationAlreadyExists();
         if (totalDelegatedPercentage[msg.sender] + percentage > MAX_PERCENTAGE) {
-            revert ICore.ExceedingPercentageUpdate();
+            revert IStorage.ExceedingPercentageUpdate();
         }
 
         delegations[msg.sender][account] = percentage;
@@ -205,14 +206,14 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param percentage The updated percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function updateDelegatedBalance(address account, uint32 percentage) external {
-        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
 
         uint32 existingPercentage = delegations[msg.sender][account];
-        if (existingPercentage == percentage) revert ICore.DelegationExistsWithSameValue();
-        if (existingPercentage == 0) revert ICore.DelegationDoesNotExist();
+        if (existingPercentage == percentage) revert IStorage.DelegationExistsWithSameValue();
+        if (existingPercentage == 0) revert IStorage.DelegationDoesNotExist();
 
         uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
-        if (newTotalPercentage > MAX_PERCENTAGE) revert ICore.ExceedingPercentageUpdate();
+        if (newTotalPercentage > MAX_PERCENTAGE) revert IStorage.ExceedingPercentageUpdate();
 
         delegations[msg.sender][account] = percentage;
         totalDelegatedPercentage[msg.sender] = newTotalPercentage;
@@ -224,7 +225,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param account The address of the account whose delegation is being removed.
     function removeDelegatedBalance(address account) external {
         uint32 percentage = delegations[msg.sender][account];
-        if (percentage == 0) revert ICore.DelegationDoesNotExist();
+        if (percentage == 0) revert IStorage.DelegationDoesNotExist();
 
         delegations[msg.sender][account] = 0;
         totalDelegatedPercentage[msg.sender] -= percentage;
@@ -237,24 +238,28 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ********************
 
     /// @notice Registers a bApp.
-    /// @param bApp The address of the bApp.
+    /// @param owner The owner address of the bApp.
     /// @param tokens The list of tokens the bApp accepts; can be empty.
     /// @param sharedRiskLevels The shared risk level of the bApp.
     /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(
-        address bApp,
+        address owner,
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels,
         string calldata metadataURI
     ) external {
-        if (bAppOwners[bApp] != address(0)) revert ICore.BAppAlreadyRegistered();
-        else bAppOwners[bApp] = msg.sender;
+        if (bAppOwners[msg.sender] != address(0)) revert IStorage.BAppAlreadyRegistered();
+        else bAppOwners[msg.sender] = owner;
 
-        _addNewTokens(bApp, tokens, sharedRiskLevels);
+        if (_isContract(msg.sender) && !_isBApp(msg.sender)) {
+            revert IStorage.BAppDoesNotSupportInterface();
+        }
 
-        emit BAppRegistered(bApp, msg.sender, tokens, sharedRiskLevels, metadataURI);
+        _addNewTokens(msg.sender, tokens, sharedRiskLevels);
+
+        emit BAppRegistered(msg.sender, owner, tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Function to update the metadata URI of the Based Application
@@ -272,7 +277,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         external
         onlyBAppOwner(bApp)
     {
-        if (tokens.length == 0) revert ICore.EmptyTokenList();
+        if (tokens.length == 0) revert IStorage.EmptyTokenList();
         _addNewTokens(bApp, tokens, sharedRiskLevels);
         emit BAppTokensCreated(bApp, tokens, sharedRiskLevels);
     }
@@ -285,13 +290,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         external
         onlyBAppOwner(bApp)
     {
-        if (tokens.length == 0) revert ICore.EmptyTokenList();
+        if (tokens.length == 0) revert IStorage.EmptyTokenList();
         _validateArraysLength(tokens, sharedRiskLevels);
         for (uint8 i = 0; i < tokens.length; i++) {
             _validateTokenInput(tokens[i]);
-            if (!bAppTokens[bApp][tokens[i]].isSet) revert ICore.TokenNoTSupportedByBApp(tokens[i]);
+            if (!bAppTokens[bApp][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
             if (bAppTokens[bApp][tokens[i]].value == sharedRiskLevels[i]) {
-                revert ICore.SharedRiskLevelAlreadySet();
+                revert IStorage.SharedRiskLevelAlreadySet();
             }
             _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
         }
@@ -306,11 +311,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param metadataURI The metadata URI of the strategy
     /// @return strategyId The ID of the new Strategy
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
-        if (fee > MAX_PERCENTAGE) revert ICore.InvalidStrategyFee();
+        if (fee > MAX_PERCENTAGE) revert IStorage.InvalidStrategyFee();
 
         strategyId = ++_strategyCounter;
 
-        ICore.Strategy storage newStrategy = strategies[strategyId];
+        IStorage.Strategy storage newStrategy = strategies[strategyId];
         newStrategy.owner = msg.sender;
         newStrategy.fee = fee;
 
@@ -338,15 +343,20 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         uint32[] calldata obligationPercentages,
         bytes calldata data
     ) external onlyStrategyOwner(strategyId) {
-        if (tokens.length != obligationPercentages.length) revert ICore.LengthsNotMatching();
+        if (tokens.length != obligationPercentages.length) revert IStorage.LengthsNotMatching();
 
         // Check if a strategy exists for the given bApp.
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
-        if (accountBAppStrategy[msg.sender][bApp] != 0) revert ICore.BAppAlreadyOptedIn();
+        if (accountBAppStrategy[msg.sender][bApp] != 0) revert IStorage.BAppAlreadyOptedIn();
 
         _createObligations(strategyId, bApp, tokens, obligationPercentages);
 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
+
+        if (_isContract(bApp)) {
+            bool success = IBasedApp(bApp).optInToBApp(strategyId, tokens, obligationPercentages, data);
+            if (!success) revert IStorage.BAppOptInFailed();
+        }
 
         emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
     }
@@ -356,7 +366,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param token The ERC20 token address
     /// @param amount The amount to deposit
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
-        if (amount == 0) revert ICore.InvalidAmount();
+        if (amount == 0) revert IStorage.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] += amount;
 
@@ -368,7 +378,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Deposit ETH into the strategy
     /// @param strategyId The ID of the strategy
     function depositETH(uint32 strategyId) external payable {
-        if (msg.value == 0) revert ICore.InvalidAmount();
+        if (msg.value == 0) revert IStorage.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
 
@@ -380,10 +390,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param token The ERC20 token address
     /// @param amount The amount to withdraw
     function fastWithdrawERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
-        if (amount == 0) revert ICore.InvalidAmount();
-        if (usedTokens[strategyId][address(token)] != 0) revert ICore.TokenIsUsedByTheBApp();
-        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
-        if (address(token) == ETH_ADDRESS) revert ICore.InvalidToken();
+        if (amount == 0) revert IStorage.InvalidAmount();
+        if (usedTokens[strategyId][address(token)] != 0) revert IStorage.TokenIsUsedByTheBApp();
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
+        if (address(token) == ETH_ADDRESS) revert IStorage.InvalidToken();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
 
@@ -396,9 +406,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     /// @param amount The amount to withdraw
     function fastWithdrawETH(uint32 strategyId, uint256 amount) external nonReentrant {
-        if (amount == 0) revert ICore.InvalidAmount();
-        if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert ICore.TokenIsUsedByTheBApp();
-        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
+        if (amount == 0) revert IStorage.InvalidAmount();
+        if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert IStorage.TokenIsUsedByTheBApp();
+        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
 
@@ -412,11 +422,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param token The ERC20 token address.
     /// @param amount The amount to withdraw.
     function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external {
-        if (amount == 0) revert ICore.InvalidAmount();
-        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert ICore.InsufficientBalance();
-        if (token == ETH_ADDRESS) revert ICore.InvalidToken();
+        if (amount == 0) revert IStorage.InvalidAmount();
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
+        if (token == ETH_ADDRESS) revert IStorage.InvalidToken();
 
-        ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
+        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
 
         request.amount = amount;
         request.requestTime = uint32(block.timestamp);
@@ -428,10 +438,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
     function finalizeWithdrawal(uint32 strategyId, IERC20 token) external nonReentrant {
-        ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
+        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
         uint256 requestTime = request.requestTime;
 
-        if (requestTime == 0) revert ICore.NoPendingWithdrawal();
+        if (requestTime == 0) revert IStorage.NoPendingWithdrawal();
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
@@ -447,10 +457,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy.
     /// @param amount The amount of ETH to withdraw.
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
-        if (amount == 0) revert ICore.InvalidAmount();
-        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert ICore.InsufficientBalance();
+        if (amount == 0) revert IStorage.InvalidAmount();
+        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
 
-        ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
 
         request.amount = amount;
         request.requestTime = uint32(block.timestamp);
@@ -461,10 +471,10 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(uint32 strategyId) external nonReentrant {
-        ICore.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
         uint256 requestTime = request.requestTime;
 
-        if (requestTime == 0) revert ICore.NoPendingWithdrawalETH();
+        if (requestTime == 0) revert IStorage.NoPendingWithdrawalETH();
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
@@ -485,7 +495,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         external
         onlyStrategyOwner(strategyId)
     {
-        if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
+        if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert IStorage.BAppNotOptedIn();
 
         _createSingleObligation(strategyId, bApp, token, obligationPercentage);
     }
@@ -500,7 +510,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         external
         onlyStrategyOwner(strategyId)
     {
-        if (obligationPercentage <= obligations[strategyId][bApp][token].percentage) revert ICore.InvalidPercentage();
+        if (obligationPercentage <= obligations[strategyId][bApp][token].percentage) revert IStorage.InvalidPercentage();
 
         _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage);
         _updateObligation(strategyId, bApp, token, obligationPercentage);
@@ -518,7 +528,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     {
         _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage);
 
-        ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][token];
+        IStorage.ObligationRequest storage request = obligationRequests[strategyId][bApp][token];
 
         request.percentage = obligationPercentage;
         request.requestTime = uint32(block.timestamp);
@@ -531,11 +541,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param bApp The address of the bApp.
     /// @param token The ERC20 token address.
     function finalizeUpdateObligation(uint32 strategyId, address bApp, address token) external onlyStrategyOwner(strategyId) {
-        ICore.ObligationRequest storage request = obligationRequests[strategyId][bApp][address(token)];
+        IStorage.ObligationRequest storage request = obligationRequests[strategyId][bApp][address(token)];
         uint256 requestTime = request.requestTime;
         uint32 percentage = request.percentage;
 
-        if (requestTime == 0) revert ICore.NoPendingObligationUpdate();
+        if (requestTime == 0) revert IStorage.NoPendingObligationUpdate();
         _checkTimelocks(requestTime, OBLIGATION_TIMELOCK_PERIOD, OBLIGATION_EXPIRE_TIME);
 
         if (percentage == 0 && obligations[strategyId][bApp][address(token)].percentage > 0) {
@@ -553,13 +563,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
     function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
-        if (proposedFee > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+        if (proposedFee > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
 
-        ICore.Strategy storage strategy = strategies[strategyId];
+        IStorage.Strategy storage strategy = strategies[strategyId];
         uint32 fee = strategy.fee;
 
-        if (proposedFee > fee + maxFeeIncrement) revert ICore.InvalidPercentageIncrement();
-        if (proposedFee == fee) revert ICore.FeeAlreadySet();
+        if (proposedFee > fee + maxFeeIncrement) revert IStorage.InvalidPercentageIncrement();
+        if (proposedFee == fee) revert IStorage.FeeAlreadySet();
 
         strategy.feeProposed = proposedFee;
         strategy.feeRequestTime = uint32(block.timestamp);
@@ -570,11 +580,11 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @notice Finalize the fee update for a strategy
     /// @param strategyId The ID of the strategy
     function finalizeFeeUpdate(uint32 strategyId) external onlyStrategyOwner(strategyId) {
-        ICore.Strategy storage strategy = strategies[strategyId];
+        IStorage.Strategy storage strategy = strategies[strategyId];
 
         uint256 feeRequestTime = strategy.feeRequestTime;
 
-        if (feeRequestTime == 0) revert ICore.NoPendingFeeUpdate();
+        if (feeRequestTime == 0) revert IStorage.NoPendingFeeUpdate();
         _checkTimelocks(feeRequestTime, FEE_TIMELOCK_PERIOD, FEE_EXPIRE_TIME);
 
         uint32 oldFee = strategy.fee;
@@ -593,13 +603,13 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param tokens The list of tokens
     /// @param uint32Array The list of uint32 values
     function _validateArraysLength(address[] calldata tokens, uint32[] calldata uint32Array) internal pure {
-        if (tokens.length != uint32Array.length) revert ICore.LengthsNotMatching();
+        if (tokens.length != uint32Array.length) revert IStorage.LengthsNotMatching();
     }
 
     /// @notice Internal function to validate the token and shared risk level
     /// @param token The token address to be validated
     function _validateTokenInput(address token) internal pure {
-        if (token == address(0)) revert ICore.ZeroAddressNotAllowed();
+        if (token == address(0)) revert IStorage.ZeroAddressNotAllowed();
     }
 
     /// @notice Internal function to set the shared risk level for a token
@@ -619,7 +629,7 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         _validateArraysLength(tokens, sharedRiskLevels);
         for (uint8 i = 0; i < tokens.length; i++) {
             _validateTokenInput(tokens[i]);
-            if (bAppTokens[bApp][tokens[i]].isSet) revert ICore.TokenAlreadyAddedToBApp(tokens[i]);
+            if (bAppTokens[bApp][tokens[i]].isSet) revert IStorage.TokenAlreadyAddedToBApp(tokens[i]);
             _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
         }
     }
@@ -646,9 +656,9 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function _createSingleObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
-        if (!bAppTokens[bApp][token].isSet) revert ICore.TokenNoTSupportedByBApp(token);
-        if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
-        if (obligations[strategyId][bApp][token].isSet) revert ICore.ObligationAlreadySet();
+        if (!bAppTokens[bApp][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+        if (obligationPercentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
+        if (obligations[strategyId][bApp][token].isSet) revert IStorage.ObligationAlreadySet();
 
         if (obligationPercentage != 0) {
             usedTokens[strategyId][token] += 1;
@@ -669,12 +679,12 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         private
         view
     {
-        if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
-        if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
+        if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert IStorage.BAppNotOptedIn();
+        if (obligationPercentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
         if (obligationPercentage == obligations[strategyId][bApp][token].percentage) {
-            revert ICore.ObligationAlreadySet();
+            revert IStorage.ObligationAlreadySet();
         }
-        if (!obligations[strategyId][bApp][token].isSet) revert ICore.ObligationHasNotBeenCreated();
+        if (!obligations[strategyId][bApp][token].isSet) revert IStorage.ObligationHasNotBeenCreated();
     }
 
     /// @notice Update a single obligation for a bApp
@@ -693,9 +703,27 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     /// @param timelockPeriod The timelock period
     /// @param expireTime The expire time
     function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) private view {
-        if (uint32(block.timestamp) < requestTime + timelockPeriod) revert ICore.TimelockNotElapsed();
+        if (uint32(block.timestamp) < requestTime + timelockPeriod) revert IStorage.TimelockNotElapsed();
         if (uint32(block.timestamp) > requestTime + timelockPeriod + expireTime) {
-            revert ICore.RequestTimeExpired();
+            revert IStorage.RequestTimeExpired();
         }
+    }
+
+    /// @notice Function to check if an address is a contract
+    /// @param account The address to check
+    /// @return isContract True if the address is a contract
+    function _isContract(address account) private view returns (bool isContract) {
+        uint32 size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
+    }
+
+    /// @notice Function to check if an address uses the correct bApp interface
+    /// @param bApp The address of the bApp
+    /// @return isBApp True if the address uses the correct bApp interface
+    function _isBApp(address bApp) public view returns (bool isBApp) {
+        return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }
 }
