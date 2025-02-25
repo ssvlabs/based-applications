@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-interface ICore {
+interface IStorage {
     /// @notice Represents a SharedRiskLevel
     struct SharedRiskLevel {
         /// @dev The shared risk level

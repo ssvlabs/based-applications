@@ -2,22 +2,22 @@
 pragma solidity 0.8.28;
 
 import {BasedAppCore} from "middleware/modules/core/BasedAppCore.sol";
+import {BasedAppWhitelisted} from "middleware/modules/BasedAppWhitelisted.sol";
 
-contract WhitelistBasedApp is BasedAppCore {
-    error NonWhitelistedCaller();
-
-    mapping(address => bool) public isWhitelisted;
-
+contract WhitelistExample is BasedAppCore, BasedAppWhitelisted {
     constructor(address _basedAppManager, address owner) BasedAppCore(_basedAppManager, owner) {
         isWhitelisted[owner] = true;
     }
 
-    function addWhitelisted(address account) external onlyOwner {
+    function addWhitelisted(address account) external override onlyOwner {
+        if (isWhitelisted[account]) revert AlreadyWhitelisted();
+        if (account == address(0)) revert ZeroAddress();
         isWhitelisted[account] = true;
     }
 
-    function removeWhitelisted(address account) external onlyOwner {
-        isWhitelisted[account] = false;
+    function removeWhitelisted(address account) external override onlyOwner {
+        if (!isWhitelisted[account]) revert NotWhitelisted();
+        delete isWhitelisted[account];
     }
 
     function optInToBApp(

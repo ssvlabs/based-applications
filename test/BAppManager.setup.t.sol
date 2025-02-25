@@ -8,12 +8,13 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {BasedAppManager} from "src/BasedAppManager.sol";
-import {ICore} from "interfaces/ICore.sol";
+import {IStorage} from "interfaces/IStorage.sol";
 import {IBasedAppManager} from "interfaces/IBasedAppManager.sol";
 
 import {IERC20, ERC20Mock} from "./mocks/MockERC20.sol";
 import {BasedAppMock} from "./mocks/MockBApp.sol";
 import {NonCompliantBApp} from "./mocks/MockNonCompliantBApp.sol";
+import {WhitelistExample} from "middleware/examples/WhitelistExample.sol";
 
 contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     BasedAppManager public implementation;
@@ -22,6 +23,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     BasedAppMock bApp1;
     BasedAppMock bApp2;
     NonCompliantBApp nonCompliantBApp;
+    WhitelistExample whitelistExample;
 
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
@@ -79,8 +81,8 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.prank(USER1);
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
+        whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
 
-        console.log("bApp1 address: ", address(bApp1));
         vm.startPrank(OWNER);
         vm.label(address(bApp1), "BasedApp1");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");

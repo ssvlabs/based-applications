@@ -37,14 +37,14 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
     function testRevert_DelegateBalanceTooLow() public {
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, 0);
     }
 
     function testRevert_DelegateBalanceTooHigh(uint32 highBalance) public {
         vm.assume(highBalance > proxiedManager.MAX_PERCENTAGE());
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, highBalance);
     }
 
@@ -73,7 +73,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
         uint32 percentage2 = proxiedManager.MAX_PERCENTAGE();
-        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingPercentageUpdate.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingPercentageUpdate.selector));
         proxiedManager.delegateBalance(RECEIVER2, percentage2);
         uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
         uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
@@ -93,7 +93,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
         assertEq(delegatedAmount, percentage1, "Delegated amount should be set");
         assertEq(totalDelegatedPercentage, percentage1, "Total delegated percentage should be set");
-        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationAlreadyExists.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationAlreadyExists.selector));
         proxiedManager.delegateBalance(RECEIVER, percentage2);
         vm.stopPrank();
     }
@@ -101,7 +101,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function testRevert_InvalidPercentageDelegateBalance() public {
         vm.startPrank(USER1);
         uint32 maxPlusOne = proxiedManager.MAX_PERCENTAGE() + 1;
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
         vm.stopPrank();
     }
@@ -115,7 +115,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         assertEq(delegatedAmount, 1e4, "Delegated amount should be 100%");
         assertEq(totalDelegatedPercentage, 1e4, "Total delegated percentage should be 100%");
         uint32 maxPlusOne = proxiedManager.MAX_PERCENTAGE() + 1;
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
         vm.stopPrank();
     }
@@ -123,7 +123,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function testRevert_UpdateTotalDelegatePercentageWithZero() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 0);
         vm.stopPrank();
     }
@@ -131,14 +131,14 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function testRevert_UpdateTotalDelegatePercentageWithSameBalance() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationExistsWithSameValue.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationExistsWithSameValue.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1);
         vm.stopPrank();
     }
 
     function testRevert_UpdateBalanceNotExisting() public {
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationDoesNotExist.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
         vm.stopPrank();
     }
@@ -153,7 +153,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         assertEq(delegatedAmount, 1, "Delegated amount should be 100%");
         assertEq(delegatedAmount2, 1, "Delegated amount should be 100%");
         assertEq(totalDelegatedPercentage, 2, "Total delegated percentage should be 100%");
-        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingPercentageUpdate.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingPercentageUpdate.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
         vm.stopPrank();
     }
@@ -191,7 +191,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
     function testRevert_RemoveNonExistingBalance() public {
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationDoesNotExist.selector));
         proxiedManager.removeDelegatedBalance(RECEIVER);
         vm.stopPrank();
     }
