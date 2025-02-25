@@ -1,22 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-abstract contract BasedAppWhitelisted {
+import {IBasedAppWhitelisted} from "interfaces/IBasedAppWhitelisted.sol";
+
+abstract contract BasedAppWhitelisted is IBasedAppWhitelisted {
     mapping(address => bool) public isWhitelisted;
 
-    error AlreadyWhitelisted();
-    error ZeroAddress();
-    error NotWhitelisted();
-    error NonWhitelistedCaller();
-
     function addWhitelisted(address account) external virtual {
-        if (isWhitelisted[account]) revert AlreadyWhitelisted();
-        if (account == address(0)) revert ZeroAddress();
+        if (isWhitelisted[account]) revert IBasedAppWhitelisted.AlreadyWhitelisted();
+        if (account == address(0)) revert IBasedAppWhitelisted.ZeroAddress();
         isWhitelisted[account] = true;
     }
 
     function removeWhitelisted(address account) external virtual {
-        if (!isWhitelisted[account]) revert NotWhitelisted();
+        if (!isWhitelisted[account]) revert IBasedAppWhitelisted.NotWhitelisted();
         delete isWhitelisted[account];
     }
 }
