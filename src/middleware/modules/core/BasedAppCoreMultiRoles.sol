@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IBasedApp} from "interfaces/IBasedApp.sol";
-import {IBasedAppManager} from "interfaces/IBasedAppManager.sol";
+import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
+import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 

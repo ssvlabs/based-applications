@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "forge-std/Script.sol";
+import "@ssv/forge-std/Script.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "../src/BasedAppManager.sol";
+import "src/BasedAppManager.sol";
 
 contract DeployProxy is Script {
     function run() external {

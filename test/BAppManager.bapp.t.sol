@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {BasedAppCore} from "middleware/modules/core/BasedAppCore.sol";
+import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
-import "./BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest, IStorage, IBasedAppManager} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     string metadataURI = "http://metadata.com";

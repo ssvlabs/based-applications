@@ -8,13 +8,13 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {BasedAppManager} from "src/BasedAppManager.sol";
-import {IStorage} from "interfaces/IStorage.sol";
-import {IBasedAppManager} from "interfaces/IBasedAppManager.sol";
+import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
+import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 
-import {IERC20, ERC20Mock} from "./mocks/MockERC20.sol";
-import {BasedAppMock} from "./mocks/MockBApp.sol";
-import {NonCompliantBApp} from "./mocks/MockNonCompliantBApp.sol";
-import {WhitelistExample} from "middleware/examples/WhitelistExample.sol";
+import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
+import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
+import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
+import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 
 contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     BasedAppManager public implementation;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import "./BAppManager.setup.t.sol";
+import "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest {
     function test_OwnerOfBasedAppManager() public view {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import "./BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest, IBasedAppManager, IStorage} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function test_DelegateMinimumBalance() public {

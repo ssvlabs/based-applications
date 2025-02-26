@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IBasedApp} from "interfaces/IBasedApp.sol";
-import {IBasedAppManager} from "interfaces/IBasedAppManager.sol";
+import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
+import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
@@ -59,7 +59,15 @@ abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable, IERC165 {
         address[] calldata tokens,
         uint32[] calldata obligationPercentages,
         bytes calldata data
-    ) external virtual onlySSVBasedAppManager returns (bool success) {}
+    ) external virtual onlySSVBasedAppManager returns (bool success) {
+        /// --- PRE-CONDITIONS (HOOK) ---
+        _preOptIn(strategyId, tokens, obligationPercentages, data);
+        /// --- CORE LOGIC (TO BE IMPLEMENTED) ---
+        success = true;
+        /// --- POST-CONDITIONS (HOOK) ---
+        _postOptIn(strategyId, tokens, obligationPercentages, data, success);
+        return success;
+    }
 
     /// @notice Checks if the contract supports the interface
     /// @param interfaceId interface id
@@ -67,4 +75,30 @@ abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable, IERC165 {
     function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
         return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
+
+    /// @notice Hook function for pre-processing before opting into a BApp.
+    /// @dev Can be overridden by child contracts to add custom pre-processing.
+    /// @param strategyId The ID of the strategy.
+    /// @param tokens Array of token addresses.
+    /// @param obligationPercentages Corresponding percentage obligations.
+    /// @param data Additional data payload.
+    function _preOptIn(uint32 strategyId, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data)
+        internal
+        virtual
+    {}
+
+    /// @notice Hook function for post-processing after opting into a BApp.
+    /// @dev Can be overridden by child contracts to add custom post-processing.
+    /// @param strategyId The ID of the strategy.
+    /// @param tokens Array of token addresses.
+    /// @param obligationPercentages Corresponding percentage obligations.
+    /// @param data Additional data payload.
+    /// @param success Boolean indicating success status.
+    function _postOptIn(
+        uint32 strategyId,
+        address[] calldata tokens,
+        uint32[] calldata obligationPercentages,
+        bytes calldata data,
+        bool success
+    ) internal virtual {}
 }

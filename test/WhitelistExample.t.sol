@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IBasedAppWhitelisted} from "interfaces/IBasedAppWhitelisted.sol";
+import {IBasedAppWhitelisted} from "@ssv/src/interfaces/IBasedAppWhitelisted.sol";
 
-import "./BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     function test_addWhitelistedAccount() public {
@@ -25,10 +25,15 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         whitelistExample.addWhitelisted(USER1);
     }
 
-    
     function testRevert_removeWhitelistedAccount() public {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.NotWhitelisted.selector));
         whitelistExample.removeWhitelisted(USER2);
+    }
+
+    function testRevert_addWhitelistedZeroAddress() public {
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.ZeroAddress.selector));
+        whitelistExample.addWhitelisted(address(0));
     }
 }

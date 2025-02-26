@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.28;
 
-import "forge-std/Script.sol";
+import "@ssv/forge-std/Script.sol";
 
 interface IUUPSUpgradeable {
     function upgradeToAndCall(address newImplementation, bytes calldata data) external;

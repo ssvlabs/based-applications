@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import "./BAppManager.setup.t.sol";
-import "./BAppManager.bapp.t.sol";
+import {BasedAppManagerSetupTest, IStorage, IBasedAppManager, IERC20, BasedAppMock} from "@ssv/test/BAppManager.setup.t.sol";
+import {BasedAppManagerBAppTest} from "@ssv/test/BAppManager.bapp.t.sol";
 
 contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManagerBAppTest {
     function test_CreateStrategies() public {
