@@ -9,17 +9,6 @@ contract WhitelistExample is BasedAppCore, BasedAppWhitelisted {
         isWhitelisted[owner] = true;
     }
 
-    // function addWhitelisted(address account) external override onlyOwner {
-    //     if (isWhitelisted[account]) revert AlreadyWhitelisted();
-    //     if (account == address(0)) revert ZeroAddress();
-    //     isWhitelisted[account] = true;
-    // }
-
-    // function removeWhitelisted(address account) external override onlyOwner {
-    //     if (!isWhitelisted[account]) revert NotWhitelisted();
-    //     delete isWhitelisted[account];
-    // }
-
     function optInToBApp(
         uint32, /*strategyId*/
         address[] calldata, /*tokens*/

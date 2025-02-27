@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
+import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 
 abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable, IERC165 {
     /// @notice Address of the SSV Based App Manager contract
@@ -51,34 +51,35 @@ abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable, IERC165 {
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
+    /// @notice Adds tokens to a BApp
+    /// @param tokens array of token addresses
+    /// @param sharedRiskLevels array of shared risk levels
     function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual onlyOwner {
         IBasedAppManager(BASED_APP_MANAGER).addTokensToBApp(tokens, sharedRiskLevels);
     }
 
+    /// @notice Updates the tokens of a BApp
+    /// @param tokens array of token addresses
+    /// @param sharedRiskLevels array of shared risk levels
     function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual onlyOwner {
         IBasedAppManager(BASED_APP_MANAGER).updateBAppTokens(tokens, sharedRiskLevels);
     }
 
+    /// @notice Updates the metadata URI of a BApp
+    /// @param metadataURI new metadata URI
     function updateBAppMetadataURI(string calldata metadataURI) external virtual onlyOwner {
         IBasedAppManager(BASED_APP_MANAGER).updateBAppMetadataURI(metadataURI);
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
-    /// @param strategyId id of the strategy
-    /// @param data data to be passed to the BApp
     function optInToBApp(
-        uint32 strategyId,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages,
-        bytes calldata data
+        uint32, /*strategyId*/
+        address[] calldata, /*tokens*/
+        uint32[] calldata, /*obligationPercentages*/
+        bytes calldata /*data*/
     ) external virtual onlySSVBasedAppManager returns (bool success) {
-        // todo move to whitelisting maybe, also the post
-        // /// --- PRE-CONDITIONS (HOOK) ---
-        // _preOptIn(strategyId, tokens, obligationPercentages, data);
-        // /// --- CORE LOGIC (TO BE IMPLEMENTED) ---
-        // return true;
-        /// --- POST-CONDITIONS (HOOK) ---
-        //_postOptIn(strategyId, tokens, obligationPercentages, data, success);
+        ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
+        return true;
     }
 
     /// @notice Checks if the contract supports the interface
@@ -87,30 +88,4 @@ abstract contract BasedAppCore is IBasedApp, OwnableUpgradeable, IERC165 {
     function supportsInterface(bytes4 interfaceId) public pure override returns (bool) {
         return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
-
-    // /// @notice Hook function for pre-processing before opting into a BApp.
-    // /// @dev Can be overridden by child contracts to add custom pre-processing.
-    // /// @param strategyId The ID of the strategy.
-    // /// @param tokens Array of token addresses.
-    // /// @param obligationPercentages Corresponding percentage obligations.
-    // /// @param data Additional data payload.
-    // function _preOptIn(uint32 strategyId, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data)
-    //     internal
-    //     virtual
-    // {}
-
-    // /// @notice Hook function for post-processing after opting into a BApp.
-    // /// @dev Can be overridden by child contracts to add custom post-processing.
-    // /// @param strategyId The ID of the strategy.
-    // /// @param tokens Array of token addresses.
-    // /// @param obligationPercentages Corresponding percentage obligations.
-    // /// @param data Additional data payload.
-    // /// @param success Boolean indicating success status.
-    // function _postOptIn(
-    //     uint32 strategyId,
-    //     address[] calldata tokens,
-    //     uint32[] calldata obligationPercentages,
-    //     bytes calldata data,
-    //     bool success
-    // ) internal virtual {}
 }

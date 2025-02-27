@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-
-import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpgradeable {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -83,14 +82,14 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
-    /// @param strategyId id of the strategy
-    /// @param data data to be passed to the BApp
     function optInToBApp(
-        uint32 strategyId,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages,
-        bytes calldata data
-    ) external virtual onlySSVBasedAppManager returns (bool success) {}
+        uint32, /*strategyId*/
+        address[] calldata, /*tokens*/
+        uint32[] calldata, /*obligationPercentages*/
+        bytes calldata /*data*/
+    ) external virtual onlySSVBasedAppManager returns (bool success) {
+        return true;
+    }
 
     /// @notice Checks if the contract supports the interface
     /// @param interfaceId interface id
