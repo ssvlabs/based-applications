@@ -6,14 +6,14 @@ import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgrade
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
+import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
+import {BasedAppManagement} from "src/BasedAppManagement.sol";
 
 /**
- * @title BasedAppManager
+ * @title SSVBasedApps
  * @notice The Core Contract to manage Based Applications, Delegations & Strategies for SSV Based Applications Platform.
  *
  * **************
@@ -54,7 +54,14 @@ import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
  * Marco Tabasco
  * Riccardo Persiani
  */
-contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardTransient, IBasedAppManager {
+contract SSVBasedApps is
+    Initializable,
+    OwnableUpgradeable,
+    UUPSUpgradeable,
+    ReentrancyGuardTransient,
+    BasedAppManagement,
+    ISSVBasedApps
+{
     using SafeERC20 for IERC20;
 
     uint32 public constant FEE_TIMELOCK_PERIOD = 7 days;
@@ -69,16 +76,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     uint32 private _strategyCounter;
     uint32 public maxFeeIncrement;
 
-    /**
-     * @notice Tracks the owners of the bApps
-     * @dev The bApp is identified with its address
-     */
-    mapping(address bApp => address owner) public bAppOwners;
-    /**
-     * @notice Tracks the tokens supported by the bApps
-     * @dev The bApp is identified with its address
-     */
-    mapping(address bApp => mapping(address token => IStorage.SharedRiskLevel)) public bAppTokens;
     /**
      * @notice Tracks the strategies created
      * @dev The strategy ID is incremental and unique
@@ -159,13 +156,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         _;
     }
 
-    /// @notice Allow the function to be called only by the bApp owner
-    /// @param bApp The address of the bApp
-    modifier onlyBAppOwner(address bApp) {
-        if (bAppOwners[bApp] != msg.sender) revert IStorage.InvalidBAppOwner(msg.sender, bAppOwners[bApp]);
-        _;
-    }
-
     /// @notice Defines who can authorize the upgrade
     /// @param newImplementation The address of the new implementation
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
@@ -231,76 +221,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
         totalDelegatedPercentage[msg.sender] -= percentage;
 
         emit DelegationRemoved(msg.sender, account);
-    }
-
-    // ********************
-    // ** Section: bApps **
-    // ********************
-
-    /// @notice Registers a bApp.
-    /// @param owner The owner address of the bApp.
-    /// @param tokens The list of tokens the bApp accepts; can be empty.
-    /// @param sharedRiskLevels The shared risk level of the bApp.
-    /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
-    /// to a JSON file containing metadata such as the name, description, logo, etc.
-    /// @dev Allows creating a bApp even with an empty token list.
-    function registerBApp(
-        address owner,
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
-        string calldata metadataURI
-    ) external {
-        if (bAppOwners[msg.sender] != address(0)) revert IStorage.BAppAlreadyRegistered();
-        else bAppOwners[msg.sender] = owner;
-
-        if (_isContract(msg.sender) && !_isBApp(msg.sender)) {
-            revert IStorage.BAppDoesNotSupportInterface();
-        }
-
-        _addNewTokens(msg.sender, tokens, sharedRiskLevels);
-
-        emit BAppRegistered(msg.sender, owner, tokens, sharedRiskLevels, metadataURI);
-    }
-
-    /// @notice Function to update the metadata URI of the Based Application
-    /// @param bApp The address of the bApp
-    /// @param metadataURI The new metadata URI
-    function updateBAppMetadataURI(address bApp, string calldata metadataURI) external onlyBAppOwner(bApp) {
-        emit BAppMetadataURIUpdated(bApp, metadataURI);
-    }
-
-    /// @notice Function to add tokens to an existing bApp
-    /// @param bApp The address of the bApp
-    /// @param tokens The list of tokens to add
-    /// @param sharedRiskLevels The shared risk levels of the tokens
-    function addTokensToBApp(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels)
-        external
-        onlyBAppOwner(bApp)
-    {
-        if (tokens.length == 0) revert IStorage.EmptyTokenList();
-        _addNewTokens(bApp, tokens, sharedRiskLevels);
-        emit BAppTokensCreated(bApp, tokens, sharedRiskLevels);
-    }
-
-    /// @notice Function to update the shared risk levels of the tokens for a bApp
-    /// @param bApp The address of the bApp
-    /// @param tokens The list of tokens to update
-    /// @param sharedRiskLevels The shared risk levels of the tokens
-    function updateBAppTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels)
-        external
-        onlyBAppOwner(bApp)
-    {
-        if (tokens.length == 0) revert IStorage.EmptyTokenList();
-        _validateArraysLength(tokens, sharedRiskLevels);
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (!bAppTokens[bApp][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
-            if (bAppTokens[bApp][tokens[i]].value == sharedRiskLevels[i]) {
-                revert IStorage.SharedRiskLevelAlreadySet();
-            }
-            _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
-        }
-        emit BAppTokensUpdated(bApp, tokens, sharedRiskLevels);
     }
 
     // ***********************
@@ -599,41 +519,6 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
     // ** Section: Helpers **
     // **********************
 
-    /// @notice Validate the length of two arrays
-    /// @param tokens The list of tokens
-    /// @param uint32Array The list of uint32 values
-    function _validateArraysLength(address[] calldata tokens, uint32[] calldata uint32Array) internal pure {
-        if (tokens.length != uint32Array.length) revert IStorage.LengthsNotMatching();
-    }
-
-    /// @notice Internal function to validate the token and shared risk level
-    /// @param token The token address to be validated
-    function _validateTokenInput(address token) internal pure {
-        if (token == address(0)) revert IStorage.ZeroAddressNotAllowed();
-    }
-
-    /// @notice Internal function to set the shared risk level for a token
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    /// @param sharedRiskLevel The shared risk level
-    function _setTokenRiskLevel(address bApp, address token, uint32 sharedRiskLevel) internal {
-        bAppTokens[bApp][token].value = sharedRiskLevel;
-        bAppTokens[bApp][token].isSet = true;
-    }
-
-    /// @notice Function to add tokens to a bApp
-    /// @param bApp The address of the bApp
-    /// @param tokens The list of tokens to add
-    /// @param sharedRiskLevels The shared risk levels of the tokens
-    function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
-        _validateArraysLength(tokens, sharedRiskLevels);
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (bAppTokens[bApp][tokens[i]].isSet) revert IStorage.TokenAlreadyAddedToBApp(tokens[i]);
-            _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
-        }
-    }
-
     /// @notice Set the obligation percentages for a strategy
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
@@ -696,34 +581,5 @@ contract BasedAppManager is Initializable, OwnableUpgradeable, UUPSUpgradeable, 
             usedTokens[strategyId][token] += 1;
         }
         obligations[strategyId][bApp][token].percentage = obligationPercentage;
-    }
-
-    /// @notice Check the timelocks
-    /// @param requestTime The time of the request
-    /// @param timelockPeriod The timelock period
-    /// @param expireTime The expire time
-    function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) private view {
-        if (uint32(block.timestamp) < requestTime + timelockPeriod) revert IStorage.TimelockNotElapsed();
-        if (uint32(block.timestamp) > requestTime + timelockPeriod + expireTime) {
-            revert IStorage.RequestTimeExpired();
-        }
-    }
-
-    /// @notice Function to check if an address is a contract
-    /// @param account The address to check
-    /// @return isContract True if the address is a contract
-    function _isContract(address account) private view returns (bool isContract) {
-        uint32 size;
-        assembly {
-            size := extcodesize(account)
-        }
-        return size > 0;
-    }
-
-    /// @notice Function to check if an address uses the correct bApp interface
-    /// @param bApp The address of the bApp
-    /// @return isBApp True if the address uses the correct bApp interface
-    function _isBApp(address bApp) public view returns (bool isBApp) {
-        return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }
 }

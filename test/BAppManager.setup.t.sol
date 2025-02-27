@@ -7,9 +7,10 @@ import "forge-std/console.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {BasedAppManager} from "src/BasedAppManager.sol";
+import {SSVBasedApps} from "src/SSVBasedApps.sol";
 import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
+import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
 
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
 import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
@@ -17,9 +18,9 @@ import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 
 contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
-    BasedAppManager public implementation;
+    SSVBasedApps public implementation;
     ERC1967Proxy proxy; // UUPS Proxy contract
-    BasedAppManager proxiedManager; // Proxy interface for interaction
+    SSVBasedApps proxiedManager; // Proxy interface for interaction
     BasedAppMock bApp1;
     BasedAppMock bApp2;
     NonCompliantBApp nonCompliantBApp;
@@ -70,11 +71,11 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.label(BAPP2, "BApp2");
 
         vm.startPrank(OWNER);
-        implementation = new BasedAppManager();
+        implementation = new SSVBasedApps();
         bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
 
         proxy = new ERC1967Proxy(address(implementation), data);
-        proxiedManager = BasedAppManager(payable(address(proxy)));
+        proxiedManager = SSVBasedApps(payable(address(proxy)));
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();

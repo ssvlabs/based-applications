@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {BasedAppManagerSetupTest, IBasedAppManager, IStorage} from "@ssv/test/BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest, IBasedAppManager, ISSVBasedApps, IStorage} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function test_DelegateMinimumBalance() public {
@@ -200,7 +200,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         string memory metadataURI = "https://account-metadata.com";
         vm.startPrank(USER1);
         vm.expectEmit(true, false, false, false);
-        emit IBasedAppManager.AccountMetadataURIUpdated(USER1, metadataURI);
+        emit ISSVBasedApps.AccountMetadataURIUpdated(USER1, metadataURI);
         proxiedManager.updateAccountMetadataURI(metadataURI);
         vm.stopPrank();
     }

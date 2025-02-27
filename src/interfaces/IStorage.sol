@@ -49,6 +49,7 @@ interface IStorage {
 
     error BAppAlreadyOptedIn();
     error BAppAlreadyRegistered();
+    error BAppNotRegistered();
     error BAppNotOptedIn();
     error BAppOptInFailed();
     error BAppDoesNotSupportInterface();

@@ -10,7 +10,8 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpgradeable {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
+    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE"); // Bapp manager
+    // adding address expose it for front running
 
     /// @notice Address of the SSV Based App Manager contract
     address public immutable BASED_APP_MANAGER;
@@ -39,8 +40,8 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
         _;
     }
 
-    /// @notice constructor for the BasedAppCore contract, initializes the contract with the BasedAppManager address and the owner and disables the initializers.
-    /// @param _basedAppManager address of the BasedAppManager contract
+    /// @notice constructor for the BasedAppCore contract, initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
+    /// @param _basedAppManager address of the SSVBasedApps contract
     constructor(address _basedAppManager) {
         BASED_APP_MANAGER = _basedAppManager;
         // _transferOwnership(owner);
@@ -61,7 +62,7 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
         revokeRole(MANAGER_ROLE, manager);
     }
 
-    /// @notice Registers a BApp calling the SSV BasedAppManager
+    /// @notice Registers a BApp calling the SSV SSVBasedApps
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
     /// @param metadataURI URI of the metadata
@@ -78,7 +79,7 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
         virtual
         onlyRole(MANAGER_ROLE)
     {
-        IBasedAppManager(BASED_APP_MANAGER).registerBApp(msg.sender, tokens, sharedRiskLevels, metadataURI);
+        IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager

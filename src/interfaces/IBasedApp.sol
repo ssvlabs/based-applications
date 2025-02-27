@@ -10,4 +10,6 @@ interface IBasedApp {
         uint32[] calldata obligationPercentages,
         bytes calldata data
     ) external returns (bool);
+
+    //todo discuss w Gal the slashing function
 }

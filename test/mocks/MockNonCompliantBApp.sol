@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-interface IBasedAppManager {
-    function registerBApp(
-        address sender,
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
-        string calldata metadataURI
-    ) external;
+interface ICustomBasedAppManager {
+    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
 }
 
 contract NonCompliantBApp {
@@ -25,7 +20,7 @@ contract NonCompliantBApp {
         external
         virtual
     {
-        IBasedAppManager(BASED_APP_MANAGER).registerBApp(msg.sender, tokens, sharedRiskLevels, metadataURI);
+        ICustomBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
     function optInToBApp(
