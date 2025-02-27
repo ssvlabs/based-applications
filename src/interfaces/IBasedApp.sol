@@ -10,4 +10,11 @@ interface IBasedApp {
         uint32[] calldata obligationPercentages,
         bytes calldata data
     ) external returns (bool);
+
+    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
+
+    function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
+
+    function updateBAppMetadataURI(string calldata metadataURI) external;
+
 }
