@@ -6,24 +6,11 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
+import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
-abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpgradeable {
+abstract contract AccessRolesBasedApp is AccessControlUpgradeable, BasedAppCore {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
-    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE"); // Bapp manager
-    // adding address expose it for front running
-
-    /// @notice Address of the SSV Based App Manager contract
-    address public immutable BASED_APP_MANAGER;
-
-    error UnauthorizedCaller();
-
-    /// @dev Allows only the SSV Based App Manager to call the function
-    modifier onlySSVBasedAppManager() {
-        if (msg.sender != address(BASED_APP_MANAGER)) {
-            revert UnauthorizedCaller();
-        }
-        _;
-    }
+    bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
     modifier onlyManager() {
         if (!hasRole(MANAGER_ROLE, msg.sender)) {
@@ -43,7 +30,6 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
     /// @param _basedAppManager address of the SSVBasedApps contract
     constructor(address _basedAppManager) {
         BASED_APP_MANAGER = _basedAppManager;
-        // _transferOwnership(owner);
         _disableInitializers();
     }
 
@@ -75,10 +61,30 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
     ///    }
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI)
         external
-        virtual
+        override
         onlyRole(MANAGER_ROLE)
     {
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
+    }
+
+    /// @notice Adds tokens to a BApp
+    /// @param tokens array of token addresses
+    /// @param sharedRiskLevels array of shared risk levels
+    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external override onlyRole(MANAGER_ROLE) {
+        IBasedAppManager(BASED_APP_MANAGER).addTokensToBApp(tokens, sharedRiskLevels);
+    }
+
+    /// @notice Updates the tokens of a BApp
+    /// @param tokens array of token addresses
+    /// @param sharedRiskLevels array of shared risk levels
+    function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external override onlyRole(MANAGER_ROLE) {
+        IBasedAppManager(BASED_APP_MANAGER).updateBAppTokens(tokens, sharedRiskLevels);
+    }
+
+    /// @notice Updates the metadata URI of a BApp
+    /// @param metadataURI new metadata URI
+    function updateBAppMetadataURI(string calldata metadataURI) external override onlyRole(MANAGER_ROLE) {
+        IBasedAppManager(BASED_APP_MANAGER).updateBAppMetadataURI(metadataURI);
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
@@ -87,14 +93,14 @@ abstract contract BasedAppCoreMultiRoles is IBasedApp, IERC165, AccessControlUpg
         address[] calldata, /*tokens*/
         uint32[] calldata, /*obligationPercentages*/
         bytes calldata /*data*/
-    ) external virtual onlySSVBasedAppManager returns (bool success) {
+    ) external view override onlySSVBasedAppManager returns (bool success) {
         return true;
     }
 
     /// @notice Checks if the contract supports the interface
     /// @param interfaceId interface id
     /// @return true if the contract supports the interface
-    function supportsInterface(bytes4 interfaceId) public pure override(AccessControlUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public pure override(AccessControlUpgradeable, BasedAppCore) returns (bool) {
         return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }

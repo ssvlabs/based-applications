@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 import {BasedAppWhitelisted} from "@ssv/src/middleware/modules/BasedAppWhitelisted.sol";
 
-contract WhitelistExample is BasedAppCore, BasedAppWhitelisted {
-    constructor(address _basedAppManager, address owner) BasedAppCore(_basedAppManager, owner) {
+import {OwnableUpgradeableBasedApp} from "@ssv/src/middleware/modules/roles/OwnableUpgradeableBasedApp.sol";
+
+contract WhitelistExample is OwnableUpgradeableBasedApp, BasedAppWhitelisted {
+    constructor(address _basedAppManager, address owner) OwnableUpgradeableBasedApp(_basedAppManager, owner) {
         isWhitelisted[owner] = true;
     }
 
