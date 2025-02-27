@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-interface IBasedApp {
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+interface IBasedApp is IERC165 {
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
 
     function optInToBApp(
@@ -16,4 +18,6 @@ interface IBasedApp {
     function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
 
     function updateBAppMetadataURI(string calldata metadataURI) external;
+
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }

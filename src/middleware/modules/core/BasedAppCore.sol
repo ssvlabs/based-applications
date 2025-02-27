@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-abstract contract BasedAppCore is IBasedApp, IERC165 {
+abstract contract BasedAppCore is IBasedApp {
     /// @notice Address of the SSV Based App Manager contract
     address public immutable BASED_APP_MANAGER;
 
