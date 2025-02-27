@@ -70,14 +70,22 @@ abstract contract AccessRolesBasedApp is AccessControlUpgradeable, BasedAppCore 
     /// @notice Adds tokens to a BApp
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
-    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external override onlyRole(MANAGER_ROLE) {
+    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels)
+        external
+        override
+        onlyRole(MANAGER_ROLE)
+    {
         IBasedAppManager(BASED_APP_MANAGER).addTokensToBApp(tokens, sharedRiskLevels);
     }
 
     /// @notice Updates the tokens of a BApp
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
-    function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external override onlyRole(MANAGER_ROLE) {
+    function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels)
+        external
+        override
+        onlyRole(MANAGER_ROLE)
+    {
         IBasedAppManager(BASED_APP_MANAGER).updateBAppTokens(tokens, sharedRiskLevels);
     }
 
