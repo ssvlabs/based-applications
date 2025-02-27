@@ -59,8 +59,8 @@ abstract contract OwnableUpgradeableBasedApp is OwnableUpgradeable, BasedAppCore
 
     /// @notice Checks if the contract supports the interface
     /// @param interfaceId interface id
-    /// @return true if the contract supports the interface
-    function supportsInterface(bytes4 interfaceId) public pure override(BasedAppCore) returns (bool) {
+    /// @return isSupported if the contract supports the interface
+    function supportsInterface(bytes4 interfaceId) public pure override(BasedAppCore) returns (bool isSupported) {
         return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
 }
