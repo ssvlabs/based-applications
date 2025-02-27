@@ -16,5 +16,4 @@ interface IBasedApp {
     function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
 
     function updateBAppMetadataURI(string calldata metadataURI) external;
-
 }
