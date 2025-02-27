@@ -15,7 +15,6 @@ docs/
 .env
 
 node_modules/
-package-lock.json
 
 # Coverage
 coverage/
@@ -23,3 +22,5 @@ report/
 lcov.info
 
 .gas-snapshot
+
+test.txt
