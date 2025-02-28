@@ -67,26 +67,31 @@ abstract contract AccessRolesBasedApp is AccessControlUpgradeable, BasedAppCore 
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
-    /// @notice Adds tokens to a BApp
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
-    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels)
-        external
-        override
-        onlyRole(MANAGER_ROLE)
-    {
-        IBasedAppManager(BASED_APP_MANAGER).addTokensToBApp(tokens, sharedRiskLevels);
-    }
-
     /// @notice Updates the tokens of a BApp
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
-    function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels)
+    function proposeBAppTokensUpdate(address[] calldata tokens, uint32[] calldata sharedRiskLevels)
         external
         override
         onlyRole(MANAGER_ROLE)
     {
-        IBasedAppManager(BASED_APP_MANAGER).updateBAppTokens(tokens, sharedRiskLevels);
+        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensUpdate(tokens, sharedRiskLevels);
+    }
+
+    /// @notice Finalizes the update of the tokens of a BApp
+    function finalizeBAppTokensUpdate() external override onlyRole(MANAGER_ROLE) {
+        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensUpdate();
+    }
+
+    /// @notice Proposes the removal of tokens from a BApp
+    /// @param tokens array of token addresses
+    function proposeBAppTokensRemoval(address[] calldata tokens) external override onlyRole(MANAGER_ROLE) {
+        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensRemoval(tokens);
+    }
+
+    /// @notice Finalizes the removal of the tokens of a BApp
+    function finalizeBAppTokensRemoval() external override onlyRole(MANAGER_ROLE) {
+        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensRemoval();
     }
 
     /// @notice Updates the metadata URI of a BApp

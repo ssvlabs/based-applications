@@ -5,6 +5,8 @@ import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
+// TODO: Add warning to the user to implement owner or access roles.
+// this shoudl be very clear
 abstract contract BasedAppCore is IBasedApp {
     /// @notice Address of the SSV Based App Manager contract
     address public immutable BASED_APP_MANAGER;
@@ -54,8 +56,24 @@ abstract contract BasedAppCore is IBasedApp {
     /// @notice Updates the tokens of a BApp
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
-    function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).updateBAppTokens(tokens, sharedRiskLevels);
+    function proposeBAppTokensUpdate(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual {
+        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensUpdate(tokens, sharedRiskLevels);
+    }
+
+    /// @notice Finalizes the update of the tokens of a BApp
+    function finalizeBAppTokensUpdate() external virtual {
+        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensUpdate();
+    }
+
+    /// @notice Removes tokens from a BApp
+    /// @param tokens array of token addresses
+    function proposeBAppTokensRemoval(address[] calldata tokens) external virtual {
+        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensRemoval(tokens);
+    }
+
+    /// @notice Finalizes the removal of the tokens of a BApp
+    function finalizeBAppTokensRemoval() external virtual {
+        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensRemoval();
     }
 
     /// @notice Updates the metadata URI of a BApp

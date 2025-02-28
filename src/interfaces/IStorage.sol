@@ -26,10 +26,6 @@ interface IStorage {
         /// @dev The fee in percentage
         uint32 fee;
     }
-    // /// @dev The proposed fee
-    // uint32 feeProposed;
-    // /// @dev The block time when the fee update request was sent
-    // uint32 feeRequestTime;
 
     struct FeeUpdateRequest {
         /// @dev The new fee percentage
@@ -51,6 +47,24 @@ interface IStorage {
         /// @dev The new obligation percentage
         uint32 percentage;
         /// @dev The block time when the update obligation request was sent
+        uint32 requestTime;
+    }
+
+    /// @notice Represents a request to update the tokens of a bApp
+    struct TokenUpdateRequest {
+        /// @dev The new tokens
+        address[] tokens;
+        /// @dev The new shared risk levels
+        uint32[] sharedRiskLevels;
+        /// @dev The block time when the update token request was sent
+        uint32 requestTime;
+    }
+
+    /// @notice Represents a request to update the tokens of a bApp
+    struct TokenRemovalRequest {
+        /// @dev The tokens to remove
+        address[] tokens;
+        /// @dev The block time when the removal token request was sent
         uint32 requestTime;
     }
 

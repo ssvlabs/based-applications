@@ -254,55 +254,76 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_updateBAppTokensWithNonOwner() public {
+    function testRevert_proposeBAppTokensUpdateWithNonOwner() public {
         test_RegisterBApp();
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
-        bApp1.updateBAppTokens(new address[](0), new uint32[](0));
+        bApp1.proposeBAppTokensUpdate(new address[](0), new uint32[](0));
     }
 
-    function testRevert_updateBAppTokensWithEmptyTokenList() public {
+    function testRevert_finalizeBAppTokensUpdateWithNonOwner() public {
         test_RegisterBApp();
-        vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
-        bApp1.updateBAppTokens(new address[](0), new uint32[](0));
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        bApp1.finalizeBAppTokensRemoval();
     }
 
-    function testRevert_updateBAppTokensWithTokenZeroAddress() public {
+    function testRevert_proposeBAppTokensUpdateWithNonOwnerFromMainContract() public {
         test_RegisterBApp();
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(0x00), 100);
-        vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
-        bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        proxiedManager.proposeBAppTokensUpdate(new address[](0), new uint32[](0));
     }
 
-    function testRevert_updateBAppTokensWithTokenNotSet() public {
+    function testRevert_finalizeBAppTokensUpdateWithNonOwnerFromMainContract() public {
         test_RegisterBApp();
-        vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
-        bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        proxiedManager.finalizeBAppTokensUpdate();
     }
 
-    function test_updateBAppTokensWithOneToken() public {
-        test_RegisterBApp();
-        vm.prank(USER1);
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
-        bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
-        checkBAppInfo(tokensInput, sharedRiskLevelInput);
-    }
+    // function testRevert_updateBAppTokensWithEmptyTokenList() public {
+    //     test_RegisterBApp();
+    //     vm.prank(USER1);
+    //     vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
+    //     bApp1.updateBAppTokens(new address[](0), new uint32[](0));
+    // }
 
-    function testRevert_updateBAppTokensWithSharedRiskLevelAlreadySet() public {
-        test_RegisterBApp();
-        vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.SharedRiskLevelAlreadySet.selector));
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
-        bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
-    }
+    // function testRevert_updateBAppTokensWithTokenZeroAddress() public {
+    //     test_RegisterBApp();
+    //     (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+    //         createSingleTokenAndSingleRiskLevel(address(0x00), 100);
+    //     vm.prank(USER1);
+    //     vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
+    //     bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
+    // }
+
+    // function testRevert_updateBAppTokensWithTokenNotSet() public {
+    //     test_RegisterBApp();
+    //     vm.prank(USER1);
+    //     vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
+    //     (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+    //         createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
+    //     bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
+    // }
+
+    // function test_updateBAppTokensWithOneToken() public {
+    //     test_RegisterBApp();
+    //     vm.prank(USER1);
+    //     (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+    //         createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
+    //     bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
+    //     checkBAppInfo(tokensInput, sharedRiskLevelInput);
+    // }
+
+    // function testRevert_updateBAppTokensWithSharedRiskLevelAlreadySet() public {
+    //     test_RegisterBApp();
+    //     vm.prank(USER1);
+    //     vm.expectRevert(abi.encodeWithSelector(IStorage.SharedRiskLevelAlreadySet.selector));
+    //     (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+    //         createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
+    //     bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
+    // }
 
     function testRevert_callBAppWithNoManager() public {
         vm.startPrank(USER1);

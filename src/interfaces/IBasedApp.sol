@@ -15,7 +15,13 @@ interface IBasedApp is IERC165 {
 
     function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
 
-    function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
+    function proposeBAppTokensUpdate(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
+
+    function finalizeBAppTokensUpdate() external;
+
+    function proposeBAppTokensRemoval(address[] calldata tokens) external;
+
+    function finalizeBAppTokensRemoval() external;
 
     function updateBAppMetadataURI(string calldata metadataURI) external;
 
