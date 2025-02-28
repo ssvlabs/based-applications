@@ -25,10 +25,17 @@ interface IStorage {
         address owner;
         /// @dev The fee in percentage
         uint32 fee;
-        /// @dev The proposed fee
-        uint32 feeProposed;
-        /// @dev The block time when the fee update request was sent
-        uint32 feeRequestTime;
+    }
+    // /// @dev The proposed fee
+    // uint32 feeProposed;
+    // /// @dev The block time when the fee update request was sent
+    // uint32 feeRequestTime;
+
+    struct FeeUpdateRequest {
+        /// @dev The new fee percentage
+        uint32 percentage;
+        /// @dev The block time when the update fee request was sent
+        uint32 requestTime;
     }
 
     /// @notice Represents a request for a withdrawal from a participant of a strategy

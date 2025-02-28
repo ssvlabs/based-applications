@@ -81,6 +81,7 @@ contract SSVBasedApps is
      * @dev The strategy ID is incremental and unique
      */
     mapping(uint32 strategyId => IStorage.Strategy) public strategies;
+    mapping(uint32 strategyId => IStorage.FeeUpdateRequest) public feeUpdateRequests;
     /**
      * @notice Links an account to a single strategy for a specific bApp
      * @dev Guarantees that an account cannot have more than one strategy for a given bApp
@@ -217,7 +218,7 @@ contract SSVBasedApps is
         uint32 percentage = delegations[msg.sender][account];
         if (percentage == 0) revert IStorage.DelegationDoesNotExist();
 
-        delegations[msg.sender][account] = 0;
+        delete delegations[msg.sender][account];
         totalDelegatedPercentage[msg.sender] -= percentage;
 
         emit DelegationRemoved(msg.sender, account);
@@ -479,6 +480,18 @@ contract SSVBasedApps is
         delete obligationRequests[strategyId][bApp][address(token)];
     }
 
+    /// @notice Instantly lowers the fee for a strategy
+    /// @param strategyId The ID of the strategy
+    /// @param proposedFee The proposed fee
+    function fastUpdateFee(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
+        if (proposedFee >= strategies[strategyId].fee) revert IStorage.InvalidPercentageIncrement();
+
+        uint32 oldFee = strategies[strategyId].fee;
+        strategies[strategyId].fee = proposedFee;
+
+        emit StrategyFeeUpdated(strategyId, msg.sender, proposedFee, oldFee);
+    }
+
     /// @notice Propose a new fee for a strategy
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
@@ -488,11 +501,13 @@ contract SSVBasedApps is
         IStorage.Strategy storage strategy = strategies[strategyId];
         uint32 fee = strategy.fee;
 
-        if (proposedFee > fee + maxFeeIncrement) revert IStorage.InvalidPercentageIncrement();
         if (proposedFee == fee) revert IStorage.FeeAlreadySet();
+        if (proposedFee > fee + maxFeeIncrement) revert IStorage.InvalidPercentageIncrement();
 
-        strategy.feeProposed = proposedFee;
-        strategy.feeRequestTime = uint32(block.timestamp);
+        IStorage.FeeUpdateRequest storage request = feeUpdateRequests[strategyId];
+
+        request.percentage = proposedFee;
+        request.requestTime = uint32(block.timestamp);
 
         emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee);
     }
@@ -501,16 +516,17 @@ contract SSVBasedApps is
     /// @param strategyId The ID of the strategy
     function finalizeFeeUpdate(uint32 strategyId) external onlyStrategyOwner(strategyId) {
         IStorage.Strategy storage strategy = strategies[strategyId];
+        IStorage.FeeUpdateRequest storage request = feeUpdateRequests[strategyId];
 
-        uint256 feeRequestTime = strategy.feeRequestTime;
+        uint256 feeRequestTime = request.requestTime;
 
         if (feeRequestTime == 0) revert IStorage.NoPendingFeeUpdate();
         _checkTimelocks(feeRequestTime, FEE_TIMELOCK_PERIOD, FEE_EXPIRE_TIME);
 
         uint32 oldFee = strategy.fee;
-        strategy.fee = strategy.feeProposed;
-        strategy.feeProposed = 0;
-        strategy.feeRequestTime = 0;
+        strategy.fee = request.percentage;
+        delete request.percentage;
+        delete request.requestTime;
 
         emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee, oldFee);
     }

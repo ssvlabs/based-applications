@@ -59,7 +59,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         // assertEq(owner, USER1, "BApp owner");
         bool isRegistered = proxiedManager.registeredBApps(address(bApp1));
         assertEq(isRegistered, true, "BApp registered");
-        for (uint256 i = 0; i < tokensInput.length; i++) {
+        for (uint32 i = 0; i < tokensInput.length; i++) {
             (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(address(bApp1), tokensInput[i]);
             assertEq(sharedRiskLevelInput[i], sharedRiskLevel, "BApp sharedRiskLevel");
             assertEq(isSet, true, "BApp sharedRiskLevel set");
