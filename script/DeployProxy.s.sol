@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "forge-std/Script.sol";
+import "@ssv/forge-std/Script.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "../src/BasedAppManager.sol";
+import "src/SSVBasedApps.sol";
 
 contract DeployProxy is Script {
     function run() external {
@@ -11,7 +11,7 @@ contract DeployProxy is Script {
         vm.startBroadcast();
 
         // 2. Deploy the implementation contract
-        BasedAppManager implementation = new BasedAppManager();
+        SSVBasedApps implementation = new SSVBasedApps();
 
         uint32 maxFeeIncrement = 500;
 

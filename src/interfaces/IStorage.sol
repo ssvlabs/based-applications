@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-interface ICore {
+interface IStorage {
     /// @notice Represents a SharedRiskLevel
     struct SharedRiskLevel {
         /// @dev The shared risk level
@@ -25,10 +25,13 @@ interface ICore {
         address owner;
         /// @dev The fee in percentage
         uint32 fee;
-        /// @dev The proposed fee
-        uint32 feeProposed;
-        /// @dev The block time when the fee update request was sent
-        uint32 feeRequestTime;
+    }
+
+    struct FeeUpdateRequest {
+        /// @dev The new fee percentage
+        uint32 percentage;
+        /// @dev The block time when the update fee request was sent
+        uint32 requestTime;
     }
 
     /// @notice Represents a request for a withdrawal from a participant of a strategy
@@ -47,12 +50,34 @@ interface ICore {
         uint32 requestTime;
     }
 
+    /// @notice Represents a request to update the tokens of a bApp
+    struct TokenUpdateRequest {
+        /// @dev The new tokens
+        address[] tokens;
+        /// @dev The new shared risk levels
+        uint32[] sharedRiskLevels;
+        /// @dev The block time when the update token request was sent
+        uint32 requestTime;
+    }
+
+    /// @notice Represents a request to update the tokens of a bApp
+    struct TokenRemovalRequest {
+        /// @dev The tokens to remove
+        address[] tokens;
+        /// @dev The block time when the removal token request was sent
+        uint32 requestTime;
+    }
+
     error BAppAlreadyOptedIn();
     error BAppAlreadyRegistered();
+    error BAppNotRegistered();
     error BAppNotOptedIn();
+    error BAppOptInFailed();
+    error BAppDoesNotSupportInterface();
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();
+    error DelegateCallFailed(bytes returnData);
     error EmptyTokenList();
     error ExceedingPercentageUpdate();
     error FeeAlreadySet();
