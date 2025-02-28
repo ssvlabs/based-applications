@@ -5,8 +5,13 @@ import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-// TODO: Add warning to the user to implement owner or access roles.
-// this shoudl be very clear
+// =====================================================================================
+// ⚠️ WARNING: IMPLEMENT OWNER OR ACCESS ROLES ⚠️
+// -------------------------------------------------------------------------------------
+// This contract does NOT include any ownership or access control mechanism by default.
+// It is crucial that you add proper access control (e.g., Ownable, AccessControl)
+// to prevent unauthorized interactions with critical functions.
+// =====================================================================================
 abstract contract BasedAppCore is IBasedApp {
     /// @notice Address of the SSV Based App Manager contract
     address public immutable BASED_APP_MANAGER;
