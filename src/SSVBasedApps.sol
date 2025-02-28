@@ -81,7 +81,6 @@ contract SSVBasedApps is
      * @dev The strategy ID is incremental and unique
      */
     mapping(uint32 strategyId => IStorage.Strategy) public strategies;
-    mapping(uint32 strategyId => IStorage.FeeUpdateRequest) public feeUpdateRequests;
     /**
      * @notice Links an account to a single strategy for a specific bApp
      * @dev Guarantees that an account cannot have more than one strategy for a given bApp
@@ -129,6 +128,12 @@ contract SSVBasedApps is
      */
     mapping(uint32 strategyId => mapping(address token => mapping(address bApp => IStorage.ObligationRequest))) public
         obligationRequests;
+    /**
+     * @notice Tracks the fee update requests for a strategy
+     * @dev Only the strategy owner can submit one.
+     * Submitting a new request will overwrite the previous one and reset the timer.
+     */
+    mapping(uint32 strategyId => IStorage.FeeUpdateRequest) public feeUpdateRequests;
 
     /// @notice Prevents the initialization of the implementation contract itself during deployment
     constructor() {
