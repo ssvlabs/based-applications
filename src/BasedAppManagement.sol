@@ -53,7 +53,7 @@ contract BasedAppManagement is IBasedAppManager {
         if (registeredBApps[msg.sender]) revert IStorage.BAppAlreadyRegistered();
         else registeredBApps[msg.sender] = true;
 
-        if (_isContract(msg.sender) && !_isBApp(msg.sender)) {
+        if (!_isBApp(msg.sender)) {
             revert IStorage.BAppDoesNotSupportInterface();
         }
 
@@ -217,17 +217,6 @@ contract BasedAppManagement is IBasedAppManager {
     /// @param token The token address to be validated
     function _validateTokenInput(address token) internal pure {
         if (token == address(0)) revert IStorage.ZeroAddressNotAllowed();
-    }
-
-    /// @notice Function to check if an address is a contract
-    /// @param account The address to check
-    /// @return isContract True if the address is a contract
-    function _isContract(address account) internal view returns (bool isContract) {
-        uint32 size;
-        assembly {
-            size := extcodesize(account)
-        }
-        return size > 0;
     }
 
     /// @notice Function to check if an address uses the correct bApp interface

@@ -279,7 +279,7 @@ contract SSVBasedApps is
 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        if (_isContract(bApp)) {
+        if (_isBApp(bApp)) {
             bool success = IBasedApp(bApp).optInToBApp(strategyId, tokens, obligationPercentages, data);
             if (!success) revert IStorage.BAppOptInFailed();
         }
