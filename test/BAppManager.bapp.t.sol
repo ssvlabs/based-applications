@@ -54,9 +54,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     }
 
     function checkBAppInfo(address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) public view {
-        // address owner = bApp1.bAppOwners(address(bApp1));
         assertEq(tokensInput.length, sharedRiskLevelInput.length, "BApp tokens and sharedRiskLevel length");
-        // assertEq(owner, USER1, "BApp owner");
         bool isRegistered = proxiedManager.registeredBApps(address(bApp1));
         assertEq(isRegistered, true, "BApp registered");
         for (uint32 i = 0; i < tokensInput.length; i++) {
@@ -316,18 +314,82 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
     function testRevert_updateBAppTokensWithTokenNotSet() public {
         test_RegisterBApp();
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
         bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
     }
 
     function testRevert_removeBAppTokensWithTokenNotSet() public {
         test_RegisterBApp();
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
         (address[] memory tokensInput,) = createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
         bApp1.proposeBAppTokensRemoval(tokensInput);
+    }
+
+    function test_proposeBAppTokensUpdate() public {
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(address(erc20mock), 500);
+        uint32[] memory sharedRiskLevelsOld = new uint32[](1);
+        sharedRiskLevelsOld[0] = 102;
+        bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
+            proxiedManager.getTokenUpdateRequest(address(bApp1));
+        checkBAppInfo(tokensInput, sharedRiskLevelsOld);
+        assertEq(tokens, tokensInput, "Token update request tokens");
+        assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
+        assertEq(requestTime, block.timestamp, "Token update request time");
+        vm.stopPrank();
+    }
+
+    function test_proposeBAppTokensRemoval() public {
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+        uint32[] memory sharedRiskLevelsOld = new uint32[](1);
+        sharedRiskLevelsOld[0] = 102;
+        (address[] memory tokensInput,) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 100);
+        bApp1.proposeBAppTokensRemoval(tokensInput);
+        (address[] memory tokens, uint32 requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp1));
+        assertEq(tokens[0], tokensInput[0], "Token removal request tokens");
+        checkBAppInfo(tokensInput, sharedRiskLevelsOld);
+        assertEq(requestTime, block.timestamp, "Token removal request time");
+        vm.stopPrank();
+    }
+
+    // todo test timelock not elapssed
+    // todo test no pending request
+
+    function test_finalizeBAppTokensUpdate() public {
+        test_proposeBAppTokensUpdate();
+        vm.startPrank(USER1);
+        vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_TIMELOCK_PERIOD() + 1 minutes);
+        bApp1.finalizeBAppTokensUpdate();
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(address(erc20mock), 500);
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
+        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
+            proxiedManager.getTokenUpdateRequest(address(bApp1));
+        assertEq(requestTime, 0, "Token update request time");
+        assertEq(tokens.length, 0, "Token update request length");
+        assertEq(sharedRiskLevels.length, 0, "Token update request length");
+        vm.stopPrank();
+    }
+
+    function test_finalizeBAppTokensRemoval() public {
+        test_proposeBAppTokensRemoval();
+        vm.startPrank(USER1);
+        vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD() + 1 minutes);
+        bApp1.finalizeBAppTokensRemoval();
+        (address[] memory tokens, uint32 requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp1));
+        assertEq(requestTime, 0, "Token update request time");
+        assertEq(tokens.length, 0, "Token update request length");
+        (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(address(bApp1), address(erc20mock));
+        assertEq(sharedRiskLevel, 0, "Token update request sharedRiskLevel");
+        assertEq(isSet, false, "Token should be not set");
+        vm.stopPrank();
     }
 
     // function test_updateBAppTokensWithOneToken() public {

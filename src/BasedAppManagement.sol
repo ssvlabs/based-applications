@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
-
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+
+import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 
@@ -37,6 +37,29 @@ contract BasedAppManagement is IBasedAppManager {
     modifier onlyRegisteredBApp() {
         if (!registeredBApps[msg.sender]) revert IStorage.BAppNotRegistered();
         _;
+    }
+
+    /// @notice Get the token update request for a bApp
+    /// @param bApp The address of the bApp
+    /// @return tokens The list of tokens
+    /// @return sharedRiskLevels The shared risk levels of the tokens
+    /// @return requestTime The time of the request
+    function getTokenUpdateRequest(address bApp)
+        public
+        view
+        returns (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime)
+    {
+        IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[bApp];
+        return (request.tokens, request.sharedRiskLevels, request.requestTime);
+    }
+
+    /// @notice Get the token removal request for a bApp
+    /// @param bApp The address of the bApp
+    /// @return tokens The list of tokens
+    /// @return requestTime The time of the request
+    function getTokenRemovalRequest(address bApp) public view returns (address[] memory tokens, uint32 requestTime) {
+        IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[bApp];
+        return (request.tokens, request.requestTime);
     }
 
     // ********************
@@ -93,6 +116,7 @@ contract BasedAppManagement is IBasedAppManager {
             }
         }
         IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[msg.sender];
+        request.test = 90;
         request.tokens = tokens;
         request.sharedRiskLevels = sharedRiskLevels;
         request.requestTime = uint32(block.timestamp);
@@ -104,7 +128,7 @@ contract BasedAppManagement is IBasedAppManager {
         IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[msg.sender];
         uint256 requestTime = request.requestTime;
 
-        if (requestTime == 0) revert IStorage.NoPendingWithdrawal();
+        if (requestTime == 0) revert IStorage.NoPendingTokenUpdate();
         _checkTimelocks(requestTime, TOKEN_UPDATE_TIMELOCK_PERIOD, TOKEN_UPDATE_EXPIRE_TIME);
 
         address[] memory tokens = request.tokens;
@@ -137,7 +161,7 @@ contract BasedAppManagement is IBasedAppManager {
         IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[msg.sender];
         uint256 requestTime = request.requestTime;
 
-        if (requestTime == 0) revert IStorage.NoPendingWithdrawal();
+        if (requestTime == 0) revert IStorage.NoPendingTokenRemoval();
         _checkTimelocks(requestTime, TOKEN_REMOVAL_TIMELOCK_PERIOD, TOKEN_REMOVAL_EXPIRE_TIME);
 
         address[] memory tokens = request.tokens;

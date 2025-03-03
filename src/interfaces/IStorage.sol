@@ -58,6 +58,7 @@ interface IStorage {
         uint32[] sharedRiskLevels;
         /// @dev The block time when the update token request was sent
         uint32 requestTime;
+        uint32 test;
     }
 
     /// @notice Represents a request to update the tokens of a bApp
@@ -94,6 +95,8 @@ interface IStorage {
     error LengthsNotMatching();
     error NoPendingFeeUpdate();
     error NoPendingObligationUpdate();
+    error NoPendingTokenUpdate();
+    error NoPendingTokenRemoval();
     error NoPendingWithdrawal();
     error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
