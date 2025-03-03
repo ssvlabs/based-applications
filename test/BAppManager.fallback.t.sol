@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import "./BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerFallbackTest is BasedAppManagerSetupTest {
     function test_InitialBalanceIsZero() public view {

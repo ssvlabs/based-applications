@@ -4,19 +4,27 @@ pragma solidity 0.8.28;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import {BasedAppManager} from "../src/BasedAppManager.sol";
-import {ICore} from "../src/interfaces/ICore.sol";
-import {IBasedAppManager} from "../src/interfaces/IBasedAppManager.sol";
+import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {SSVBasedApps} from "src/SSVBasedApps.sol";
+import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
+import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
+import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
 
-import "./mocks/MockERC20.sol";
+import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
+import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
+import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
+import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 
 contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
-    BasedAppManager public implementation;
+    SSVBasedApps public implementation;
     ERC1967Proxy proxy; // UUPS Proxy contract
-    BasedAppManager proxiedManager; // Proxy interface for interaction
+    SSVBasedApps proxiedManager; // Proxy interface for interaction
+    BasedAppMock bApp1;
+    BasedAppMock bApp2;
+    NonCompliantBApp nonCompliantBApp;
+    WhitelistExample whitelistExample;
 
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
@@ -26,6 +34,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     address OWNER = makeAddr("Owner");
     address USER1 = makeAddr("User1");
+    address USER2 = makeAddr("User2");
     address BAPP1 = makeAddr("BApp1");
     address BAPP2 = makeAddr("BApp2");
     address ATTACKER = makeAddr("Attacker");
@@ -39,6 +48,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     uint32 STRATEGY1_INITIAL_FEE = 5;
     uint32 STRATEGY2_INITIAL_FEE = 0;
     uint32 STRATEGY3_INITIAL_FEE = 1000;
+    uint32 STRATEGY4_INITIAL_FEE = 900;
     uint32 STRATEGY1_UPDATE_FEE = 10;
 
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
@@ -61,15 +71,21 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.label(BAPP2, "BApp2");
 
         vm.startPrank(OWNER);
-
-        implementation = new BasedAppManager();
+        implementation = new SSVBasedApps();
         bytes memory data = abi.encodeWithSelector(implementation.initialize.selector, address(OWNER), MAX_FEE_INCREMENT); // Encodes initialize() call
 
         proxy = new ERC1967Proxy(address(implementation), data);
-        proxiedManager = BasedAppManager(payable(address(proxy)));
+        proxiedManager = SSVBasedApps(payable(address(proxy)));
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
+        vm.stopPrank();
+        vm.prank(USER1);
+        bApp1 = new BasedAppMock(address(proxiedManager), USER1);
+        nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
+        whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
 
+        vm.startPrank(OWNER);
+        vm.label(address(bApp1), "BasedApp1");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);
