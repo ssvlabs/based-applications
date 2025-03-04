@@ -345,6 +345,23 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
+    function test_proposeBAppTokensUpdateETH() public {
+        test_RegisterBAppWithETH();
+        vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 500);
+        uint32[] memory sharedRiskLevelsOld = new uint32[](1);
+        sharedRiskLevelsOld[0] = 100;
+        bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
+            proxiedManager.getTokenUpdateRequest(address(bApp1));
+        checkBAppInfo(tokensInput, sharedRiskLevelsOld);
+        assertEq(tokens, tokensInput, "Token update request tokens");
+        assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
+        assertEq(requestTime, block.timestamp, "Token update request time");
+        vm.stopPrank();
+    }
+
     function test_proposeBAppTokensRemoval() public {
         test_RegisterBApp();
         vm.startPrank(USER1);
@@ -359,10 +376,39 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    // todo test timelock not elapssed
-    // todo test no pending request
+    function testRevert_finalizeBAppTokensUpdateTimelockNotElapsed() public {
+        test_proposeBAppTokensUpdate();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
+        bApp1.finalizeBAppTokensUpdate();
+        vm.stopPrank();
+    }
 
-    function test_finalizeBAppTokensUpdate() public {
+    function testRevert_finalizeBAppTokensRemovalTimelockNotElapsed() public {
+        test_proposeBAppTokensRemoval();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
+        bApp1.finalizeBAppTokensRemoval();
+        vm.stopPrank();
+    }
+
+    function testRevert_finalizeBAppTokensUpdateNoPendingRequest() public {
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenUpdate.selector));
+        bApp1.finalizeBAppTokensUpdate();
+        vm.stopPrank();
+    }
+
+    function testRevert_finalizeBAppTokensRemovalNoPendingRequest() public {
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenRemoval.selector));
+        bApp1.finalizeBAppTokensRemoval();
+        vm.stopPrank();
+    }
+
+    function test_finalizeBAppTokensUpdateOneToken() public {
         test_proposeBAppTokensUpdate();
         vm.startPrank(USER1);
         vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_TIMELOCK_PERIOD() + 1 minutes);
@@ -378,7 +424,24 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function test_finalizeBAppTokensRemoval() public {
+
+    function test_finalizeBAppTokensUpdateOneTokenETH() public {
+        test_proposeBAppTokensUpdateETH();
+        vm.startPrank(USER1);
+        vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_TIMELOCK_PERIOD() + 1 minutes);
+        bApp1.finalizeBAppTokensUpdate();
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 500);
+        checkBAppInfo(tokensInput, sharedRiskLevelInput);
+        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
+            proxiedManager.getTokenUpdateRequest(address(bApp1));
+        assertEq(requestTime, 0, "Token update request time");
+        assertEq(tokens.length, 0, "Token update request length");
+        assertEq(sharedRiskLevels.length, 0, "Token update request length");
+        vm.stopPrank();
+    }
+
+    function test_finalizeBAppTokensRemovalOneToken() public {
         test_proposeBAppTokensRemoval();
         vm.startPrank(USER1);
         vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD() + 1 minutes);
@@ -391,33 +454,6 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         assertEq(isSet, false, "Token should be not set");
         vm.stopPrank();
     }
-
-    // function test_updateBAppTokensWithOneToken() public {
-    //     test_RegisterBApp();
-    //     vm.startPrank(USER1);
-    //     (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-    //         createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
-    //     bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
-    //     (address[] memory storedTokens, uint32[] memory storedRiskLevels, uint32 requestTime) =
-    //         proxiedManager.bAppTokenUpdateRequests(address(bApp1));
-    //     assertEq(requestTime, block.timestamp, "Token update request time");
-    //     //assertEq(tokens.length, 1, "Token update request length");
-    //     //assertEq(tokens[0], address(erc20mock), "Token update request token");
-    //     //assertEq(sharedRiskLevels[0], 1000, "Token update request sharedRiskLevel");
-    //     vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_EXPIRE_TIME() + 1 hours);
-    //     bApp1.finalizeBAppTokensUpdate();
-    //     checkBAppInfo(tokensInput, sharedRiskLevelInput);
-    //     vm.stopPrank();
-    // }
-
-    // function testRevert_updateBAppTokensWithSharedRiskLevelAlreadySet() public {
-    //     test_RegisterBApp();
-    //     vm.prank(USER1);
-    //     vm.expectRevert(abi.encodeWithSelector(IStorage.SharedRiskLevelAlreadySet.selector));
-    //     (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-    //         createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
-    //     bApp1.updateBAppTokens(tokensInput, sharedRiskLevelInput);
-    // }
 
     function testRevert_callBAppWithNoManager() public {
         vm.startPrank(USER1);
