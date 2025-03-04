@@ -86,6 +86,7 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
         vm.startPrank(OWNER);
         vm.label(address(bApp1), "BasedApp1");
+        vm.label(address(whitelistExample), "WhitelistExample");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
+import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 
 import {BasedAppManagerSetupTest, IStorage, IBasedAppManager} from "@ssv/test/BAppManager.setup.t.sol";
 
@@ -252,6 +252,22 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
+    function testRevert_UpdateBAppMetadataWithNonRegisteredBApp() public {
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp1.updateBAppMetadataURI(metadataURI);
+        vm.stopPrank();
+    }
+
+    function testRevert_AddTokensWithNonRegisteredBApp() public {
+        vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp1.addTokensToBApp(tokensInput, sharedRiskLevelInput);
+        vm.stopPrank();
+    }
+
     function testRevert_proposeBAppTokensUpdateWithNonOwner() public {
         test_RegisterBApp();
         vm.prank(ATTACKER);
@@ -328,6 +344,37 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         bApp1.proposeBAppTokensRemoval(tokensInput);
     }
 
+    function testRevert_proposeBAppTokensUpdateBAppNotRegistered() public {
+        vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(address(erc20mock), 500);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        vm.stopPrank();
+    }
+
+    function testRevert_proposeBAppTokensRemovalBAppNotRegistered() public {
+        vm.startPrank(USER1);
+        (address[] memory tokensInput,) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 500);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp1.proposeBAppTokensRemoval(tokensInput);
+        vm.stopPrank();
+    }
+
+    function testRevert_finalizeBAppTokensUpdateBAppNotRegistered() public {
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp1.finalizeBAppTokensUpdate();
+        vm.stopPrank();
+    }
+
+    function testRevert_finalizeBAppTokensRemovalBAppNotRegistered() public {
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp1.finalizeBAppTokensRemoval();
+        vm.stopPrank();
+    }
+
     function test_proposeBAppTokensUpdate() public {
         test_RegisterBApp();
         vm.startPrank(USER1);
@@ -342,6 +389,16 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         assertEq(tokens, tokensInput, "Token update request tokens");
         assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
         assertEq(requestTime, block.timestamp, "Token update request time");
+        vm.stopPrank();
+    }
+
+    function testRevert_proposeBAppTokenUpdateWithSameRiskLevel() public {
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
+            createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.SharedRiskLevelAlreadySet.selector));
+        bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
@@ -424,7 +481,6 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-
     function test_finalizeBAppTokensUpdateOneTokenETH() public {
         test_proposeBAppTokensUpdateETH();
         vm.startPrank(USER1);
@@ -459,7 +515,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
-        vm.expectRevert(abi.encodeWithSelector(BasedAppCore.UnauthorizedCaller.selector));
+        vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
         bApp1.optInToBApp(0, tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }

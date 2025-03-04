@@ -173,23 +173,6 @@ contract BasedAppManagement is IBasedAppManager {
         emit BAppTokensRemoved(msg.sender, tokens);
     }
 
-    // /// @notice Function to update the shared risk levels of the tokens for a bApp
-    // /// @param tokens The list of tokens to update
-    // /// @param sharedRiskLevels The shared risk levels of the tokens
-    // function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external onlyRegisteredBApp {
-    //     if (tokens.length == 0) revert IStorage.EmptyTokenList();
-    //     _validateArraysLength(tokens, sharedRiskLevels);
-    //     for (uint8 i = 0; i < tokens.length; i++) {
-    //         _validateTokenInput(tokens[i]);
-    //         if (!bAppTokens[msg.sender][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
-    //         if (bAppTokens[msg.sender][tokens[i]].value == sharedRiskLevels[i]) {
-    //             revert IStorage.SharedRiskLevelAlreadySet();
-    //         }
-    //         _setTokenRiskLevel(msg.sender, tokens[i], sharedRiskLevels[i]);
-    //     }
-    //     emit BAppTokensUpdated(msg.sender, tokens, sharedRiskLevels);
-    // }
-
     /// @notice Function to add tokens to a bApp
     /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to add

@@ -26,4 +26,6 @@ interface IBasedApp is IERC165 {
     function updateBAppMetadataURI(string calldata metadataURI) external;
 
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
+
+    error UnauthorizedCaller();
 }

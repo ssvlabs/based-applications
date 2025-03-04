@@ -780,6 +780,24 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         vm.stopPrank();
     }
 
+    function test_StrategyFastFeeUpdate() public {
+        test_StrategyOptInToBApp(9000);
+        vm.startPrank(USER1);
+        proxiedManager.fastUpdateFee(STRATEGY1, 1);
+        (address owner, uint32 fee) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        assertEq(fee, 1, "Strategy fee");
+        vm.stopPrank();
+    }
+
+    function testRevert_StrategyFastFeeUpdateInvalidPercentage() public {
+        test_StrategyOptInToBApp(9000);
+        vm.startPrank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentageIncrement.selector));
+        proxiedManager.fastUpdateFee(STRATEGY1, 100);
+        vm.stopPrank();
+    }
+
     function testRevert_ProposeUpdateObligationWithNonOwner() public {
         test_StrategyOptInToBApp(9000);
         vm.startPrank(ATTACKER);
