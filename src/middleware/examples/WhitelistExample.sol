@@ -3,10 +3,10 @@ pragma solidity 0.8.28;
 
 import {BasedAppWhitelisted} from "@ssv/src/middleware/modules/BasedAppWhitelisted.sol";
 
-import {OwnableUpgradeableBasedApp} from "@ssv/src/middleware/modules/roles/OwnableUpgradeableBasedApp.sol";
+import {OwnableBasedApp} from "@ssv/src/middleware/modules/core+roles/OwnableBasedApp.sol";
 
-contract WhitelistExample is OwnableUpgradeableBasedApp, BasedAppWhitelisted {
-    constructor(address _basedAppManager, address owner) OwnableUpgradeableBasedApp(_basedAppManager, owner) {}
+contract WhitelistExample is OwnableBasedApp, BasedAppWhitelisted {
+    constructor(address _basedAppManager, address owner) OwnableBasedApp(_basedAppManager, owner) {}
 
     function optInToBApp(
         uint32 strategyId,

@@ -263,7 +263,10 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         test_RegisterBAppWithNoTokens();
         vm.startPrank(USER1);
         proxiedManager.optInToBApp(STRATEGY1, address(bApp1), new address[](0), new uint32[](0), abi.encodePacked("0x00"));
+        proxiedManager.optInToBApp(STRATEGY1, address(bApp2), new address[](0), new uint32[](0), abi.encodePacked("0x00"));
         uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp1));
+        assertEq(strategyId, STRATEGY1, "Strategy id");
+        strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp2));
         assertEq(strategyId, STRATEGY1, "Strategy id");
         vm.stopPrank();
     }
@@ -302,6 +305,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManage
         obligationPercentagesInput[0] = 10;
         vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock)));
         proxiedManager.optInToBApp(1, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock)));
+        proxiedManager.optInToBApp(1, address(bApp2), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         vm.stopPrank();
     }
 

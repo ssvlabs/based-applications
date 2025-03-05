@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import "@ssv/test/BAppManager.setup.t.sol";
 
-contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest {
+contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgradeable {
     function test_OwnerOfBasedAppManager() public view {
         assertEq(proxiedManager.owner(), OWNER, "Owner should be the deployer");
     }

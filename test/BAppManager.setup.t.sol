@@ -5,24 +5,24 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {SSVBasedApps} from "src/SSVBasedApps.sol";
 import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
-
+import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
 import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
+import {BasedAppMock2} from "@ssv/test/mocks/MockBApp2.sol";
 import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 
-contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
+contract BasedAppManagerSetupTest is Test {
     SSVBasedApps public implementation;
     ERC1967Proxy proxy; // UUPS Proxy contract
     SSVBasedApps proxiedManager; // Proxy interface for interaction
     BasedAppMock bApp1;
-    BasedAppMock bApp2;
+    BasedAppMock2 bApp2;
     NonCompliantBApp nonCompliantBApp;
     WhitelistExample whitelistExample;
 
@@ -61,7 +61,9 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     uint32 constant MAX_FEE_INCREMENT = 500;
 
-    function setUp() public {
+    IBasedApp[] public bApps;
+
+    function setUp() public virtual {
         vm.label(OWNER, "Owner");
         vm.label(USER1, "User1");
         vm.label(ATTACKER, "Attacker");
@@ -81,8 +83,11 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         vm.stopPrank();
         vm.prank(USER1);
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
+        bApp2 = new BasedAppMock2(address(proxiedManager), USER1);
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
         whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
+        bApps.push(bApp1);
+        bApps.push(bApp2);
 
         vm.startPrank(OWNER);
         vm.label(address(bApp1), "BasedApp1");

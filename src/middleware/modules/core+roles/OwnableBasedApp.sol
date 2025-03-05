@@ -1,21 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
-abstract contract OwnableUpgradeableBasedApp is OwnableUpgradeable, BasedAppCore {
-    /// @notice constructor for the BasedAppCore contract, initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
-    /// @param _basedAppManager address of the SSVBasedApps contract
-    /// @param owner address of the owner of the bApp
-    constructor(address _basedAppManager, address owner) BasedAppCore(_basedAppManager) {
-        _transferOwnership(owner);
-        _disableInitializers();
-    }
+abstract contract OwnableBasedApp is Ownable, BasedAppCore {
+    constructor(address _basedAppManager, address owner) BasedAppCore(_basedAppManager) Ownable(owner) {}
 
     /// @notice Registers a BApp calling the SSV SSVBasedApps
     /// @param tokens array of token addresses
