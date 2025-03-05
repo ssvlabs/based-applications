@@ -7,19 +7,13 @@ import {BasedAppManagerSetupTest, IStorage, IBasedAppManager} from "@ssv/test/BA
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
-    string metadataURI = "http://metadata.com";
+import {TestUtils} from "@ssv/test/Utils.t.sol";
 
-    function createSingleTokenAndSingleRiskLevel(address token, uint32 sharedRiskLevel)
-        private
-        pure
-        returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
-    {
-        tokensInput = new address[](1);
-        tokensInput[0] = token;
-        sharedRiskLevelInput = new uint32[](1);
-        sharedRiskLevelInput[0] = sharedRiskLevel;
-    }
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
+    string metadataURI = "http://metadata.com";
 
     function createTwoTokenAndRiskInputs()
         private
@@ -517,6 +511,19 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest {
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
         vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
         bApp1.optInToBApp(0, tokensInput, sharedRiskLevelInput, "");
+        vm.stopPrank();
+    }
+
+    function test_supportInterface() public {
+        vm.startPrank(USER1);
+        bool success = bApp1.supportsInterface(type(IBasedApp).interfaceId);
+        assertEq(success, true, "supportsInterface based app");
+        bool failed = bApp1.supportsInterface(type(IBasedAppManager).interfaceId);
+        assertEq(failed, false, "does not supportsInterface based app manager");
+        bool failed2 = bApp1.supportsInterface(type(IERC20).interfaceId);
+        assertEq(failed2, false, "does not supportsInterface");
+        bool success2 = bApp1.supportsInterface(type(IERC165).interfaceId);
+        assertEq(success2, true, "does supportsInterface of IERC165");
         vm.stopPrank();
     }
 }

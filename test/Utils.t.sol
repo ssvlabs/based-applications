@@ -1,0 +1,36 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.8.28;
+
+import "forge-std/Test.sol";
+import "forge-std/console.sol";
+
+import {SSVBasedApps} from "src/SSVBasedApps.sol";
+
+contract TestUtils is Test {
+    function createSingleTokenAndSingleRiskLevel(address token, uint32 sharedRiskLevel)
+        internal
+        pure
+        returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
+    {
+        tokensInput = new address[](1);
+        tokensInput[0] = token;
+        sharedRiskLevelInput = new uint32[](1);
+        sharedRiskLevelInput[0] = sharedRiskLevel;
+    }
+
+    function checkBAppInfo(
+        address[] memory tokensInput,
+        uint32[] memory riskLevelInput,
+        address bApp,
+        SSVBasedApps proxiedManager
+    ) internal view {
+        assertEq(tokensInput.length, riskLevelInput.length, "BApp tokens and sharedRiskLevel length");
+        bool isRegistered = proxiedManager.registeredBApps(bApp);
+        assertEq(isRegistered, true, "BApp registered");
+        for (uint32 i = 0; i < tokensInput.length; i++) {
+            (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(bApp, tokensInput[i]);
+            assertEq(riskLevelInput[i], sharedRiskLevel, "BApp risk level percentage");
+            assertEq(isSet, true, "BApp token set");
+        }
+    }
+}
