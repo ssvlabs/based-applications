@@ -14,6 +14,7 @@ import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
 import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
 import {BasedAppMock2} from "@ssv/test/mocks/MockBApp2.sol";
+import {BasedAppMock3} from "@ssv/test/mocks/MockBAppAccessControl.sol";
 import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 
@@ -23,6 +24,7 @@ contract BasedAppManagerSetupTest is Test {
     SSVBasedApps proxiedManager; // Proxy interface for interaction
     BasedAppMock bApp1;
     BasedAppMock2 bApp2;
+    BasedAppMock3 bApp3;
     NonCompliantBApp nonCompliantBApp;
     WhitelistExample whitelistExample;
 
@@ -37,6 +39,7 @@ contract BasedAppManagerSetupTest is Test {
     address USER2 = makeAddr("User2");
     address BAPP1 = makeAddr("BApp1");
     address BAPP2 = makeAddr("BApp2");
+    address BAPP3 = makeAddr("BApp3");
     address ATTACKER = makeAddr("Attacker");
     address RECEIVER = makeAddr("Receiver");
     address RECEIVER2 = makeAddr("Receiver2");
@@ -71,6 +74,7 @@ contract BasedAppManagerSetupTest is Test {
         vm.label(RECEIVER2, "Receiver2");
         vm.label(BAPP1, "BApp1");
         vm.label(BAPP2, "BApp2");
+        vm.label(BAPP3, "BApp3");
 
         vm.startPrank(OWNER);
         implementation = new SSVBasedApps();
@@ -81,13 +85,20 @@ contract BasedAppManagerSetupTest is Test {
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();
-        vm.prank(USER1);
+        vm.startPrank(USER1);
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
         bApp2 = new BasedAppMock2(address(proxiedManager), USER1);
+        bApp3 = new BasedAppMock3(address(proxiedManager), USER1);
+        bApp3.hasRole(bApp3.OWNER_ROLE(), USER1);
+        bApp3.hasRole(bApp3.MANAGER_ROLE(), USER1);
+        bApp3.grantManagerRole(USER1);
+        bApp3.hasRole(bApp3.MANAGER_ROLE(), USER1);
+        vm.stopPrank();
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
         whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
         bApps.push(bApp1);
         bApps.push(bApp2);
+        bApps.push(bApp3);
 
         vm.startPrank(OWNER);
         vm.label(address(bApp1), "BasedApp1");
@@ -109,7 +120,6 @@ contract BasedAppManagerSetupTest is Test {
         erc20mock3 = new ERC20Mock();
         erc20mock4 = new ERC20Mock();
         erc20mock5 = new ERC20Mock();
-
         vm.stopPrank();
     }
 }

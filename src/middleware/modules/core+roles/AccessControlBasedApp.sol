@@ -13,15 +13,15 @@ abstract contract AccessControlBasedApp is BasedAppCore, AccessControl {
     bytes32 public constant OWNER_ROLE = keccak256("OWNER_ROLE");
 
     constructor(address _basedAppManager, address owner) AccessControl() BasedAppCore(_basedAppManager) {
-        _grantRole(OWNER_ROLE, owner);
+        _grantRole(DEFAULT_ADMIN_ROLE, owner);
         BASED_APP_MANAGER = _basedAppManager;
     }
 
-    function grantManagerRole(address manager) external onlyRole(OWNER_ROLE) {
+    function grantManagerRole(address manager) external onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(MANAGER_ROLE, manager);
     }
 
-    function revokeManagerRole(address manager) external onlyRole(OWNER_ROLE) {
+    function revokeManagerRole(address manager) external onlyRole(DEFAULT_ADMIN_ROLE) {
         revokeRole(MANAGER_ROLE, manager);
     }
 

@@ -9,9 +9,9 @@ import {
     BasedAppMock,
     ISSVBasedApps
 } from "@ssv/test/BAppManager.setup.t.sol";
-import {BasedAppManagerBAppTest} from "@ssv/test/BAppManager.bapp.t.sol";
+import {BasedAppsTest} from "@ssv/test/BApps.general.t.sol";
 
-contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppManagerBAppTest {
+contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest {
     function test_CreateStrategies() public {
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);

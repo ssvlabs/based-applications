@@ -5,16 +5,18 @@ import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 
 import {BasedAppManagerSetupTest, IStorage, IBasedAppManager} from "@ssv/test/BAppManager.setup.t.sol";
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import {TestUtils} from "@ssv/test/Utils.t.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
+contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
     string metadataURI = "http://metadata.com";
     string metadataURI2 = "http://metadata2.com";
+    string metadataURI3 = "http://metadata3.com";
 
     function createTwoTokenAndRiskInputs()
         private
@@ -59,12 +61,58 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
+    function checkTokenUpdateRequest(address bApp, address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) internal {
+        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint256 requestTime) =
+            proxiedManager.getTokenUpdateRequest(bApp);
+        assertEq(tokens, tokensInput, "Token update request tokens");
+        assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
+        assertEq(requestTime, block.timestamp, "Token update request time");
+    }
+
+    function checkTokenRemovalRequest(address bApp, address[] memory tokensInput) internal {
+        (address[] memory tokens, uint256 requestTime) = proxiedManager.getTokenRemovalRequest(bApp);
+        assertEq(tokens, tokensInput, "Token removal request tokens");
+        assertEq(requestTime, block.timestamp, "Token removal request time");
+    }
+
+    function checkTokenUpdateRequestCompleted(address bApp, uint32 newSharedRiskLevel) internal {
+        (address[] memory tokens, uint32[] memory requestSharedRiskLevel, uint32 requestTime) =
+            proxiedManager.getTokenUpdateRequest(address(bApp));
+        assertEq(requestTime, 0, "Token update request time");
+        assertEq(tokens.length, 0, "Token update request length");
+        assertEq(requestSharedRiskLevel.length, 0, "Risk Level update request length");
+        (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(address(bApp), address(erc20mock));
+        assertEq(sharedRiskLevel, newSharedRiskLevel, "Token update request sharedRiskLevel");
+        assertEq(isSet, true, "Token should be not set");
+    }
+
+    function checkTokenUpdateRequestCompletedETH(address bApp, uint32 newSharedRiskLevel) internal {
+        (address[] memory tokens, uint32[] memory requestSharedRiskLevel, uint32 requestTime) =
+            proxiedManager.getTokenUpdateRequest(address(bApp));
+        assertEq(requestTime, 0, "Token update request time");
+        assertEq(tokens.length, 0, "Token update request length");
+        assertEq(requestSharedRiskLevel.length, 0, "Risk Level update request length");
+        (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(address(bApp), address(ETH_ADDRESS));
+        assertEq(sharedRiskLevel, newSharedRiskLevel, "Token update request sharedRiskLevel");
+        assertEq(isSet, true, "Token should be not set");
+    }
+
+    function checkTokenRemovalRequestCompleted(address bApp) internal {
+        (address[] memory tokens, uint32 requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp));
+        assertEq(requestTime, 0, "Token removal request time");
+        assertEq(tokens.length, 0, "Token removal request length");
+        (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(address(bApp), address(erc20mock));
+        assertEq(sharedRiskLevel, 0, "Token removal request sharedRiskLevel");
+        assertEq(isSet, false, "Token should be not set");
+    }
+
     function test_RegisterBApp() public {
         vm.startPrank(USER1);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, metadataURI);
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, metadataURI2);
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, metadataURI3);
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
@@ -77,6 +125,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndRiskInputs();
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
@@ -89,6 +138,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
             createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 100);
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
@@ -101,6 +151,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         uint32[] memory sharedRiskLevelInput = new uint32[](0);
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "http://metadata.com");
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
@@ -111,6 +162,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createFiveTokenAndRiskInputs();
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
@@ -126,6 +178,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelInput[1] = 102;
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
@@ -144,6 +197,9 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
         vm.expectRevert(abi.encodeWithSelector(IStorage.BAppAlreadyRegistered.selector));
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppAlreadyRegistered.selector));
+        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }
 
@@ -187,6 +243,7 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelInput[1] = 103;
         bApp1.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         bApp2.addTokensToBApp(tokensInput, sharedRiskLevelInput);
+        bApp3.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
@@ -206,6 +263,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.LengthsNotMatching.selector));
         bApp2.addTokensToBApp(tokensInput, sharedRiskLevelInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.LengthsNotMatching.selector));
+        bApp3.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
@@ -222,13 +281,15 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TokenAlreadyAddedToBApp.selector, address(erc20mock)));
         bApp2.addTokensToBApp(tokensInput, sharedRiskLevelInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenAlreadyAddedToBApp.selector, address(erc20mock)));
+        bApp3.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
     function testRevert_AddTokensToBAppWithNonOwner() public {
         test_RegisterBApp();
         vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         bApp1.addTokensToBApp(new address[](0), new uint32[](0));
     }
 
@@ -239,6 +300,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.addTokensToBApp(new address[](0), new uint32[](0));
         vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
         bApp2.addTokensToBApp(new address[](0), new uint32[](0));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
+        bApp3.addTokensToBApp(new address[](0), new uint32[](0));
     }
 
     function testRevert_AddTokensToBAppWithTokenZeroAddress() public {
@@ -250,34 +313,41 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
         bApp2.addTokensToBApp(tokensInput, sharedRiskLevelInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
+        bApp3.addTokensToBApp(tokensInput, sharedRiskLevelInput);
     }
 
     function test_UpdateBAppMetadata() public {
         test_RegisterBApp();
         vm.startPrank(USER1);
-        vm.expectEmit(true, false, false, false);
-        emit IBasedAppManager.BAppMetadataURIUpdated(address(bApp1), metadataURI);
-        bApp1.updateBAppMetadataURI(metadataURI);
-        vm.expectEmit(true, false, false, false);
-        emit IBasedAppManager.BAppMetadataURIUpdated(address(bApp2), metadataURI2);
-        bApp2.updateBAppMetadataURI(metadataURI2);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectEmit(true, false, false, false);
+            emit IBasedAppManager.BAppMetadataURIUpdated(address(bApps[i]), metadataURI);
+            bApps[i].updateBAppMetadataURI(metadataURI);
+        }
         vm.stopPrank();
     }
 
     function testRevert_UpdateBAppMetadataWithWrongOwner() public {
         test_RegisterBApp();
         vm.startPrank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         bApp1.updateBAppMetadataURI(metadataURI);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, address(ATTACKER), bApp3.MANAGER_ROLE()
+            )
+        );
+        bApp3.updateBAppMetadataURI(metadataURI);
         vm.stopPrank();
     }
 
     function testRevert_UpdateBAppMetadataWithNonRegisteredBApp() public {
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
-        bApp1.updateBAppMetadataURI(metadataURI);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
-        bApp2.updateBAppMetadataURI(metadataURI);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+            bApps[i].updateBAppMetadataURI(metadataURI);
+        }
         vm.stopPrank();
     }
 
@@ -289,20 +359,22 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
         bApp2.addTokensToBApp(tokensInput, sharedRiskLevelInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp3.addTokensToBApp(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
     function testRevert_proposeBAppTokensUpdateWithNonOwner() public {
         test_RegisterBApp();
         vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         bApp1.proposeBAppTokensUpdate(new address[](0), new uint32[](0));
     }
 
     function testRevert_finalizeBAppTokensUpdateWithNonOwner() public {
         test_RegisterBApp();
         vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         bApp1.finalizeBAppTokensRemoval();
     }
 
@@ -327,6 +399,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.proposeBAppTokensUpdate(new address[](0), new uint32[](0));
         vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
         bApp2.proposeBAppTokensUpdate(new address[](0), new uint32[](0));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
+        bApp3.proposeBAppTokensUpdate(new address[](0), new uint32[](0));
     }
 
     function testRevert_removeBAppTokensWithEmptyTokenList() public {
@@ -336,6 +410,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.proposeBAppTokensRemoval(new address[](0));
         vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
         bApp2.proposeBAppTokensRemoval(new address[](0));
+        vm.expectRevert(abi.encodeWithSelector(IStorage.EmptyTokenList.selector));
+        bApp3.proposeBAppTokensRemoval(new address[](0));
     }
 
     function testRevert_updateBAppTokensWithTokenZeroAddress() public {
@@ -347,35 +423,39 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
         bApp2.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
+        bApp3.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
     }
 
     function testRevert_removeBAppTokensWithTokenZeroAddress() public {
         test_RegisterBApp();
         (address[] memory tokensInput,) = createSingleTokenAndSingleRiskLevel(address(0x00), 100);
-        vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
-        bApp1.proposeBAppTokensRemoval(tokensInput);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.ZeroAddressNotAllowed.selector));
+            vm.prank(USER1);
+            bApps[i].proposeBAppTokensRemoval(tokensInput);
+        }
     }
 
     function testRevert_updateBAppTokensWithTokenNotSet() public {
         test_RegisterBApp();
-        vm.startPrank(USER1);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
-        bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
-        bApp2.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
+            vm.prank(USER1);
+            bApps[i].proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        }
     }
 
     function testRevert_removeBAppTokensWithTokenNotSet() public {
         test_RegisterBApp();
-        vm.startPrank(USER1);
         (address[] memory tokensInput,) = createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
-        bApp1.proposeBAppTokensRemoval(tokensInput);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
-        bApp2.proposeBAppTokensRemoval(tokensInput);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
+            vm.prank(USER1);
+            bApps[i].proposeBAppTokensRemoval(tokensInput);
+        }
     }
 
     function testRevert_proposeBAppTokensUpdateBAppNotRegistered() public {
@@ -386,6 +466,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
         bApp2.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp3.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
@@ -396,6 +478,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.proposeBAppTokensRemoval(tokensInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
         bApp2.proposeBAppTokensRemoval(tokensInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp3.proposeBAppTokensRemoval(tokensInput);
         vm.stopPrank();
     }
 
@@ -405,6 +489,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.finalizeBAppTokensUpdate();
         vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
         bApp2.finalizeBAppTokensUpdate();
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp3.finalizeBAppTokensUpdate();
         vm.stopPrank();
     }
 
@@ -414,6 +500,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.finalizeBAppTokensRemoval();
         vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
         bApp2.finalizeBAppTokensRemoval();
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        bApp3.finalizeBAppTokensRemoval();
         vm.stopPrank();
     }
 
@@ -426,18 +514,11 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelsOld[0] = 102;
         bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         bApp2.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        bApp3.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelsOld, address(bApps[i]), proxiedManager);
+            checkTokenUpdateRequest(address(bApps[i]), tokensInput, sharedRiskLevelInput);
         }
-        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
-            proxiedManager.getTokenUpdateRequest(address(bApp1));
-        assertEq(tokens, tokensInput, "Token update request tokens");
-        assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
-        assertEq(requestTime, block.timestamp, "Token update request time");
-        (tokens, sharedRiskLevels, requestTime) = proxiedManager.getTokenUpdateRequest(address(bApp2));
-        assertEq(tokens, tokensInput, "Token update request tokens");
-        assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
-        assertEq(requestTime, block.timestamp, "Token update request time");
         vm.stopPrank();
     }
 
@@ -450,6 +531,8 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         vm.expectRevert(abi.encodeWithSelector(IStorage.SharedRiskLevelAlreadySet.selector));
         bApp2.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.SharedRiskLevelAlreadySet.selector));
+        bApp3.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         vm.stopPrank();
     }
 
@@ -462,18 +545,11 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelsOld[0] = 100;
         bApp1.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         bApp2.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
+        bApp3.proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelsOld, address(bApps[i]), proxiedManager);
+            checkTokenUpdateRequest(address(bApps[i]), tokensInput, sharedRiskLevelInput);
         }
-        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
-            proxiedManager.getTokenUpdateRequest(address(bApp1));
-        assertEq(tokens, tokensInput, "Token update request tokens");
-        assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
-        assertEq(requestTime, block.timestamp, "Token update request time");
-        (tokens, sharedRiskLevels, requestTime) = proxiedManager.getTokenUpdateRequest(address(bApp2));
-        assertEq(tokens, tokensInput, "Token update request tokens");
-        assertEq(sharedRiskLevels[0], sharedRiskLevelInput[0], "Token update request sharedRiskLevel");
-        assertEq(requestTime, block.timestamp, "Token update request time");
         vm.stopPrank();
     }
 
@@ -485,55 +561,51 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         (address[] memory tokensInput,) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 100);
         bApp1.proposeBAppTokensRemoval(tokensInput);
         bApp2.proposeBAppTokensRemoval(tokensInput);
+        bApp3.proposeBAppTokensRemoval(tokensInput);
         for (uint256 i = 0; i < bApps.length; i++) {
             checkBAppInfo(tokensInput, sharedRiskLevelsOld, address(bApps[i]), proxiedManager);
+            checkTokenRemovalRequest(address(bApps[i]), tokensInput);
         }
-        (address[] memory tokens, uint32 requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp1));
-        assertEq(tokens[0], tokensInput[0], "Token removal request tokens");
-        assertEq(requestTime, block.timestamp, "Token removal request time");
-        (tokens, requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp2));
-        assertEq(tokens[0], tokensInput[0], "Token removal request tokens");
-        assertEq(requestTime, block.timestamp, "Token removal request time");
         vm.stopPrank();
     }
 
     function testRevert_finalizeBAppTokensUpdateTimelockNotElapsed() public {
         test_proposeBAppTokensUpdate();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
-        bApp1.finalizeBAppTokensUpdate();
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
-        bApp2.finalizeBAppTokensUpdate();
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
+            bApps[i].finalizeBAppTokensUpdate();
+        }
         vm.stopPrank();
     }
 
     function testRevert_finalizeBAppTokensRemovalTimelockNotElapsed() public {
         test_proposeBAppTokensRemoval();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
-        bApp1.finalizeBAppTokensRemoval();
-        vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
-        bApp2.finalizeBAppTokensRemoval();
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
+            bApps[i].finalizeBAppTokensRemoval();
+        }
         vm.stopPrank();
     }
 
     function testRevert_finalizeBAppTokensUpdateNoPendingRequest() public {
         test_RegisterBApp();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenUpdate.selector));
-        bApp1.finalizeBAppTokensUpdate();
-        vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenUpdate.selector));
-        bApp2.finalizeBAppTokensUpdate();
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenUpdate.selector));
+            bApps[i].finalizeBAppTokensUpdate();
+        }
         vm.stopPrank();
     }
 
     function testRevert_finalizeBAppTokensRemovalNoPendingRequest() public {
         test_RegisterBApp();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenRemoval.selector));
-        bApp1.finalizeBAppTokensRemoval();
-        vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenRemoval.selector));
-        bApp2.finalizeBAppTokensRemoval();
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IStorage.NoPendingTokenRemoval.selector));
+            bApps[i].finalizeBAppTokensRemoval();
+        }
         vm.stopPrank();
     }
 
@@ -541,22 +613,13 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         test_proposeBAppTokensUpdate();
         vm.startPrank(USER1);
         vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_TIMELOCK_PERIOD() + 1 minutes);
-        bApp1.finalizeBAppTokensUpdate();
-        bApp2.finalizeBAppTokensUpdate();
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 500);
         for (uint256 i = 0; i < bApps.length; i++) {
+            bApps[i].finalizeBAppTokensUpdate();
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
+            checkTokenUpdateRequestCompleted(address(bApps[i]), sharedRiskLevelInput[0]);
         }
-        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
-            proxiedManager.getTokenUpdateRequest(address(bApp1));
-        assertEq(requestTime, 0, "Token update request time");
-        assertEq(tokens.length, 0, "Token update request length");
-        assertEq(sharedRiskLevels.length, 0, "Token update request length");
-        (tokens, sharedRiskLevels, requestTime) = proxiedManager.getTokenUpdateRequest(address(bApp2));
-        assertEq(requestTime, 0, "Token update request time");
-        assertEq(tokens.length, 0, "Token update request length");
-        assertEq(sharedRiskLevels.length, 0, "Token update request length");
         vm.stopPrank();
     }
 
@@ -564,22 +627,14 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         test_proposeBAppTokensUpdateETH();
         vm.startPrank(USER1);
         vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_TIMELOCK_PERIOD() + 1 minutes);
-        bApp1.finalizeBAppTokensUpdate();
-        bApp2.finalizeBAppTokensUpdate();
+
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelsInput) =
             createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 500);
         for (uint256 i = 0; i < bApps.length; i++) {
+            bApps[i].finalizeBAppTokensUpdate();
             checkBAppInfo(tokensInput, sharedRiskLevelsInput, address(bApps[i]), proxiedManager);
+            checkTokenUpdateRequestCompletedETH(address(bApps[i]), sharedRiskLevelsInput[0]);
         }
-        (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime) =
-            proxiedManager.getTokenUpdateRequest(address(bApp1));
-        assertEq(requestTime, 0, "Token update request time");
-        assertEq(tokens.length, 0, "Token update request length");
-        assertEq(sharedRiskLevels.length, 0, "Token update request length");
-        (tokens, sharedRiskLevels, requestTime) = proxiedManager.getTokenUpdateRequest(address(bApp2));
-        assertEq(requestTime, 0, "Token update request time");
-        assertEq(tokens.length, 0, "Token update request length");
-        assertEq(sharedRiskLevels.length, 0, "Token update request length");
         vm.stopPrank();
     }
 
@@ -587,18 +642,11 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         test_proposeBAppTokensRemoval();
         vm.startPrank(USER1);
         vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD() + 1 minutes);
-        bApp1.finalizeBAppTokensRemoval();
-        bApp2.finalizeBAppTokensRemoval();
-        (address[] memory tokens, uint32 requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp1));
-        assertEq(requestTime, 0, "Token update request time");
-        assertEq(tokens.length, 0, "Token update request length");
-        (tokens, requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp2));
-        (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(address(bApp1), address(erc20mock));
-        assertEq(sharedRiskLevel, 0, "Token update request sharedRiskLevel");
-        assertEq(isSet, false, "Token should be not set");
-        (sharedRiskLevel, isSet) = proxiedManager.bAppTokens(address(bApp2), address(erc20mock));
-        assertEq(sharedRiskLevel, 0, "Token update request sharedRiskLevel");
-        assertEq(isSet, false, "Token should be not set");
+        for (uint256 i = 0; i < bApps.length; i++) {
+            bApps[i].finalizeBAppTokensRemoval();
+            checkBAppInfo(new address[](0), new uint32[](0), address(bApps[i]), proxiedManager);
+            checkTokenRemovalRequestCompleted(address(bApps[i]));
+        }
         vm.stopPrank();
     }
 
@@ -606,31 +654,25 @@ contract BasedAppManagerBAppTest is BasedAppManagerSetupTest, TestUtils {
         vm.startPrank(USER1);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
-        vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
-        bApp1.optInToBApp(0, tokensInput, sharedRiskLevelInput, "");
-        vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
-        bApp2.optInToBApp(0, tokensInput, sharedRiskLevelInput, "");
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
+            bApps[i].optInToBApp(0, tokensInput, sharedRiskLevelInput, "");
+        }
         vm.stopPrank();
     }
 
     function test_supportInterface() public {
         vm.startPrank(USER1);
-        bool success = bApp1.supportsInterface(type(IBasedApp).interfaceId);
-        assertEq(success, true, "supportsInterface based app");
-        bool failed = bApp1.supportsInterface(type(IBasedAppManager).interfaceId);
-        assertEq(failed, false, "does not supportsInterface based app manager");
-        bool failed2 = bApp1.supportsInterface(type(IERC20).interfaceId);
-        assertEq(failed2, false, "does not supportsInterface");
-        bool success2 = bApp1.supportsInterface(type(IERC165).interfaceId);
-        assertEq(success2, true, "does supportsInterface of IERC165");
-        success = bApp2.supportsInterface(type(IBasedApp).interfaceId);
-        assertEq(success, true, "supportsInterface based app");
-        failed = bApp2.supportsInterface(type(IBasedAppManager).interfaceId);
-        assertEq(failed, false, "does not supportsInterface based app manager");
-        failed2 = bApp2.supportsInterface(type(IERC20).interfaceId);
-        assertEq(failed2, false, "does not supportsInterface");
-        success2 = bApp2.supportsInterface(type(IERC165).interfaceId);
-        assertEq(success2, true, "does supportsInterface of IERC165");
+        for (uint256 i = 0; i < bApps.length; i++) {
+            bool success = bApps[i].supportsInterface(type(IBasedApp).interfaceId);
+            assertEq(success, true, "supportsInterface based app");
+            bool failed = bApps[i].supportsInterface(type(IBasedAppManager).interfaceId);
+            assertEq(failed, false, "does not supportsInterface based app manager");
+            bool failed2 = bApps[i].supportsInterface(type(IERC20).interfaceId);
+            assertEq(failed2, false, "does not supportsInterface");
+            bool success2 = bApps[i].supportsInterface(type(IERC165).interfaceId);
+            assertEq(success2, true, "does supportsInterface of IERC165");
+        }
         vm.stopPrank();
     }
 }
