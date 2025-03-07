@@ -76,9 +76,9 @@ contract BasedAppManagement is IBasedAppManager {
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
-        if (registeredBApps[msg.sender]) revert IStorage.BAppAlreadyRegistered(); 
+        if (registeredBApps[msg.sender]) revert IStorage.BAppAlreadyRegistered();
         if (!_isBApp(msg.sender)) revert IStorage.BAppDoesNotSupportInterface();
-        
+
         registeredBApps[msg.sender] = true;
 
         _addNewTokens(msg.sender, tokens, sharedRiskLevels);
@@ -109,8 +109,9 @@ contract BasedAppManagement is IBasedAppManager {
         if (tokens.length == 0) revert IStorage.EmptyTokenList();
         _validateArraysLength(tokens, sharedRiskLevels);
 
+        address token;
         for (uint256 i = 0; i < tokens.length; i++) {
-            address token = tokens[i];
+            token = tokens[i];
             _validateTokenInput(token);
             IStorage.SharedRiskLevel storage tokenData = bAppTokens[msg.sender][token];
             if (!tokenData.isSet) revert IStorage.TokenNoTSupportedByBApp(token);
@@ -129,18 +130,23 @@ contract BasedAppManagement is IBasedAppManager {
     /// @notice Function to finalize the update of tokens for a bApp
     function finalizeBAppTokensUpdate() external onlyRegisteredBApp {
         IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[msg.sender];
-        uint256 requestTime = request.requestTime;
 
+        uint256 requestTime = request.requestTime;
         if (requestTime == 0) revert IStorage.NoPendingTokenUpdate();
+
         _checkTimelocks(requestTime, TOKEN_UPDATE_TIMELOCK_PERIOD, TOKEN_UPDATE_EXPIRE_TIME);
 
         address[] memory tokens = request.tokens;
         uint32[] memory sharedRiskLevels = request.sharedRiskLevels;
-        for (uint8 i = 0; i < tokens.length; i++) {
+
+        for (uint256 i = 0; i < tokens.length; i++) {
             _setTokenRiskLevel(msg.sender, tokens[i], sharedRiskLevels[i]);
         }
 
-        delete bAppTokenUpdateRequests[msg.sender];
+        delete request.tokens;
+        delete request.sharedRiskLevels;
+        delete request.requestTime;
+
         emit BAppTokensUpdated(msg.sender, tokens, sharedRiskLevels);
     }
 
@@ -149,30 +155,38 @@ contract BasedAppManagement is IBasedAppManager {
     function proposeBAppTokensRemoval(address[] calldata tokens) external onlyRegisteredBApp {
         if (tokens.length == 0) revert IStorage.EmptyTokenList();
 
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (!bAppTokens[msg.sender][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
+        address token;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            token = tokens[i];
+            _validateTokenInput(token);
+            if (!bAppTokens[msg.sender][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
         }
+
         IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[msg.sender];
         request.tokens = tokens;
         request.requestTime = uint32(block.timestamp);
+
         emit BAppTokensRemovalProposed(msg.sender, tokens);
     }
 
     /// @notice Function to finalize the removal of tokens from a bApp
     function finalizeBAppTokensRemoval() external onlyRegisteredBApp {
         IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[msg.sender];
-        uint256 requestTime = request.requestTime;
 
+        uint256 requestTime = request.requestTime;
         if (requestTime == 0) revert IStorage.NoPendingTokenRemoval();
+
         _checkTimelocks(requestTime, TOKEN_REMOVAL_TIMELOCK_PERIOD, TOKEN_REMOVAL_EXPIRE_TIME);
 
         address[] memory tokens = request.tokens;
-        for (uint8 i = 0; i < tokens.length; i++) {
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length; i++) {
             _removeToken(msg.sender, tokens[i]);
         }
 
-        delete bAppTokenRemovalRequests[msg.sender];
+        delete request.tokens;
+        delete request.requestTime;
+
         emit BAppTokensRemoved(msg.sender, tokens);
     }
 

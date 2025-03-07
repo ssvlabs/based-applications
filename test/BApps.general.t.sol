@@ -561,6 +561,20 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         vm.stopPrank();
     }
 
+    function test_proposeBAppTokensRemovalFiveTokens() public {
+        test_RegisterBAppWithFiveTokens();
+        vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevels) = createFiveTokenAndRiskInputs();
+        bApp1.proposeBAppTokensRemoval(tokensInput);
+        bApp2.proposeBAppTokensRemoval(tokensInput);
+        bApp3.proposeBAppTokensRemoval(tokensInput);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            checkBAppInfo(tokensInput, sharedRiskLevels, address(bApps[i]), proxiedManager);
+            checkTokenRemovalRequest(address(bApps[i]), tokensInput);
+        }
+        vm.stopPrank();
+    }
+
     function testRevert_finalizeBAppTokensUpdateTimelockNotElapsed() public {
         test_proposeBAppTokensUpdate();
         vm.startPrank(USER1);
@@ -632,6 +646,18 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
 
     function test_finalizeBAppTokensRemovalOneToken() public {
         test_proposeBAppTokensRemoval();
+        vm.startPrank(USER1);
+        vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD() + 1 minutes);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            bApps[i].finalizeBAppTokensRemoval();
+            checkBAppInfo(new address[](0), new uint32[](0), address(bApps[i]), proxiedManager);
+            checkTokenRemovalRequestCompleted(address(bApps[i]));
+        }
+        vm.stopPrank();
+    }
+
+    function test_finalizeBAppTokensRemovalFiveTokens() public {
+        test_proposeBAppTokensRemovalFiveTokens();
         vm.startPrank(USER1);
         vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD() + 1 minutes);
         for (uint256 i = 0; i < bApps.length; i++) {
