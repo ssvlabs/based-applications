@@ -188,9 +188,9 @@ contract SSVBasedApps is
     function delegateBalance(address account, uint32 percentage) external {
         if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
         if (delegations[msg.sender][account] != 0) revert IStorage.DelegationAlreadyExists();
-        
+
         unchecked {
-            uint32 newTotal = totalDelegatedPercentage[msg.sender] + percentage; 
+            uint32 newTotal = totalDelegatedPercentage[msg.sender] + percentage;
             if (newTotal > MAX_PERCENTAGE) {
                 revert IStorage.ExceedingPercentageUpdate();
             }
