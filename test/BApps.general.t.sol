@@ -50,7 +50,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelInput[4] = 106;
     }
 
-    function checkBAppInfo(address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) public view {
+    function checkBAppInfo(address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) internal view {
         assertEq(tokensInput.length, sharedRiskLevelInput.length, "BApp tokens and sharedRiskLevel length");
         bool isRegistered = proxiedManager.registeredBApps(address(bApp1));
         assertEq(isRegistered, true, "BApp registered");
@@ -61,7 +61,10 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function checkTokenUpdateRequest(address bApp, address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) internal {
+    function checkTokenUpdateRequest(address bApp, address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
+        internal
+        view
+    {
         (address[] memory tokens, uint32[] memory sharedRiskLevels, uint256 requestTime) =
             proxiedManager.getTokenUpdateRequest(bApp);
         assertEq(tokens, tokensInput, "Token update request tokens");
@@ -69,13 +72,13 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         assertEq(requestTime, block.timestamp, "Token update request time");
     }
 
-    function checkTokenRemovalRequest(address bApp, address[] memory tokensInput) internal {
+    function checkTokenRemovalRequest(address bApp, address[] memory tokensInput) internal view {
         (address[] memory tokens, uint256 requestTime) = proxiedManager.getTokenRemovalRequest(bApp);
         assertEq(tokens, tokensInput, "Token removal request tokens");
         assertEq(requestTime, block.timestamp, "Token removal request time");
     }
 
-    function checkTokenUpdateRequestCompleted(address bApp, uint32 newSharedRiskLevel) internal {
+    function checkTokenUpdateRequestCompleted(address bApp, uint32 newSharedRiskLevel) internal view {
         (address[] memory tokens, uint32[] memory requestSharedRiskLevel, uint32 requestTime) =
             proxiedManager.getTokenUpdateRequest(address(bApp));
         assertEq(requestTime, 0, "Token update request time");
@@ -86,7 +89,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         assertEq(isSet, true, "Token should be not set");
     }
 
-    function checkTokenUpdateRequestCompletedETH(address bApp, uint32 newSharedRiskLevel) internal {
+    function checkTokenUpdateRequestCompletedETH(address bApp, uint32 newSharedRiskLevel) internal view {
         (address[] memory tokens, uint32[] memory requestSharedRiskLevel, uint32 requestTime) =
             proxiedManager.getTokenUpdateRequest(address(bApp));
         assertEq(requestTime, 0, "Token update request time");
@@ -97,7 +100,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         assertEq(isSet, true, "Token should be not set");
     }
 
-    function checkTokenRemovalRequestCompleted(address bApp) internal {
+    function checkTokenRemovalRequestCompleted(address bApp) internal view {
         (address[] memory tokens, uint32 requestTime) = proxiedManager.getTokenRemovalRequest(address(bApp));
         assertEq(requestTime, 0, "Token removal request time");
         assertEq(tokens.length, 0, "Token removal request length");
@@ -202,17 +205,6 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }
-
-    // TODO double check EOA
-    // function test_RegisterBAppFromEOA() public {
-    //     vm.startPrank(USER1);
-    //     address[] memory tokensInput = new address[](1);
-    //     tokensInput[0] = address(erc20mock);
-    //     uint32[] memory sharedRiskLevelInput = new uint32[](1);
-    //     sharedRiskLevelInput[0] = 102;
-    //     proxiedManager.registerBApp(tokensInput, sharedRiskLevelInput, "");
-    //     vm.stopPrank();
-    // }
 
     function testRevert_RegisterBAppFromNonBAppContract() public {
         vm.startPrank(USER1);

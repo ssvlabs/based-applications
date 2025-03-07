@@ -8,7 +8,7 @@ contract BasedAppMock2 is BasedAppCore {
 
     uint32 public counter;
 
-    constructor(address _basedAppManager, address _owner) BasedAppCore(_basedAppManager) {
+    constructor(address _basedAppManager) BasedAppCore(_basedAppManager) {
         counter = 0;
     }
 }

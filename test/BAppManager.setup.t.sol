@@ -87,7 +87,7 @@ contract BasedAppManagerSetupTest is Test {
         vm.stopPrank();
         vm.startPrank(USER1);
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
-        bApp2 = new BasedAppMock2(address(proxiedManager), USER1);
+        bApp2 = new BasedAppMock2(address(proxiedManager));
         bApp3 = new BasedAppMock3(address(proxiedManager), USER1);
         bApp3.hasRole(bApp3.OWNER_ROLE(), USER1);
         bApp3.hasRole(bApp3.MANAGER_ROLE(), USER1);
