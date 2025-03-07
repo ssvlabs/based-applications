@@ -106,7 +106,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_UpdateTotalDelegatePercentageByTheSameUser() public {
+    function test_UpdateDelegatedBalance() public {
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, 1);
         proxiedManager.updateDelegatedBalance(RECEIVER, proxiedManager.MAX_PERCENTAGE());
@@ -114,10 +114,15 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
         assertEq(delegatedAmount, 1e4, "Delegated amount should be 100%");
         assertEq(totalDelegatedPercentage, 1e4, "Total delegated percentage should be 100%");
+        vm.stopPrank();
+    }
+
+    function testRevert_UpdateTotalDelegatePercentageByTheSameUser() public {
+        test_UpdateDelegatedBalance();
         uint32 maxPlusOne = proxiedManager.MAX_PERCENTAGE() + 1;
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
-        vm.stopPrank();
     }
 
     function testRevert_UpdateTotalDelegatePercentageWithZero() public {

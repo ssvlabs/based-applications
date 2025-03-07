@@ -209,14 +209,16 @@ contract SSVBasedApps is
         if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
 
         uint32 existingPercentage = delegations[msg.sender][account];
-        if (existingPercentage == percentage) revert IStorage.DelegationExistsWithSameValue();
         if (existingPercentage == 0) revert IStorage.DelegationDoesNotExist();
+        if (existingPercentage == percentage) revert IStorage.DelegationExistsWithSameValue();
 
-        uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
-        if (newTotalPercentage > MAX_PERCENTAGE) revert IStorage.ExceedingPercentageUpdate();
+        unchecked {
+            uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
+            if (newTotalPercentage > MAX_PERCENTAGE) revert IStorage.ExceedingPercentageUpdate();
+            totalDelegatedPercentage[msg.sender] = newTotalPercentage;
+        }
 
         delegations[msg.sender][account] = percentage;
-        totalDelegatedPercentage[msg.sender] = newTotalPercentage;
 
         emit DelegationUpdated(msg.sender, account, percentage);
     }
@@ -227,8 +229,11 @@ contract SSVBasedApps is
         uint32 percentage = delegations[msg.sender][account];
         if (percentage == 0) revert IStorage.DelegationDoesNotExist();
 
+        unchecked {
+            totalDelegatedPercentage[msg.sender] -= percentage;
+        }
+
         delete delegations[msg.sender][account];
-        totalDelegatedPercentage[msg.sender] -= percentage;
 
         emit DelegationRemoved(msg.sender, account);
     }
@@ -243,7 +248,9 @@ contract SSVBasedApps is
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
         if (fee > MAX_PERCENTAGE) revert IStorage.InvalidStrategyFee();
 
-        strategyId = ++_strategyCounter;
+        unchecked {
+            strategyId = ++_strategyCounter;
+        }
 
         IStorage.Strategy storage newStrategy = strategies[strategyId];
         newStrategy.owner = msg.sender;
