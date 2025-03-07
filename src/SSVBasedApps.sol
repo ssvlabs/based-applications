@@ -575,18 +575,15 @@ contract SSVBasedApps is
     /// @param obligationPercentage The obligation percentage
     function _createSingleObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
         if (!bAppTokens[bApp][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
-
-        IStorage.Obligation storage obligation = obligations[strategyId][bApp][token];
-
         if (obligationPercentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
-        if (obligation.isSet) revert IStorage.ObligationAlreadySet();
+        if (obligations[strategyId][bApp][token].isSet) revert IStorage.ObligationAlreadySet();
 
         if (obligationPercentage != 0) {
             usedTokens[strategyId][token] += 1;
-            obligation.percentage = obligationPercentage;
+            obligations[strategyId][bApp][token].percentage = obligationPercentage;
         }
 
-        obligation.isSet = true;
+        obligations[strategyId][bApp][token].isSet = true;
 
         emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
     }
