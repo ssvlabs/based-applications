@@ -61,7 +61,8 @@ contract BasedAppManagement is IBasedAppManager {
     /// @return requestTime The time of the request
     function getTokenRemovalRequest(address bApp) public view returns (address[] memory tokens, uint32 requestTime) {
         IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[bApp];
-        return (request.tokens, request.requestTime);
+        tokens = request.tokens;
+        requestTime = request.requestTime;
     }
 
     // ********************
@@ -75,12 +76,10 @@ contract BasedAppManagement is IBasedAppManager {
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
-        if (registeredBApps[msg.sender]) revert IStorage.BAppAlreadyRegistered();
-        else registeredBApps[msg.sender] = true;
-
-        if (!_isBApp(msg.sender)) {
-            revert IStorage.BAppDoesNotSupportInterface();
-        }
+        if (registeredBApps[msg.sender]) revert IStorage.BAppAlreadyRegistered(); 
+        if (!_isBApp(msg.sender)) revert IStorage.BAppDoesNotSupportInterface();
+        
+        registeredBApps[msg.sender] = true;
 
         _addNewTokens(msg.sender, tokens, sharedRiskLevels);
 
@@ -110,15 +109,17 @@ contract BasedAppManagement is IBasedAppManager {
         if (tokens.length == 0) revert IStorage.EmptyTokenList();
         _validateArraysLength(tokens, sharedRiskLevels);
 
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (!bAppTokens[msg.sender][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
-            if (bAppTokens[msg.sender][tokens[i]].value == sharedRiskLevels[i]) {
+        for (uint256 i = 0; i < tokens.length; i++) {
+            address token = tokens[i];
+            _validateTokenInput(token);
+            IStorage.SharedRiskLevel storage tokenData = bAppTokens[msg.sender][token];
+            if (!tokenData.isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+            if (tokenData.value == sharedRiskLevels[i]) {
                 revert IStorage.SharedRiskLevelAlreadySet();
             }
         }
+
         IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[msg.sender];
-        request.test = 90;
         request.tokens = tokens;
         request.sharedRiskLevels = sharedRiskLevels;
         request.requestTime = uint32(block.timestamp);
@@ -181,10 +182,12 @@ contract BasedAppManagement is IBasedAppManager {
     /// @param sharedRiskLevels The shared risk levels of the tokens
     function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
         _validateArraysLength(tokens, sharedRiskLevels);
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (bAppTokens[bApp][tokens[i]].isSet) revert IStorage.TokenAlreadyAddedToBApp(tokens[i]);
-            _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length; i++) {
+            address token = tokens[i];
+            _validateTokenInput(token);
+            if (bAppTokens[bApp][token].isSet) revert IStorage.TokenAlreadyAddedToBApp(token);
+            _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
         }
     }
 
