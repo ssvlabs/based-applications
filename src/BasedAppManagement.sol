@@ -50,7 +50,9 @@ contract BasedAppManagement is IBasedAppManager {
         returns (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime)
     {
         IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[bApp];
-        return (request.tokens, request.sharedRiskLevels, request.requestTime);
+        tokens = request.tokens;
+        sharedRiskLevels = request.sharedRiskLevels;
+        requestTime = request.requestTime;
     }
 
     /// @notice Get the token removal request for a bApp

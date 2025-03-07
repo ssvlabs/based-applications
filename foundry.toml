@@ -5,7 +5,7 @@ libs = ["lib"]
 solc = "0.8.28"
 optimizer = true
 optimizer_runs = 1
-gas_reports = ["src/SSVBasedApps", "src/BasedAppManagement"]
+gas_reports = ["*"]
 
 [fmt]
 bracket_spacing = false
