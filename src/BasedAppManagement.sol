@@ -197,8 +197,9 @@ contract BasedAppManagement is IBasedAppManager {
     function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
         _validateArraysLength(tokens, sharedRiskLevels);
         uint256 length = tokens.length;
+        address token;
         for (uint256 i = 0; i < length; i++) {
-            address token = tokens[i];
+            token = tokens[i];
             _validateTokenInput(token);
             if (bAppTokens[bApp][token].isSet) revert IStorage.TokenAlreadyAddedToBApp(token);
             _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
