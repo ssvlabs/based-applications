@@ -211,8 +211,10 @@ contract BasedAppManagement is IBasedAppManager {
     /// @param timelockPeriod The timelock period
     /// @param expireTime The expire time
     function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) internal view {
-        if (uint32(block.timestamp) < requestTime + timelockPeriod) revert IStorage.TimelockNotElapsed();
-        if (uint32(block.timestamp) > requestTime + timelockPeriod + expireTime) {
+        uint256 currentTime = uint32(block.timestamp);
+        uint256 unlockTime = requestTime + timelockPeriod;
+        if (currentTime < unlockTime) revert IStorage.TimelockNotElapsed();
+        if (currentTime > unlockTime + expireTime) {
             revert IStorage.RequestTimeExpired();
         }
     }
@@ -222,8 +224,10 @@ contract BasedAppManagement is IBasedAppManager {
     /// @param token The address of the token
     /// @param sharedRiskLevel The shared risk level
     function _setTokenRiskLevel(address bApp, address token, uint32 sharedRiskLevel) internal {
-        bAppTokens[bApp][token].value = sharedRiskLevel;
-        bAppTokens[bApp][token].isSet = true;
+        IStorage.SharedRiskLevel storage tokenData = bAppTokens[bApp][token];
+
+        tokenData.value = sharedRiskLevel;
+        tokenData.isSet = true;
     }
 
     /// @notice Internal function to set the shared risk level for a token

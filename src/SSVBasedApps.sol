@@ -144,13 +144,14 @@ contract SSVBasedApps is
     /// @param owner The owner of the contract
     /// @param _maxFeeIncrement The maximum fee increment
     function initialize(address owner, uint32 _maxFeeIncrement) public initializer {
-        if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) {
-            revert IStorage.InvalidMaxFeeIncrement();
-        }
+        if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) revert IStorage.InvalidMaxFeeIncrement();
+
         __Ownable_init(owner);
         __UUPSUpgradeable_init();
+
         maxFeeIncrement = _maxFeeIncrement;
-        emit MaxFeeIncrementSet(maxFeeIncrement);
+
+        emit MaxFeeIncrementSet(_maxFeeIncrement);
     }
 
     /// @notice Allow the function to be called only by the strategy owner
@@ -187,12 +188,15 @@ contract SSVBasedApps is
     function delegateBalance(address account, uint32 percentage) external {
         if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
         if (delegations[msg.sender][account] != 0) revert IStorage.DelegationAlreadyExists();
-        if (totalDelegatedPercentage[msg.sender] + percentage > MAX_PERCENTAGE) {
-            revert IStorage.ExceedingPercentageUpdate();
+        
+        unchecked {
+            uint32 newTotal = totalDelegatedPercentage[msg.sender] + percentage; 
+            if (newTotal > MAX_PERCENTAGE) {
+                revert IStorage.ExceedingPercentageUpdate();
+            }
+            totalDelegatedPercentage[msg.sender] = newTotal;
         }
-
         delegations[msg.sender][account] = percentage;
-        totalDelegatedPercentage[msg.sender] += percentage;
 
         emit DelegationCreated(msg.sender, account, percentage);
     }

@@ -85,6 +85,7 @@ contract BasedAppManagerSetupTest is Test {
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();
+
         vm.startPrank(USER1);
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
         bApp2 = new BasedAppMock2(address(proxiedManager));
@@ -96,6 +97,7 @@ contract BasedAppManagerSetupTest is Test {
         vm.stopPrank();
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
         whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
+
         bApps.push(bApp1);
         bApps.push(bApp2);
         bApps.push(bApp3);
