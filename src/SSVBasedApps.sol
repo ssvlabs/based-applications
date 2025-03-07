@@ -314,7 +314,7 @@ contract SSVBasedApps is
 
     /// @notice Deposit ETH into the strategy
     /// @param strategyId The ID of the strategy
-    function depositETH(uint32 strategyId) external payable {
+    function depositETH(uint32 strategyId) external payable nonReentrant {
         if (msg.value == 0) revert IStorage.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
@@ -328,9 +328,10 @@ contract SSVBasedApps is
     /// @param amount The amount to withdraw
     function fastWithdrawERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (usedTokens[strategyId][address(token)] != 0) revert IStorage.TokenIsUsedByTheBApp();
-        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
         if (address(token) == ETH_ADDRESS) revert IStorage.InvalidToken();
+        if (usedTokens[strategyId][address(token)] != 0) revert IStorage.TokenIsUsedByTheBApp();
+
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
 
@@ -562,7 +563,7 @@ contract SSVBasedApps is
         address[] calldata tokens,
         uint32[] calldata obligationPercentages
     ) private {
-        for (uint8 i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             _createSingleObligation(strategyId, bApp, tokens[i], obligationPercentages[i]);
         }
     }
@@ -574,15 +575,18 @@ contract SSVBasedApps is
     /// @param obligationPercentage The obligation percentage
     function _createSingleObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
         if (!bAppTokens[bApp][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+
+        IStorage.Obligation storage obligation = obligations[strategyId][bApp][token];
+
         if (obligationPercentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
-        if (obligations[strategyId][bApp][token].isSet) revert IStorage.ObligationAlreadySet();
+        if (obligation.isSet) revert IStorage.ObligationAlreadySet();
 
         if (obligationPercentage != 0) {
             usedTokens[strategyId][token] += 1;
-            obligations[strategyId][bApp][token].percentage = obligationPercentage;
+            obligation.percentage = obligationPercentage;
         }
 
-        obligations[strategyId][bApp][token].isSet = true;
+        obligation.isSet = true;
 
         emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
     }
