@@ -10,6 +10,7 @@ import {
     ISSVBasedApps
 } from "@ssv/test/BAppManager.setup.t.sol";
 import {BasedAppsTest} from "@ssv/test/BApps.general.t.sol";
+import {TestUtils} from "@ssv/test/Utils.t.sol";
 
 contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest {
     function test_CreateStrategies() public {
@@ -326,6 +327,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         (address owner,) = proxiedManager.strategies(STRATEGY1);
         assertEq(owner, USER1, "Strategy owner");
+
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
@@ -1308,6 +1310,31 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
         proxiedManager.updateStrategyMetadataURI(STRATEGY1, metadataURI);
+        vm.stopPrank();
+    }
+
+    function test_RegisterWithStrategy2() public {
+        vm.startPrank(USER1);
+    }
+
+    function test_UpdateUsedTokens() public {
+        uint32 percentage = 10_000;
+        test_CreateStrategies();
+        test_RegisterBAppWith2Tokens();
+        vm.startPrank(USER1);
+        (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
+            createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
+        proxiedManager.optInToBApp(STRATEGY1, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        proxiedManager.optInToBApp(STRATEGY1, address(bApp2), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp1));
+        assertEq(strategyId, STRATEGY1, "Strategy id");
+        strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp2));
+        assertEq(strategyId, STRATEGY1, "Strategy id");
+        (uint256 obligationPercentage, bool isSet) = proxiedManager.obligations(strategyId, address(bApp1), address(erc20mock));
+        assertEq(isSet, true, "Obligation is set");
+        assertEq(obligationPercentage, percentage, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 2, "Used tokens");
         vm.stopPrank();
     }
 }

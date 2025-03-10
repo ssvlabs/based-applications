@@ -18,6 +18,17 @@ contract TestUtils is Test {
         sharedRiskLevelInput[0] = sharedRiskLevel;
     }
 
+    function createSingleTokenAndSingleObligationPercentage(address token, uint32 obligationPercentage)
+        internal
+        pure
+        returns (address[] memory tokensInput, uint32[] memory obligationPercentageInput)
+    {
+        tokensInput = new address[](1);
+        tokensInput[0] = token;
+        obligationPercentageInput = new uint32[](1);
+        obligationPercentageInput[0] = obligationPercentage;
+    }
+
     function checkBAppInfo(
         address[] memory tokensInput,
         uint32[] memory riskLevelInput,
