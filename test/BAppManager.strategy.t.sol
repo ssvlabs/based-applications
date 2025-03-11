@@ -1497,7 +1497,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         assertEq(usedTokens, 2, "Used tokens");
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
-         usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
+        usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
         assertEq(usedTokens, 1, "Used tokens");
         vm.stopPrank();
     }
