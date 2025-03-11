@@ -44,4 +44,23 @@ contract TestUtils is Test {
             assertEq(isSet, true, "BApp token set");
         }
     }
+
+    function checkStrategyInfo(
+        address owner,
+        uint32 strategyId,
+        address bApp,
+        address token,
+        uint32 percentage,
+        SSVBasedApps proxiedManager,
+        uint32 expectedTokens,
+        bool expectedIsSet
+    ) internal view {
+        uint32 id = proxiedManager.accountBAppStrategy(owner, bApp);
+        assertEq(strategyId, id, "Strategy id");
+        (uint256 obligationPercentage, bool isSet) = proxiedManager.obligations(strategyId, bApp, token);
+        assertEq(isSet, expectedIsSet, "Obligation is set");
+        assertEq(obligationPercentage, percentage, "Obligation percentage");
+        uint256 usedTokens = proxiedManager.usedTokens(strategyId, token);
+        assertEq(usedTokens, expectedTokens, "Used tokens");
+    }
 }
