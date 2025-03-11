@@ -17,6 +17,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
         erc20mock2.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategyCreated(STRATEGY1, USER1, STRATEGY1_INITIAL_FEE, "");
         uint32 strategyId1 = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE, "");
         proxiedManager.createStrategy(STRATEGY2_INITIAL_FEE, "");
         proxiedManager.createStrategy(STRATEGY3_INITIAL_FEE, "");
@@ -36,6 +38,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function test_CreateStrategyWithZeroFee() public {
         vm.startPrank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategyCreated(STRATEGY1, USER1, 0, "");
         uint32 strategyId1 = proxiedManager.createStrategy(0, "");
         (, uint32 delegationFeeOnRewards) = proxiedManager.strategies(strategyId1);
         assertEq(delegationFeeOnRewards, 0, "Strategy fee");
@@ -53,6 +57,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
         test_CreateStrategies();
         vm.startPrank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategyDeposit(STRATEGY1, USER1, address(erc20mock), amount);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, amount);
         assertEq(
             proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
@@ -100,15 +106,21 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_CreateStrategyAndSingleDepositAndSingleWithdrawal() public {
+        uint256 depositAmount = 100_000;
+        uint256 withdrawalAmount = 50_000;
         test_CreateStrategies();
         vm.startPrank(USER1);
-        proxiedManager.depositERC20(STRATEGY1, erc20mock, 100_000);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategyDeposit(STRATEGY1, USER1, address(erc20mock), depositAmount);
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, depositAmount);
         assertEq(
             proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
             100_000,
             "User strategy balance should be 100_000"
         );
-        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 50_000);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), withdrawalAmount, true);
+        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, withdrawalAmount);
         assertEq(
             proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
             50_000,
@@ -201,7 +213,11 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
             "User strategy balance should be 100_000"
         );
         // There was no opt-in so the fast withdraw is allowed
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), 50_000, true);
         proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 50_000);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), 10_000, true);
         proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 10_000);
         assertEq(
             proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
@@ -223,6 +239,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
         vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.BAppOptedInByStrategy(
+            STRATEGY1, address(bApp1), abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
+        );
         emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         proxiedManager.optInToBApp(STRATEGY1, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp1));
@@ -263,12 +282,16 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_CreateStrategies();
         test_RegisterBAppWithNoTokens();
         vm.startPrank(USER1);
-        proxiedManager.optInToBApp(STRATEGY1, address(bApp1), new address[](0), new uint32[](0), abi.encodePacked("0x00"));
-        proxiedManager.optInToBApp(STRATEGY1, address(bApp2), new address[](0), new uint32[](0), abi.encodePacked("0x00"));
-        uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp1));
-        assertEq(strategyId, STRATEGY1, "Strategy id");
-        strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp2));
-        assertEq(strategyId, STRATEGY1, "Strategy id");
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit ISSVBasedApps.BAppOptedInByStrategy(
+                STRATEGY1, address(bApps[i]), abi.encodePacked("0x00"), new address[](0), new uint32[](0)
+            );
+            proxiedManager.optInToBApp(STRATEGY1, address(bApps[i]), new address[](0), new uint32[](0), abi.encodePacked("0x00"));
+            checkBAppInfo(new address[](0), new uint32[](0), address(bApps[i]), proxiedManager);
+            uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApps[i]));
+            assertEq(strategyId, STRATEGY1, "Strategy id");
+        }
         vm.stopPrank();
     }
 
