@@ -1335,6 +1335,26 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         assertEq(obligationPercentage, percentage, "Obligation percentage");
         uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
         assertEq(usedTokens, 2, "Used tokens");
+        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
+        usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 2, "Used tokens");
+        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
+        usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 1, "Used tokens");
+        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), address(erc20mock), 0);
+        usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 1, "Used tokens");
+        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), address(erc20mock));
+        usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 0, "Used tokens");
+        proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 1);
+        usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 1, "Used tokens");
+        proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), address(erc20mock), 1);
+        usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
+        assertEq(usedTokens, 2, "Used tokens");
         vm.stopPrank();
     }
 }
