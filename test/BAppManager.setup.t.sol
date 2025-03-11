@@ -56,6 +56,8 @@ contract BasedAppManagerSetupTest is Test {
 
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 constant INITIAL_USER1_BALANCE_ETH = 10 ether;
+    uint256 constant INITIAL_USER2_BALANCE_ERC20 = 1000 * 10 ** 18;
+    uint256 constant INITIAL_USER2_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_RECEIVER_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 constant INITIAL_RECEIVER_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_ATTACKER_BALANCE_ETH = 10 ether;
@@ -69,6 +71,7 @@ contract BasedAppManagerSetupTest is Test {
     function setUp() public virtual {
         vm.label(OWNER, "Owner");
         vm.label(USER1, "User1");
+        vm.label(USER2, "User2");
         vm.label(ATTACKER, "Attacker");
         vm.label(RECEIVER, "Receiver");
         vm.label(RECEIVER2, "Receiver2");
@@ -108,11 +111,13 @@ contract BasedAppManagerSetupTest is Test {
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);
+        vm.deal(USER2, INITIAL_USER2_BALANCE_ETH);
         vm.deal(RECEIVER, INITIAL_RECEIVER_BALANCE_ETH);
         vm.deal(ATTACKER, INITIAL_ATTACKER_BALANCE_ETH);
 
         erc20mock = new ERC20Mock();
         erc20mock.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
+        erc20mock.transfer(USER2, INITIAL_USER2_BALANCE_ERC20);
         erc20mock.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 
         erc20mock2 = new ERC20Mock();
