@@ -1543,8 +1543,11 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 100_000);
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
             createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
-        proxiedManager.optInToBApp(STRATEGY1, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
-        proxiedManager.optInToBApp(STRATEGY1, address(bApp2), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        for (uint256 i = 0; i < bApps.length; i++) {
+            proxiedManager.optInToBApp(
+                STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
+            );
+        }
         bApp1.proposeBAppTokensRemoval(tokensInput);
         vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD());
         bApp1.finalizeBAppTokensRemoval();
@@ -1552,11 +1555,11 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 100_000);
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
         uint32 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
-        assertEq(usedTokens, 2, "Used tokens");
+        assertEq(usedTokens, bApps.length, "Used tokens");
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
         usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
-        assertEq(usedTokens, 1, "Used tokens");
+        assertEq(usedTokens, bApps.length - 1, "Used tokens");
         vm.stopPrank();
     }
 }
