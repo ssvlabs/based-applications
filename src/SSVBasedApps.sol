@@ -503,10 +503,9 @@ contract SSVBasedApps is
     function fastUpdateFee(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
         if (proposedFee >= strategies[strategyId].fee) revert IStorage.InvalidPercentageIncrement();
 
-        uint32 oldFee = strategies[strategyId].fee;
         strategies[strategyId].fee = proposedFee;
 
-        emit StrategyFeeUpdated(strategyId, msg.sender, proposedFee, oldFee);
+        emit StrategyFeeUpdated(strategyId, msg.sender, proposedFee);
     }
 
     /// @notice Propose a new fee for a strategy
@@ -526,7 +525,7 @@ contract SSVBasedApps is
         request.percentage = proposedFee;
         request.requestTime = uint32(block.timestamp);
 
-        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee);
+        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee);
     }
 
     /// @notice Finalize the fee update for a strategy
@@ -540,12 +539,11 @@ contract SSVBasedApps is
         if (feeRequestTime == 0) revert IStorage.NoPendingFeeUpdate();
         _checkTimelocks(feeRequestTime, FEE_TIMELOCK_PERIOD, FEE_EXPIRE_TIME);
 
-        uint32 oldFee = strategy.fee;
         strategy.fee = request.percentage;
         delete request.percentage;
         delete request.requestTime;
 
-        emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee, oldFee);
+        emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee);
     }
 
     // **********************
