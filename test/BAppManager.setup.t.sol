@@ -40,6 +40,7 @@ contract BasedAppManagerSetupTest is Test {
     address BAPP1 = makeAddr("BApp1");
     address BAPP2 = makeAddr("BApp2");
     address BAPP3 = makeAddr("BApp3");
+    address NON_EXISTENT_BAPP = makeAddr("NonExistentBApp");
     address ATTACKER = makeAddr("Attacker");
     address RECEIVER = makeAddr("Receiver");
     address RECEIVER2 = makeAddr("Receiver2");

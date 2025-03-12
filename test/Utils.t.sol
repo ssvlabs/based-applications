@@ -62,5 +62,9 @@ contract TestUtils is Test {
         assertEq(obligationPercentage, percentage, "Obligation percentage");
         uint256 usedTokens = proxiedManager.usedTokens(strategyId, token);
         assertEq(usedTokens, expectedTokens, "Used tokens");
+        (address strategyOwner,) = proxiedManager.strategies(strategyId);
+        if (strategyOwner != address(0)) {
+            assertEq(owner, strategyOwner, "Strategy owner");
+        }
     }
 }
