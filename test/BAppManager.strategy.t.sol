@@ -802,29 +802,26 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevert_StrategyFeeUpdateFailsWithOverLimitFee(uint32 fee) public {
         test_StrategyOptInToBApp(9000);
         vm.assume(fee > proxiedManager.MAX_PERCENTAGE());
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, fee);
-        vm.stopPrank();
     }
 
     function testRevert_StrategyFeeUpdateFailsWithOverLimitIncrement(uint32 proposedFee) public {
         test_StrategyOptInToBApp(9000);
         (, uint32 fee) = proxiedManager.strategies(STRATEGY1);
         vm.assume(proposedFee < proxiedManager.MAX_PERCENTAGE() && proposedFee > fee + proxiedManager.maxFeeIncrement());
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentageIncrement.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, proposedFee);
-        vm.stopPrank();
     }
 
     function testRevert_StrategyFeeUpdateFailsWithSameFeeValue() public {
         test_StrategyOptInToBApp(9000);
         (, uint32 fee) = proxiedManager.strategies(STRATEGY1);
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.FeeAlreadySet.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, fee);
-        vm.stopPrank();
     }
 
     function test_StrategyProposeFeeUpdate() public returns (uint32 proposedFee) {
@@ -841,7 +838,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function test_StrategyFeeUpdate(uint256 timeBeforeLimit) public {
         vm.assume(timeBeforeLimit < proxiedManager.FEE_EXPIRE_TIME());
         uint32 proposedFee = test_StrategyProposeFeeUpdate();
-
         vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() + timeBeforeLimit);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
@@ -853,7 +849,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevert_StrategyFeeUpdateTooLate(uint256 timeAfterLimit) public {
         vm.assume(timeAfterLimit > proxiedManager.FEE_EXPIRE_TIME() && timeAfterLimit < 100 * 365 days);
         test_StrategyProposeFeeUpdate();
-
         vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() + timeAfterLimit);
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.RequestTimeExpired.selector));
@@ -1147,41 +1142,22 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function testRevert_AsyncFailedWithdrawFromStrategyTooEarly() public {
-        test_CreateStrategyAndMultipleDeposits(100_000, 20_000, 200_000);
-        vm.startPrank(USER1);
-        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 1000);
-        assertEq(
-            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-            120_000,
-            "User strategy balance should be 120_000"
-        );
-        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
-        assertEq(requestTime, block.timestamp, "Request time");
-        assertEq(amount, 1000, "Request amount");
+        test_ProposeWithdrawalFromStrategy();
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() - 1 seconds);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
     }
 
     function testRevert_AsyncFailedWithdrawFromStrategyTooLate() public {
-        test_CreateStrategyAndMultipleDeposits(100_000, 20_000, 200_000);
-        vm.startPrank(USER1);
-        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 1000);
-        assertEq(
-            proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-            120_000,
-            "User strategy balance should be 120_000"
-        );
-        (uint256 amount, uint256 requestTime) = proxiedManager.withdrawalRequests(STRATEGY1, USER1, address(erc20mock));
-        assertEq(requestTime, block.timestamp, "Request time");
-        assertEq(amount, 1000, "Request amount");
+        test_ProposeWithdrawalFromStrategy();
         vm.warp(
             block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() + proxiedManager.WITHDRAWAL_EXPIRE_TIME() + 1 seconds
         );
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.RequestTimeExpired.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
-        vm.stopPrank();
     }
 
     function test_CreateObligationETH(uint32 percentage) public {
@@ -1189,32 +1165,22 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_CreateStrategies();
         test_RegisterBAppWithETHAndErc20();
         vm.startPrank(USER1);
-        (address owner,) = proxiedManager.strategies(STRATEGY1);
-        assertEq(owner, USER1, "Strategy owner");
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32[] memory obligationPercentagesInput = new uint32[](1);
-        obligationPercentagesInput[0] = percentage;
+        (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
+            createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.expectEmit(true, true, true, true);
             emit ISSVBasedApps.BAppOptedInByStrategy(
                 STRATEGY1, address(bApps[i]), abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
             );
             proxiedManager.optInToBApp(1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
-            uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApps[i]));
-            assertEq(strategyId, 1, "Strategy id");
-            (uint256 obligationPercentage, bool isSet) =
-                proxiedManager.obligations(strategyId, address(bApps[i]), address(erc20mock));
-            assertEq(isSet, true, "Obligation is set");
-            assertEq(obligationPercentage, percentage, "Obligation percentage");
-            uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
-            assertEq(usedTokens, uint32(i) + 1, "Used tokens");
+            checkObligationInfo(STRATEGY1, address(bApps[i]), address(erc20mock), percentage, uint32(i) + 1, true, proxiedManager);
+
+            vm.expectEmit(true, true, true, true);
+            emit ISSVBasedApps.ObligationCreated(STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.MAX_PERCENTAGE());
             proxiedManager.createObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.MAX_PERCENTAGE());
-            (uint256 obligation, bool isSet2) = proxiedManager.obligations(STRATEGY1, address(bApps[i]), ETH_ADDRESS);
-            assertEq(isSet2, true, "Obligation is set");
-            assertEq(obligation, proxiedManager.MAX_PERCENTAGE(), "Obligation percentage should be max");
-            usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-            assertEq(usedTokens, uint32(i) + 1, "Used tokens");
+            checkObligationInfo(
+                STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.MAX_PERCENTAGE(), uint32(i) + 1, true, proxiedManager
+            );
         }
 
         vm.stopPrank();
@@ -1224,52 +1190,46 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_CreateStrategies();
         test_RegisterBAppWithETHAndErc20();
         vm.startPrank(USER1);
-        (address owner,) = proxiedManager.strategies(STRATEGY1);
-        assertEq(owner, USER1, "Strategy owner");
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32[] memory obligationPercentagesInput = new uint32[](1);
-        obligationPercentagesInput[0] = 0;
-        proxiedManager.optInToBApp(1, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
-        uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp1));
-        assertEq(strategyId, 1, "Strategy id");
-        (uint256 obligationPercentage, bool isSet) = proxiedManager.obligations(strategyId, address(bApp1), address(erc20mock));
-        assertEq(isSet, true, "Obligation is set");
-        assertEq(obligationPercentage, 0, "Obligation percentage");
-        uint256 usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
-        assertEq(usedTokens, 0, "Used tokens");
-        proxiedManager.createObligation(STRATEGY1, address(bApp1), ETH_ADDRESS, 0);
-        (uint256 obligation, bool isSet2) = proxiedManager.obligations(STRATEGY1, address(bApp1), ETH_ADDRESS);
-        assertEq(isSet2, true, "Obligation is set");
-        assertEq(obligation, 0, "Obligation percentage should be zero");
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 0, "Used ETH tokens");
+        (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
+            createSingleTokenAndSingleObligationPercentage(address(erc20mock), 0);
+
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit ISSVBasedApps.BAppOptedInByStrategy(
+                STRATEGY1, address(bApps[i]), abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
+            );
+            proxiedManager.optInToBApp(1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+            checkObligationInfo(STRATEGY1, address(bApps[i]), address(erc20mock), 0, 0, true, proxiedManager);
+
+            vm.expectEmit(true, true, true, true);
+            emit ISSVBasedApps.ObligationCreated(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 0);
+            proxiedManager.createObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 0);
+            checkObligationInfo(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 0, 0, true, proxiedManager);
+        }
         vm.stopPrank();
     }
 
     function test_updateObligationFromZeroToHigher() public {
         test_CreateObligationETHWithZeroPercentage();
         vm.startPrank(USER1);
-        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS, 5000);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
-        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS);
-        (uint256 obligationPercentage, bool isSet) = proxiedManager.obligations(STRATEGY1, address(bApp1), ETH_ADDRESS);
-        assertEq(isSet, true, "Obligation is set");
-        assertEq(obligationPercentage, 5000, "Obligation percentage");
-        uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, ETH_ADDRESS);
-        assertEq(usedTokens, 1, "Used ETH");
+        for (uint256 i = 0; i < bApps.length; i++) {
+            proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000);
+            vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+            proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS);
+            checkObligationInfo(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000, uint32(i) + 1, true, proxiedManager);
+        }
         vm.stopPrank();
     }
 
     function test_fastUpdateObligationETHFromZeroToHigher() public {
         test_CreateObligationETHWithZeroPercentage();
-        vm.prank(USER1);
-        proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS, 5000);
-        (uint256 obligationPercentage, bool isSet) = proxiedManager.obligations(STRATEGY1, address(bApp1), ETH_ADDRESS);
-        uint256 usedTokens = proxiedManager.usedTokens(STRATEGY1, ETH_ADDRESS);
-        assertEq(isSet, true, "Obligation is set");
-        assertEq(obligationPercentage, 5000, "Obligation percentage");
-        assertEq(usedTokens, 1, "Used ETH");
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER1);
+            vm.expectEmit(true, true, true, true);
+            emit ISSVBasedApps.ObligationUpdated(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000, true);
+            proxiedManager.fastUpdateObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000);
+            checkObligationInfo(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000, uint32(i) + 1, true, proxiedManager);
+        }
     }
 
     function testRevert_proposeUpdateObligationWithBAppNotOptedIN() public {
@@ -1311,35 +1271,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         }
     }
 
-    function test_updateUsedTokensCorrectly() public {
-        test_CreateNewObligationSuccessful();
-        vm.startPrank(USER1);
-        address TOKEN = address(erc20mock2);
-        proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 9700);
-        (uint32 percentage, bool isSet) = proxiedManager.obligations(STRATEGY1, address(bApp1), TOKEN);
-        assertEq(percentage, 9700, "Obligation percentage");
-        assertEq(isSet, true, "Obligation is set");
-        uint32 usedTokens = proxiedManager.usedTokens(STRATEGY1, TOKEN);
-        assertEq(usedTokens, bApps.length, "Used tokens");
-        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 0);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
-        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), TOKEN);
-        (percentage, isSet) = proxiedManager.obligations(STRATEGY1, address(bApp1), TOKEN);
-        assertEq(percentage, 0, "Obligation percentage");
-        assertEq(isSet, true, "Obligation is set");
-        usedTokens = proxiedManager.usedTokens(STRATEGY1, TOKEN);
-        assertEq(usedTokens, bApps.length - 1, "Used tokens");
-        vm.expectRevert(abi.encodeWithSelector(IStorage.ObligationAlreadySet.selector));
-        proxiedManager.createObligation(STRATEGY1, address(bApp1), TOKEN, 1000);
-        proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 1000);
-        (percentage, isSet) = proxiedManager.obligations(STRATEGY1, address(bApp1), TOKEN);
-        assertEq(percentage, 1000, "Obligation percentage");
-        assertEq(isSet, true, "Obligation is set");
-        usedTokens = proxiedManager.usedTokens(STRATEGY1, TOKEN);
-        assertEq(usedTokens, bApps.length, "Used tokens");
-        vm.stopPrank();
-    }
-
     function test_UpdateStrategyMetadata() public {
         test_CreateStrategies();
         string memory metadataURI = "https://metadata.com";
@@ -1359,8 +1290,26 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function test_RegisterWithStrategy2() public {
+    function test_updateUsedTokensCorrectly() public {
+        test_CreateNewObligationSuccessful();
         vm.startPrank(USER1);
+        address TOKEN = address(erc20mock2);
+
+        proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 9700);
+        checkObligationInfo(STRATEGY1, address(bApp1), TOKEN, 9700, uint32(bApps.length), true, proxiedManager);
+
+        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 0);
+        checkProposedObligation(STRATEGY1, address(bApp1), TOKEN, 9700, 0, block.timestamp, true);
+        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), TOKEN);
+        checkProposedObligation(STRATEGY1, address(bApp1), TOKEN, 0, 0, 0, true);
+        checkObligationInfo(STRATEGY1, address(bApp1), TOKEN, 0, uint32(bApps.length) - 1, true, proxiedManager);
+
+        vm.expectRevert(abi.encodeWithSelector(IStorage.ObligationAlreadySet.selector));
+        proxiedManager.createObligation(STRATEGY1, address(bApp1), TOKEN, 1000);
+        proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 1000);
+        checkObligationInfo(STRATEGY1, address(bApp1), TOKEN, 1000, uint32(bApps.length), true, proxiedManager);
+        vm.stopPrank();
     }
 
     function test_UpdateUsedTokens() public {
@@ -1422,46 +1371,47 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
             createSingleTokenAndSingleObligationPercentage(ETH_ADDRESS, percentage);
+
         proxiedManager.optInToBApp(STRATEGY1, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, percentage, 1, true, proxiedManager);
+
         proxiedManager.optInToBApp(STRATEGY1, address(bApp2), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
-        uint32 strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp1));
-        assertEq(strategyId, STRATEGY1, "Strategy id");
-        strategyId = proxiedManager.accountBAppStrategy(USER1, address(bApp2));
-        assertEq(strategyId, STRATEGY1, "Strategy id");
-        (uint256 obligationPercentage, bool isSet) = proxiedManager.obligations(strategyId, address(bApp1), ETH_ADDRESS);
-        assertEq(isSet, true, "Obligation is set");
-        assertEq(obligationPercentage, percentage, "Obligation percentage");
-        uint256 usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 2, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, percentage, 2, true, proxiedManager);
+
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS, 0);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 2, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, percentage, 2, true, proxiedManager);
+
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 1, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, 0, 1, true, proxiedManager);
+
         vm.expectRevert(abi.encodeWithSelector(IStorage.TokenIsUsedByTheBApp.selector));
         proxiedManager.fastWithdrawETH(STRATEGY1, 1);
+
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS, 0);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 1, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, percentage, 1, true, proxiedManager);
+
         vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 0, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, 0, 0, true, proxiedManager);
+        checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, 0, 0, true, proxiedManager);
+
         proxiedManager.fastWithdrawETH(STRATEGY1, 1);
         proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS, 1);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 1, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, 1, 1, true, proxiedManager);
+        checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, 0, 1, true, proxiedManager);
+
         proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS, 2);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 1, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, 2, 1, true, proxiedManager);
+
         proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS, 1);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 2, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, 1, 2, true, proxiedManager);
+
         proxiedManager.fastUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS, 2);
-        usedTokens = proxiedManager.usedTokens(strategyId, ETH_ADDRESS);
-        assertEq(usedTokens, 2, "Used tokens");
+        checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, 2, 2, true, proxiedManager);
+
         vm.stopPrank();
     }
 
