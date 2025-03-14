@@ -67,4 +67,20 @@ contract TestUtils is Test {
             assertEq(owner, strategyOwner, "Strategy owner");
         }
     }
+
+    function checkObligationInfo(
+        uint32 strategyId,
+        address bApp,
+        address token,
+        uint32 expectedPercentage,
+        uint32 expectedUsedTokens,
+        bool expectedIsSet,
+        SSVBasedApps proxiedManager
+    ) internal view {
+        (uint32 percentage, bool isSet) = proxiedManager.obligations(strategyId, bApp, token);
+        assertEq(percentage, expectedPercentage, "Obligation percentage");
+        assertEq(isSet, expectedIsSet, "Obligation is set");
+        uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
+        assertEq(usedTokens, expectedUsedTokens, "Used tokens");
+    }
 }
