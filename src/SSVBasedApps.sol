@@ -383,6 +383,7 @@ contract SSVBasedApps is
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
         delete withdrawalRequests[strategyId][msg.sender][address(token)];
 
@@ -416,6 +417,7 @@ contract SSVBasedApps is
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
+        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
         delete withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
 
