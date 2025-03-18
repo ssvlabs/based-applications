@@ -16,7 +16,7 @@ abstract contract BasedAppSlasher is BasedAppCore, IBasedAppSlasher {
         _;
     }
 
-    function slash(uint32 requestId, uint32[] calldata strategies) external virtual {
+    function slash(uint32 requestId, uint32[] calldata strategies) external virtual onlySlasher {
         IBasedAppManager(BASED_APP_MANAGER).slash(strategies);
     }
 }

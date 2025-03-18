@@ -194,7 +194,9 @@ contract BasedAppManagement is IBasedAppManager {
     // **********************
 
     function slash(uint32[] calldata strategies) external onlyRegisteredBApp {
-        uint32 token = 1;
+        // require(bApp)
+        //todo pick the strategy
+        // remove the relative amount, for now it will be a burn.
     }
 
     /// @notice Function to add tokens to a bApp
