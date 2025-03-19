@@ -1507,39 +1507,63 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    // function testRevert_AttackWithDoubleWithdrawal() public {
-    //     uint32 percentage = 10_000;
-    //     test_CreateStrategies();
-    //     test_RegisterBAppWith2Tokens();
-    //     vm.prank(ATTACKER);
-    //     proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 200_000);
-    //     vm.startPrank(USER1);
-    //     proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 100_000);
-    //     (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
-    //         createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
-    //     for (uint256 i = 0; i < bApps.length; i++) {
-    //         proxiedManager.optInToBApp(
-    //             STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
-    //         );
-    //     }
-    //     vm.stopPrank();
-    //     vm.startPrank(ATTACKER);
-    //     vm.expectRevert(abi.encodeWithSelector(IStorage.TokenIsUsedByTheBApp.selector));
-    //     proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 200_000);
-    //     proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 100_000);
-    //     vm.stopPrank();
-    //     vm.startPrank(USER1);
-    //     proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
-    //     vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
-    //     proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
-    //     vm.startPrank(ATTACKER);
-    //     proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 100_000);
-    //     proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
-    //     uint32 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
-    //     assertEq(usedTokens, bApps.length, "Used tokens");
-    //     vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
-    //     usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
-    //     assertEq(usedTokens, bApps.length - 1, "Used tokens");
-    //     vm.stopPrank();
-    // }
+    function testRevert_AttackWithDoubleWithdrawalERC20() public {
+        uint32 percentage = 10_000;
+        test_CreateStrategies();
+        test_RegisterBAppWith2Tokens();
+        vm.prank(ATTACKER);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 200_000);
+        vm.startPrank(USER1);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 100_001);
+        (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
+            createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
+        proxiedManager.optInToBApp(STRATEGY1, address(bApp2), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        vm.stopPrank();
+        vm.startPrank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenIsUsedByTheBApp.selector));
+        proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 200_000);
+        vm.stopPrank();
+        vm.startPrank(USER1);
+        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
+        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
+        checkObligationInfo(STRATEGY1, address(bApp2), address(erc20mock), 0, 0, true, proxiedManager);
+        vm.startPrank(ATTACKER);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 100_000);
+        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 200_000);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
+        proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
+        vm.stopPrank();
+    }
+
+    function testRevert_AttackWithDoubleWithdrawalETH() public {
+        uint32 percentage = 10_000;
+        test_CreateStrategies();
+        test_RegisterBAppWithETHAndErc20();
+        vm.prank(ATTACKER);
+        proxiedManager.depositETH{value: 2 ether}(STRATEGY1);
+        vm.startPrank(USER1);
+        proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
+        (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
+            createSingleTokenAndSingleObligationPercentage(ETH_ADDRESS, percentage);
+        proxiedManager.optInToBApp(STRATEGY1, address(bApp2), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        vm.stopPrank();
+        vm.startPrank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.TokenIsUsedByTheBApp.selector));
+        proxiedManager.fastWithdrawETH(STRATEGY1, 2 ether);
+        vm.stopPrank();
+        vm.startPrank(USER1);
+        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS, 0);
+        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS);
+        checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, 0, 0, true, proxiedManager);
+        vm.startPrank(ATTACKER);
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
+        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        proxiedManager.fastWithdrawETH(STRATEGY1, 2 ether);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
+        proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+        vm.stopPrank();
+    }
 }
