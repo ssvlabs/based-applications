@@ -322,6 +322,50 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
+    function test_StrategyOptInToBAppEOA(uint32 percentage) public {
+        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        test_CreateStrategies();
+        test_RegisterBAppWithEOA();
+        vm.startPrank(USER1);
+        (address owner,) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = percentage;
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.BAppOptedInByStrategy(
+            STRATEGY1, USER1, abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
+        );
+        emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        proxiedManager.optInToBApp(STRATEGY1, USER1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        checkStrategyInfo(USER1, STRATEGY1, USER1, address(erc20mock), percentage, proxiedManager, 1, true);
+        vm.stopPrank();
+    }
+
+    function test_StrategyOptInToBAppNonCompliant(uint32 percentage) public {
+        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        test_CreateStrategies();
+        test_RegisterBAppFromNonBAppContract();
+        vm.startPrank(USER1);
+        (address owner,) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = percentage;
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.BAppOptedInByStrategy(
+            STRATEGY1, address(nonCompliantBApp), abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
+        );
+        emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        proxiedManager.optInToBApp(
+            STRATEGY1, address(nonCompliantBApp), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
+        );
+        checkStrategyInfo(USER1, STRATEGY1, address(nonCompliantBApp), address(erc20mock), percentage, proxiedManager, 1, true);
+        vm.stopPrank();
+    }
+
     function test_StrategyRevertsSecondOptIn(uint32 percentage) public {
         vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
         test_StrategyOptInToBApp(percentage);
@@ -1138,7 +1182,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidToken.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, ETH_ADDRESS, withdrawalAmount);
-        vm.stopPrank();
     }
 
     function testRevert_AsyncFailedWithdrawFromStrategyTooEarly() public {
@@ -1147,7 +1190,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
-        vm.stopPrank();
     }
 
     function testRevert_AsyncFailedWithdrawFromStrategyTooLate() public {
@@ -1182,7 +1224,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
                 STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.MAX_PERCENTAGE(), uint32(i) + 1, true, proxiedManager
             );
         }
-
         vm.stopPrank();
     }
 

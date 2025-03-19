@@ -77,7 +77,6 @@ contract BasedAppManagement is IBasedAppManager {
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
         if (registeredBApps[msg.sender]) revert IStorage.BAppAlreadyRegistered();
-        if (!_isBApp(msg.sender)) revert IStorage.BAppDoesNotSupportInterface();
 
         registeredBApps[msg.sender] = true;
 
