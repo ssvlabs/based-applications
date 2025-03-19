@@ -593,8 +593,12 @@ contract SSVBasedApps is
         address[] calldata tokens,
         uint32[] calldata obligationPercentages
     ) private {
-        for (uint256 i = 0; i < tokens.length; i++) {
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length;) {
             _createSingleObligation(strategyId, bApp, tokens[i], obligationPercentages[i]);
+            unchecked {
+                i++;
+            }
         }
     }
 

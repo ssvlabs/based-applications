@@ -109,7 +109,8 @@ contract BasedAppManagement is IBasedAppManager {
         _validateArraysLength(tokens, sharedRiskLevels);
 
         address token;
-        for (uint256 i = 0; i < tokens.length; i++) {
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length; i++) {
             token = tokens[i];
             _validateTokenInput(token);
             IStorage.SharedRiskLevel storage tokenData = bAppTokens[msg.sender][token];
@@ -138,8 +139,12 @@ contract BasedAppManagement is IBasedAppManager {
         address[] memory tokens = request.tokens;
         uint32[] memory sharedRiskLevels = request.sharedRiskLevels;
 
-        for (uint256 i = 0; i < tokens.length; i++) {
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length;) {
             _setTokenRiskLevel(msg.sender, tokens[i], sharedRiskLevels[i]);
+            unchecked {
+                i++;
+            }
         }
 
         delete request.tokens;
@@ -155,10 +160,14 @@ contract BasedAppManagement is IBasedAppManager {
         if (tokens.length == 0) revert IStorage.EmptyTokenList();
 
         address token;
-        for (uint256 i = 0; i < tokens.length; i++) {
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length;) {
             token = tokens[i];
             _validateTokenInput(token);
             if (!bAppTokens[msg.sender][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+            unchecked {
+                i++;
+            }
         }
 
         IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[msg.sender];
@@ -179,8 +188,11 @@ contract BasedAppManagement is IBasedAppManager {
 
         address[] memory tokens = request.tokens;
         uint256 length = tokens.length;
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length;) {
             _removeToken(msg.sender, tokens[i]);
+            unchecked {
+                i++;
+            }
         }
 
         delete request.tokens;
@@ -197,11 +209,14 @@ contract BasedAppManagement is IBasedAppManager {
         _validateArraysLength(tokens, sharedRiskLevels);
         uint256 length = tokens.length;
         address token;
-        for (uint256 i = 0; i < length; i++) {
+        for (uint256 i = 0; i < length;) {
             token = tokens[i];
             _validateTokenInput(token);
             if (bAppTokens[bApp][token].isSet) revert IStorage.TokenAlreadyAddedToBApp(token);
             _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
+            unchecked {
+                i++;
+            }
         }
     }
 
