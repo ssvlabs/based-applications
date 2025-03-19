@@ -189,16 +189,6 @@ contract BasedAppManagement is IBasedAppManager {
         emit BAppTokensRemoved(msg.sender, tokens);
     }
 
-    // **********************
-    // ** Section: Slashing **
-    // **********************
-
-    function slash(uint32[] calldata strategies) external onlyRegisteredBApp {
-        // require(bApp)
-        //todo pick the strategy
-        // remove the relative amount, for now it will be a burn.
-    }
-
     /// @notice Function to add tokens to a bApp
     /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to add

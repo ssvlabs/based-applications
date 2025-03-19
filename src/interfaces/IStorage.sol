@@ -73,6 +73,7 @@ interface IStorage {
     error BAppNotRegistered();
     error BAppNotOptedIn();
     error BAppOptInFailed();
+    error BAppSlashingFailed();
     error BAppDoesNotSupportInterface();
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();

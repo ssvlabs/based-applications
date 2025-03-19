@@ -548,6 +548,36 @@ contract SSVBasedApps is
         emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee, false);
     }
 
+    // ***********************
+    // ** Section: Slashing **
+    // ***********************
+
+    /// @notice Slash a strategy
+    /// @param strategyId The ID of the strategy
+    /// @param bApp The address of the bApp
+    /// @param token The address of the token
+    /// @param amount The amount to slash
+    /// @param data Optional parameter that could be required by the service
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external nonReentrant {
+        if (amount == 0) revert IStorage.InvalidAmount();
+        if (strategyTokenBalances[strategyId][bApp][token] < amount) revert IStorage.InsufficientBalance();
+        // A bApp can only slash if it is registered
+        if (!registeredBApps[bApp]) revert IStorage.BAppNotRegistered();
+        // If the BApp is not interface compatible, then only the bApp owner can slash
+        if (!_isBApp(bApp)) {
+            // Only the bApp owner can slash
+            if (msg.sender != bApp) revert IStorage.InvalidBAppOwner(msg.sender, bApp);
+        } else {
+            // If the BApp is interface compatible, then the bApp has to develop their own slashing logic
+            bool success = IBasedApp(bApp).slash(strategyId, token, amount, data);
+            if (!success) revert IStorage.BAppSlashingFailed();
+        }
+        // Slash the amount from the strategy
+        strategyTokenBalances[strategyId][bApp][token] -= amount;
+
+        emit ISSVBasedApps.StrategySlashed(strategyId, bApp, token, amount, data);
+    }
+
     // **********************
     // ** Section: Helpers **
     // **********************

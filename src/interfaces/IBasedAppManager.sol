@@ -23,6 +23,4 @@ interface IBasedAppManager {
     function updateBAppMetadataURI(string calldata metadataURI) external;
 
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
-
-    function slash(uint32[] calldata strategies) external;
 }
