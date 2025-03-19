@@ -96,11 +96,15 @@ abstract contract BasedAppCore is IBasedApp {
         return true;
     }
 
-    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata) external virtual onlySSVBasedAppManager returns (bool) {
+    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata)
+        external
+        virtual
+        onlySSVBasedAppManager
+        returns (bool)
+    {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         return true;
     }
-
 
     /// @notice Checks if the contract supports the interface
     /// @param interfaceId interface id
@@ -108,5 +112,4 @@ abstract contract BasedAppCore is IBasedApp {
     function supportsInterface(bytes4 interfaceId) public pure virtual returns (bool) {
         return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
-
 }
