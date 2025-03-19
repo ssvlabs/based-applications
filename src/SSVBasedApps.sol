@@ -507,7 +507,7 @@ contract SSVBasedApps is
 
         strategies[strategyId].fee = proposedFee;
 
-        emit StrategyFeeUpdated(strategyId, msg.sender, proposedFee);
+        emit StrategyFeeUpdated(strategyId, msg.sender, proposedFee, true);
     }
 
     /// @notice Propose a new fee for a strategy
@@ -545,7 +545,7 @@ contract SSVBasedApps is
         delete request.percentage;
         delete request.requestTime;
 
-        emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee);
+        emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee, false);
     }
 
     // **********************

@@ -841,7 +841,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() + timeBeforeLimit);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategyFeeUpdated(STRATEGY1, USER1, proposedFee);
+        emit ISSVBasedApps.StrategyFeeUpdated(STRATEGY1, USER1, proposedFee, false);
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
         checkProposedFee(STRATEGY1, USER1, proposedFee, 0, 0);
     }
@@ -867,7 +867,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_StrategyOptInToBApp(9000);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategyFeeUpdated(STRATEGY1, USER1, 1);
+        emit ISSVBasedApps.StrategyFeeUpdated(STRATEGY1, USER1, 1, true);
         proxiedManager.fastUpdateFee(STRATEGY1, 1);
         checkFee(STRATEGY1, USER1, 1);
     }
@@ -1506,4 +1506,40 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         assertEq(usedTokens, bApps.length - 1, "Used tokens");
         vm.stopPrank();
     }
+
+    // function testRevert_AttackWithDoubleWithdrawal() public {
+    //     uint32 percentage = 10_000;
+    //     test_CreateStrategies();
+    //     test_RegisterBAppWith2Tokens();
+    //     vm.prank(ATTACKER);
+    //     proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 200_000);
+    //     vm.startPrank(USER1);
+    //     proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 100_000);
+    //     (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
+    //         createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
+    //     for (uint256 i = 0; i < bApps.length; i++) {
+    //         proxiedManager.optInToBApp(
+    //             STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
+    //         );
+    //     }
+    //     vm.stopPrank();
+    //     vm.startPrank(ATTACKER);
+    //     vm.expectRevert(abi.encodeWithSelector(IStorage.TokenIsUsedByTheBApp.selector));
+    //     proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 200_000);
+    //     proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 100_000);
+    //     vm.stopPrank();
+    //     vm.startPrank(USER1);
+    //     proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
+    //     vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+    //     proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
+    //     vm.startPrank(ATTACKER);
+    //     proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 100_000);
+    //     proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
+    //     uint32 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
+    //     assertEq(usedTokens, bApps.length, "Used tokens");
+    //     vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+    //     usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
+    //     assertEq(usedTokens, bApps.length - 1, "Used tokens");
+    //     vm.stopPrank();
+    // }
 }
