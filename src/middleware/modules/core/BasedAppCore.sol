@@ -103,7 +103,7 @@ abstract contract BasedAppCore is IBasedApp {
         returns (bool)
     {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
-        return true;
+        return false;
     }
 
     /// @notice Checks if the contract supports the interface

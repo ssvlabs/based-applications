@@ -309,7 +309,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
             emit ISSVBasedApps.BAppOptedInByStrategy(
                 STRATEGY1, address(bApps[i]), abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
             );
-            emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
             proxiedManager.optInToBApp(
                 STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
             );
@@ -317,6 +316,31 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
                 USER1, STRATEGY1, address(bApps[i]), address(erc20mock), percentage, proxiedManager, uint32(i) + 1, true
             );
         }
+        uint32 counter = bApp1.counter();
+        assertEq(counter, 1, "Counter should be 1");
+        vm.stopPrank();
+    }
+
+    function test_StrategyOptInToBAppWithEmitEvent(uint32 percentage) public {
+        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        test_CreateStrategies();
+        test_RegisterBApp();
+        vm.startPrank(USER1);
+        (address owner,) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = address(erc20mock);
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = percentage;
+        bytes memory data = abi.encodePacked("0x00");
+        vm.expectEmit(true, true, true, true);
+        emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, data);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.BAppOptedInByStrategy(
+            STRATEGY1, address(bApp1), abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
+        );
+        proxiedManager.optInToBApp(STRATEGY1, address(bApp1), tokensInput, obligationPercentagesInput, data);
+        checkStrategyInfo(USER1, STRATEGY1, address(bApp1), address(erc20mock), percentage, proxiedManager, 1, true);
         uint32 counter = bApp1.counter();
         assertEq(counter, 1, "Counter should be 1");
         vm.stopPrank();
@@ -337,7 +361,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         emit ISSVBasedApps.BAppOptedInByStrategy(
             STRATEGY1, USER1, abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
         );
-        emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         proxiedManager.optInToBApp(STRATEGY1, USER1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         checkStrategyInfo(USER1, STRATEGY1, USER1, address(erc20mock), percentage, proxiedManager, 1, true);
         vm.stopPrank();
@@ -358,7 +381,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         emit ISSVBasedApps.BAppOptedInByStrategy(
             STRATEGY1, address(nonCompliantBApp), abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput
         );
-        emit BasedAppMock.OptInToBApp(STRATEGY1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         proxiedManager.optInToBApp(
             STRATEGY1, address(nonCompliantBApp), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
         );

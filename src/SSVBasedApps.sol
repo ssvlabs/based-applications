@@ -552,28 +552,47 @@ contract SSVBasedApps is
     // ** Section: Slashing **
     // ***********************
 
+    /// @notice Get the slashable balance for a strategy
+    /// @param strategyId The ID of the strategy
+    /// @param bApp The address of the bApp
+    /// @param token The address of the token
+    /// @return slashableBalance The slashable balance
+    function getSlashableBalance(uint32 strategyId, address account, address bApp, address token)
+        public
+        view
+        returns (uint256 slashableBalance)
+    {
+        uint32 percentage = obligations[strategyId][bApp][token].percentage;
+        uint256 balance = strategyTokenBalances[strategyId][account][token];
+        return balance * percentage / MAX_PERCENTAGE;
+    }
+
     /// @notice Slash a strategy
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param amount The amount to slash
     /// @param data Optional parameter that could be required by the service
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external nonReentrant {
+    function slash(uint32 strategyId, address account, address bApp, address token, uint256 amount, bytes calldata data)
+        external
+        nonReentrant
+    {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (strategyTokenBalances[strategyId][bApp][token] < amount) revert IStorage.InsufficientBalance();
-        // A bApp can only slash if it is registered
         if (!registeredBApps[bApp]) revert IStorage.BAppNotRegistered();
-        // If the BApp is not interface compatible, then only the bApp owner can slash
-        if (!_isBApp(bApp)) {
-            // Only the bApp owner can slash
-            if (msg.sender != bApp) revert IStorage.InvalidBAppOwner(msg.sender, bApp);
-        } else {
-            // If the BApp is interface compatible, then the bApp has to develop their own slashing logic
+
+        uint256 slashableBalance = getSlashableBalance(strategyId, account, bApp, token);
+        if (slashableBalance < amount) revert IStorage.InsufficientBalance();
+
+        if (_isBApp(bApp)) {
             bool success = IBasedApp(bApp).slash(strategyId, token, amount, data);
             if (!success) revert IStorage.BAppSlashingFailed();
+        } else {
+            // Only the bApp EOA or non-compliant bapp owner can slash
+            if (msg.sender != bApp) revert IStorage.InvalidBAppOwner(msg.sender, bApp);
         }
+
         // Slash the amount from the strategy
-        strategyTokenBalances[strategyId][bApp][token] -= amount;
+        strategyTokenBalances[strategyId][account][token] -= amount;
 
         emit ISSVBasedApps.StrategySlashed(strategyId, bApp, token, amount, data);
     }

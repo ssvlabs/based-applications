@@ -105,6 +105,8 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
+            vm.expectEmit(true, true, true, true);
+            emit IBasedAppManager.BAppRegistered(address(bApps[i]), tokensInput, sharedRiskLevelInput, metadataURIs[i]);
             bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[i]);
             checkBAppInfo(tokensInput, sharedRiskLevelInput, address(bApps[i]), proxiedManager);
         }
