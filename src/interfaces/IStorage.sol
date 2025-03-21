@@ -81,6 +81,7 @@ interface IStorage {
     error DelegateCallFailed(bytes returnData);
     error EmptyTokenList();
     error ExceedingPercentageUpdate();
+    error ExceedingMaxShares();
     error FeeAlreadySet();
     error InsufficientBalance();
     error InsufficientLiquidity();
