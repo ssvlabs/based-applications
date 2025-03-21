@@ -16,8 +16,6 @@ abstract contract BasedAppCore is IBasedApp {
     /// @notice Address of the SSV Based App Manager contract
     address public immutable BASED_APP_MANAGER;
 
-    error UnauthorizedCaller();
-
     /// @dev Allows only the SSV Based App Manager to call the function
     modifier onlySSVBasedAppManager() {
         if (msg.sender != address(BASED_APP_MANAGER)) {

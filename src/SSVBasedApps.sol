@@ -144,13 +144,14 @@ contract SSVBasedApps is
     /// @param owner The owner of the contract
     /// @param _maxFeeIncrement The maximum fee increment
     function initialize(address owner, uint32 _maxFeeIncrement) public initializer {
-        if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) {
-            revert IStorage.InvalidMaxFeeIncrement();
-        }
+        if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) revert IStorage.InvalidMaxFeeIncrement();
+
         __Ownable_init(owner);
         __UUPSUpgradeable_init();
+
         maxFeeIncrement = _maxFeeIncrement;
-        emit MaxFeeIncrementSet(maxFeeIncrement);
+
+        emit MaxFeeIncrementSet(_maxFeeIncrement);
     }
 
     /// @notice Allow the function to be called only by the strategy owner
@@ -187,12 +188,15 @@ contract SSVBasedApps is
     function delegateBalance(address account, uint32 percentage) external {
         if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
         if (delegations[msg.sender][account] != 0) revert IStorage.DelegationAlreadyExists();
-        if (totalDelegatedPercentage[msg.sender] + percentage > MAX_PERCENTAGE) {
-            revert IStorage.ExceedingPercentageUpdate();
-        }
 
+        unchecked {
+            uint32 newTotal = totalDelegatedPercentage[msg.sender] + percentage;
+            if (newTotal > MAX_PERCENTAGE) {
+                revert IStorage.ExceedingPercentageUpdate();
+            }
+            totalDelegatedPercentage[msg.sender] = newTotal;
+        }
         delegations[msg.sender][account] = percentage;
-        totalDelegatedPercentage[msg.sender] += percentage;
 
         emit DelegationCreated(msg.sender, account, percentage);
     }
@@ -205,14 +209,16 @@ contract SSVBasedApps is
         if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
 
         uint32 existingPercentage = delegations[msg.sender][account];
-        if (existingPercentage == percentage) revert IStorage.DelegationExistsWithSameValue();
         if (existingPercentage == 0) revert IStorage.DelegationDoesNotExist();
+        if (existingPercentage == percentage) revert IStorage.DelegationExistsWithSameValue();
 
-        uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
-        if (newTotalPercentage > MAX_PERCENTAGE) revert IStorage.ExceedingPercentageUpdate();
+        unchecked {
+            uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
+            if (newTotalPercentage > MAX_PERCENTAGE) revert IStorage.ExceedingPercentageUpdate();
+            totalDelegatedPercentage[msg.sender] = newTotalPercentage;
+        }
 
         delegations[msg.sender][account] = percentage;
-        totalDelegatedPercentage[msg.sender] = newTotalPercentage;
 
         emit DelegationUpdated(msg.sender, account, percentage);
     }
@@ -223,8 +229,11 @@ contract SSVBasedApps is
         uint32 percentage = delegations[msg.sender][account];
         if (percentage == 0) revert IStorage.DelegationDoesNotExist();
 
+        unchecked {
+            totalDelegatedPercentage[msg.sender] -= percentage;
+        }
+
         delete delegations[msg.sender][account];
-        totalDelegatedPercentage[msg.sender] -= percentage;
 
         emit DelegationRemoved(msg.sender, account);
     }
@@ -239,7 +248,9 @@ contract SSVBasedApps is
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
         if (fee > MAX_PERCENTAGE) revert IStorage.InvalidStrategyFee();
 
-        strategyId = ++_strategyCounter;
+        unchecked {
+            strategyId = ++_strategyCounter;
+        }
 
         IStorage.Strategy storage newStrategy = strategies[strategyId];
         newStrategy.owner = msg.sender;
@@ -303,7 +314,7 @@ contract SSVBasedApps is
 
     /// @notice Deposit ETH into the strategy
     /// @param strategyId The ID of the strategy
-    function depositETH(uint32 strategyId) external payable {
+    function depositETH(uint32 strategyId) external payable nonReentrant {
         if (msg.value == 0) revert IStorage.InvalidAmount();
 
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
@@ -317,9 +328,10 @@ contract SSVBasedApps is
     /// @param amount The amount to withdraw
     function fastWithdrawERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (usedTokens[strategyId][address(token)] != 0) revert IStorage.TokenIsUsedByTheBApp();
-        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
         if (address(token) == ETH_ADDRESS) revert IStorage.InvalidToken();
+        if (usedTokens[strategyId][address(token)] != 0) revert IStorage.TokenIsUsedByTheBApp();
+
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
 
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
 
@@ -371,6 +383,7 @@ contract SSVBasedApps is
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
+        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
         strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
         delete withdrawalRequests[strategyId][msg.sender][address(token)];
 
@@ -404,6 +417,7 @@ contract SSVBasedApps is
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
         uint256 amount = request.amount;
+        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
         strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
         delete withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
 
@@ -491,10 +505,9 @@ contract SSVBasedApps is
     function fastUpdateFee(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
         if (proposedFee >= strategies[strategyId].fee) revert IStorage.InvalidPercentageIncrement();
 
-        uint32 oldFee = strategies[strategyId].fee;
         strategies[strategyId].fee = proposedFee;
 
-        emit StrategyFeeUpdated(strategyId, msg.sender, proposedFee, oldFee);
+        emit StrategyFeeUpdated(strategyId, msg.sender, proposedFee, true);
     }
 
     /// @notice Propose a new fee for a strategy
@@ -514,7 +527,7 @@ contract SSVBasedApps is
         request.percentage = proposedFee;
         request.requestTime = uint32(block.timestamp);
 
-        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee, fee);
+        emit StrategyFeeUpdateProposed(strategyId, msg.sender, proposedFee);
     }
 
     /// @notice Finalize the fee update for a strategy
@@ -528,12 +541,11 @@ contract SSVBasedApps is
         if (feeRequestTime == 0) revert IStorage.NoPendingFeeUpdate();
         _checkTimelocks(feeRequestTime, FEE_TIMELOCK_PERIOD, FEE_EXPIRE_TIME);
 
-        uint32 oldFee = strategy.fee;
         strategy.fee = request.percentage;
         delete request.percentage;
         delete request.requestTime;
 
-        emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee, oldFee);
+        emit StrategyFeeUpdated(strategyId, msg.sender, strategy.fee, false);
     }
 
     // **********************
@@ -551,7 +563,7 @@ contract SSVBasedApps is
         address[] calldata tokens,
         uint32[] calldata obligationPercentages
     ) private {
-        for (uint8 i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             _createSingleObligation(strategyId, bApp, tokens[i], obligationPercentages[i]);
         }
     }

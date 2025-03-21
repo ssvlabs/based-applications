@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
-
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+
+import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 
@@ -39,6 +39,32 @@ contract BasedAppManagement is IBasedAppManager {
         _;
     }
 
+    /// @notice Get the token update request for a bApp
+    /// @param bApp The address of the bApp
+    /// @return tokens The list of tokens
+    /// @return sharedRiskLevels The shared risk levels of the tokens
+    /// @return requestTime The time of the request
+    function getTokenUpdateRequest(address bApp)
+        public
+        view
+        returns (address[] memory tokens, uint32[] memory sharedRiskLevels, uint32 requestTime)
+    {
+        IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[bApp];
+        tokens = request.tokens;
+        sharedRiskLevels = request.sharedRiskLevels;
+        requestTime = request.requestTime;
+    }
+
+    /// @notice Get the token removal request for a bApp
+    /// @param bApp The address of the bApp
+    /// @return tokens The list of tokens
+    /// @return requestTime The time of the request
+    function getTokenRemovalRequest(address bApp) public view returns (address[] memory tokens, uint32 requestTime) {
+        IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[bApp];
+        tokens = request.tokens;
+        requestTime = request.requestTime;
+    }
+
     // ********************
     // ** Section: bApps **
     // ********************
@@ -51,11 +77,8 @@ contract BasedAppManagement is IBasedAppManager {
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
         if (registeredBApps[msg.sender]) revert IStorage.BAppAlreadyRegistered();
-        else registeredBApps[msg.sender] = true;
 
-        if (!_isBApp(msg.sender)) {
-            revert IStorage.BAppDoesNotSupportInterface();
-        }
+        registeredBApps[msg.sender] = true;
 
         _addNewTokens(msg.sender, tokens, sharedRiskLevels);
 
@@ -85,13 +108,17 @@ contract BasedAppManagement is IBasedAppManager {
         if (tokens.length == 0) revert IStorage.EmptyTokenList();
         _validateArraysLength(tokens, sharedRiskLevels);
 
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (!bAppTokens[msg.sender][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
-            if (bAppTokens[msg.sender][tokens[i]].value == sharedRiskLevels[i]) {
+        address token;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            token = tokens[i];
+            _validateTokenInput(token);
+            IStorage.SharedRiskLevel storage tokenData = bAppTokens[msg.sender][token];
+            if (!tokenData.isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+            if (tokenData.value == sharedRiskLevels[i]) {
                 revert IStorage.SharedRiskLevelAlreadySet();
             }
         }
+
         IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[msg.sender];
         request.tokens = tokens;
         request.sharedRiskLevels = sharedRiskLevels;
@@ -102,18 +129,23 @@ contract BasedAppManagement is IBasedAppManager {
     /// @notice Function to finalize the update of tokens for a bApp
     function finalizeBAppTokensUpdate() external onlyRegisteredBApp {
         IStorage.TokenUpdateRequest storage request = bAppTokenUpdateRequests[msg.sender];
-        uint256 requestTime = request.requestTime;
 
-        if (requestTime == 0) revert IStorage.NoPendingWithdrawal();
+        uint256 requestTime = request.requestTime;
+        if (requestTime == 0) revert IStorage.NoPendingTokenUpdate();
+
         _checkTimelocks(requestTime, TOKEN_UPDATE_TIMELOCK_PERIOD, TOKEN_UPDATE_EXPIRE_TIME);
 
         address[] memory tokens = request.tokens;
         uint32[] memory sharedRiskLevels = request.sharedRiskLevels;
-        for (uint8 i = 0; i < tokens.length; i++) {
+
+        for (uint256 i = 0; i < tokens.length; i++) {
             _setTokenRiskLevel(msg.sender, tokens[i], sharedRiskLevels[i]);
         }
 
-        delete bAppTokenUpdateRequests[msg.sender];
+        delete request.tokens;
+        delete request.sharedRiskLevels;
+        delete request.requestTime;
+
         emit BAppTokensUpdated(msg.sender, tokens, sharedRiskLevels);
     }
 
@@ -122,49 +154,40 @@ contract BasedAppManagement is IBasedAppManager {
     function proposeBAppTokensRemoval(address[] calldata tokens) external onlyRegisteredBApp {
         if (tokens.length == 0) revert IStorage.EmptyTokenList();
 
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (!bAppTokens[msg.sender][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
+        address token;
+        for (uint256 i = 0; i < tokens.length; i++) {
+            token = tokens[i];
+            _validateTokenInput(token);
+            if (!bAppTokens[msg.sender][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
         }
+
         IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[msg.sender];
         request.tokens = tokens;
         request.requestTime = uint32(block.timestamp);
+
         emit BAppTokensRemovalProposed(msg.sender, tokens);
     }
 
     /// @notice Function to finalize the removal of tokens from a bApp
     function finalizeBAppTokensRemoval() external onlyRegisteredBApp {
         IStorage.TokenRemovalRequest storage request = bAppTokenRemovalRequests[msg.sender];
-        uint256 requestTime = request.requestTime;
 
-        if (requestTime == 0) revert IStorage.NoPendingWithdrawal();
+        uint256 requestTime = request.requestTime;
+        if (requestTime == 0) revert IStorage.NoPendingTokenRemoval();
+
         _checkTimelocks(requestTime, TOKEN_REMOVAL_TIMELOCK_PERIOD, TOKEN_REMOVAL_EXPIRE_TIME);
 
         address[] memory tokens = request.tokens;
-        for (uint8 i = 0; i < tokens.length; i++) {
+        uint256 length = tokens.length;
+        for (uint256 i = 0; i < length; i++) {
             _removeToken(msg.sender, tokens[i]);
         }
 
-        delete bAppTokenRemovalRequests[msg.sender];
+        delete request.tokens;
+        delete request.requestTime;
+
         emit BAppTokensRemoved(msg.sender, tokens);
     }
-
-    // /// @notice Function to update the shared risk levels of the tokens for a bApp
-    // /// @param tokens The list of tokens to update
-    // /// @param sharedRiskLevels The shared risk levels of the tokens
-    // function updateBAppTokens(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external onlyRegisteredBApp {
-    //     if (tokens.length == 0) revert IStorage.EmptyTokenList();
-    //     _validateArraysLength(tokens, sharedRiskLevels);
-    //     for (uint8 i = 0; i < tokens.length; i++) {
-    //         _validateTokenInput(tokens[i]);
-    //         if (!bAppTokens[msg.sender][tokens[i]].isSet) revert IStorage.TokenNoTSupportedByBApp(tokens[i]);
-    //         if (bAppTokens[msg.sender][tokens[i]].value == sharedRiskLevels[i]) {
-    //             revert IStorage.SharedRiskLevelAlreadySet();
-    //         }
-    //         _setTokenRiskLevel(msg.sender, tokens[i], sharedRiskLevels[i]);
-    //     }
-    //     emit BAppTokensUpdated(msg.sender, tokens, sharedRiskLevels);
-    // }
 
     /// @notice Function to add tokens to a bApp
     /// @param bApp The address of the bApp
@@ -172,10 +195,13 @@ contract BasedAppManagement is IBasedAppManager {
     /// @param sharedRiskLevels The shared risk levels of the tokens
     function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
         _validateArraysLength(tokens, sharedRiskLevels);
-        for (uint8 i = 0; i < tokens.length; i++) {
-            _validateTokenInput(tokens[i]);
-            if (bAppTokens[bApp][tokens[i]].isSet) revert IStorage.TokenAlreadyAddedToBApp(tokens[i]);
-            _setTokenRiskLevel(bApp, tokens[i], sharedRiskLevels[i]);
+        uint256 length = tokens.length;
+        address token;
+        for (uint256 i = 0; i < length; i++) {
+            token = tokens[i];
+            _validateTokenInput(token);
+            if (bAppTokens[bApp][token].isSet) revert IStorage.TokenAlreadyAddedToBApp(token);
+            _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
         }
     }
 
@@ -184,8 +210,10 @@ contract BasedAppManagement is IBasedAppManager {
     /// @param timelockPeriod The timelock period
     /// @param expireTime The expire time
     function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) internal view {
-        if (uint32(block.timestamp) < requestTime + timelockPeriod) revert IStorage.TimelockNotElapsed();
-        if (uint32(block.timestamp) > requestTime + timelockPeriod + expireTime) {
+        uint256 currentTime = uint32(block.timestamp);
+        uint256 unlockTime = requestTime + timelockPeriod;
+        if (currentTime < unlockTime) revert IStorage.TimelockNotElapsed();
+        if (currentTime > unlockTime + expireTime) {
             revert IStorage.RequestTimeExpired();
         }
     }
@@ -195,8 +223,10 @@ contract BasedAppManagement is IBasedAppManager {
     /// @param token The address of the token
     /// @param sharedRiskLevel The shared risk level
     function _setTokenRiskLevel(address bApp, address token, uint32 sharedRiskLevel) internal {
-        bAppTokens[bApp][token].value = sharedRiskLevel;
-        bAppTokens[bApp][token].isSet = true;
+        IStorage.SharedRiskLevel storage tokenData = bAppTokens[bApp][token];
+
+        tokenData.value = sharedRiskLevel;
+        tokenData.isSet = true;
     }
 
     /// @notice Internal function to set the shared risk level for a token

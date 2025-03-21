@@ -5,24 +5,26 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {SSVBasedApps} from "src/SSVBasedApps.sol";
 import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
-
+import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
 import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
+import {BasedAppMock2} from "@ssv/test/mocks/MockBApp2.sol";
+import {BasedAppMock3} from "@ssv/test/mocks/MockBAppAccessControl.sol";
 import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 
-contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
+contract BasedAppManagerSetupTest is Test {
     SSVBasedApps public implementation;
     ERC1967Proxy proxy; // UUPS Proxy contract
     SSVBasedApps proxiedManager; // Proxy interface for interaction
     BasedAppMock bApp1;
-    BasedAppMock bApp2;
+    BasedAppMock2 bApp2;
+    BasedAppMock3 bApp3;
     NonCompliantBApp nonCompliantBApp;
     WhitelistExample whitelistExample;
 
@@ -37,6 +39,8 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
     address USER2 = makeAddr("User2");
     address BAPP1 = makeAddr("BApp1");
     address BAPP2 = makeAddr("BApp2");
+    address BAPP3 = makeAddr("BApp3");
+    address NON_EXISTENT_BAPP = makeAddr("NonExistentBApp");
     address ATTACKER = makeAddr("Attacker");
     address RECEIVER = makeAddr("Receiver");
     address RECEIVER2 = makeAddr("Receiver2");
@@ -53,6 +57,8 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 constant INITIAL_USER1_BALANCE_ETH = 10 ether;
+    uint256 constant INITIAL_USER2_BALANCE_ERC20 = 1000 * 10 ** 18;
+    uint256 constant INITIAL_USER2_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_RECEIVER_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 constant INITIAL_RECEIVER_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_ATTACKER_BALANCE_ETH = 10 ether;
@@ -61,14 +67,18 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
     uint32 constant MAX_FEE_INCREMENT = 500;
 
-    function setUp() public {
+    IBasedApp[] public bApps;
+
+    function setUp() public virtual {
         vm.label(OWNER, "Owner");
         vm.label(USER1, "User1");
+        vm.label(USER2, "User2");
         vm.label(ATTACKER, "Attacker");
         vm.label(RECEIVER, "Receiver");
         vm.label(RECEIVER2, "Receiver2");
         vm.label(BAPP1, "BApp1");
         vm.label(BAPP2, "BApp2");
+        vm.label(BAPP3, "BApp3");
 
         vm.startPrank(OWNER);
         implementation = new SSVBasedApps();
@@ -79,21 +89,36 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
 
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();
-        vm.prank(USER1);
+
+        vm.startPrank(USER1);
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
+        bApp2 = new BasedAppMock2(address(proxiedManager));
+        bApp3 = new BasedAppMock3(address(proxiedManager), USER1);
+        bApp3.hasRole(bApp3.OWNER_ROLE(), USER1);
+        bApp3.hasRole(bApp3.MANAGER_ROLE(), USER1);
+        bApp3.grantManagerRole(USER1);
+        bApp3.hasRole(bApp3.MANAGER_ROLE(), USER1);
+        vm.stopPrank();
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
         whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
 
+        bApps.push(bApp1);
+        bApps.push(bApp2);
+        bApps.push(bApp3);
+
         vm.startPrank(OWNER);
         vm.label(address(bApp1), "BasedApp1");
+        vm.label(address(whitelistExample), "WhitelistExample");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);
+        vm.deal(USER2, INITIAL_USER2_BALANCE_ETH);
         vm.deal(RECEIVER, INITIAL_RECEIVER_BALANCE_ETH);
         vm.deal(ATTACKER, INITIAL_ATTACKER_BALANCE_ETH);
 
         erc20mock = new ERC20Mock();
         erc20mock.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
+        erc20mock.transfer(USER2, INITIAL_USER2_BALANCE_ERC20);
         erc20mock.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 
         erc20mock2 = new ERC20Mock();
@@ -103,7 +128,6 @@ contract BasedAppManagerSetupTest is Test, OwnableUpgradeable {
         erc20mock3 = new ERC20Mock();
         erc20mock4 = new ERC20Mock();
         erc20mock5 = new ERC20Mock();
-
         vm.stopPrank();
     }
 }

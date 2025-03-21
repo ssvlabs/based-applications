@@ -2,11 +2,11 @@
 pragma solidity 0.8.28;
 
 interface IBasedAppWhitelisted {
-    function addWhitelisted(address account) external;
-    function removeWhitelisted(address account) external;
+    function addWhitelisted(uint32 strategyId) external;
+    function removeWhitelisted(uint32 strategyId) external;
 
     error AlreadyWhitelisted();
-    error ZeroAddress();
+    error ZeroID();
     error NotWhitelisted();
     error NonWhitelistedCaller();
 }

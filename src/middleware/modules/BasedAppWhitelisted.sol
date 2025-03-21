@@ -4,16 +4,16 @@ pragma solidity 0.8.28;
 import {IBasedAppWhitelisted} from "@ssv/src/interfaces/IBasedAppWhitelisted.sol";
 
 abstract contract BasedAppWhitelisted is IBasedAppWhitelisted {
-    mapping(address => bool) public isWhitelisted;
+    mapping(uint32 => bool) public isWhitelisted;
 
-    function addWhitelisted(address account) external virtual {
-        if (isWhitelisted[account]) revert IBasedAppWhitelisted.AlreadyWhitelisted();
-        if (account == address(0)) revert IBasedAppWhitelisted.ZeroAddress();
-        isWhitelisted[account] = true;
+    function addWhitelisted(uint32 strategyId) external virtual {
+        if (isWhitelisted[strategyId]) revert IBasedAppWhitelisted.AlreadyWhitelisted();
+        if (strategyId == 0) revert IBasedAppWhitelisted.ZeroID();
+        isWhitelisted[strategyId] = true;
     }
 
-    function removeWhitelisted(address account) external virtual {
-        if (!isWhitelisted[account]) revert IBasedAppWhitelisted.NotWhitelisted();
-        delete isWhitelisted[account];
+    function removeWhitelisted(uint32 strategyId) external virtual {
+        if (!isWhitelisted[strategyId]) revert IBasedAppWhitelisted.NotWhitelisted();
+        delete isWhitelisted[strategyId];
     }
 }

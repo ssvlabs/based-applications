@@ -6,6 +6,7 @@ solc = "0.8.28"
 optimizer = true
 optimizer_runs = 1
 gas_reports = ["*"]
+gas_reports_ignore = ["ERC20Mock", "BasedAppMock", "BasedAppMock2", "BasedAppMock3", "ERC1967Proxy"]
 
 [fmt]
 bracket_spacing = false
@@ -17,4 +18,4 @@ quote_style = "double"
 tab_width = 4
 
 [fuzz]
-runs = 5
+runs = 10

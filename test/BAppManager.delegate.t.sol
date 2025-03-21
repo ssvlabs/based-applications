@@ -4,34 +4,48 @@ pragma solidity 0.8.28;
 import {BasedAppManagerSetupTest, IBasedAppManager, ISSVBasedApps, IStorage} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
+    function checkDelegation(
+        address owner,
+        address receiver,
+        uint32 expectedDelegatedAmount,
+        uint32 expectedTotalDelegatedPercentage
+    ) internal view {
+        uint32 delegatedAmount = proxiedManager.delegations(owner, receiver);
+        uint32 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(owner);
+        assertEq(delegatedAmount, expectedDelegatedAmount, "Delegated percentage to the receiver should be the expected one");
+        assertEq(totalDelegatedPercentage, expectedTotalDelegatedPercentage, "Total delegated percentage should be the expected");
+    }
+
+    function checkDelegationZero(address owner, address receiver, uint32 expectedTotalDelegatedPercentage) internal view {
+        uint32 delegatedAmount = proxiedManager.delegations(owner, receiver);
+        uint32 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(owner);
+        assertEq(delegatedAmount, 0, "Delegated percentage to the receiver should be 0");
+        assertEq(totalDelegatedPercentage, expectedTotalDelegatedPercentage, "Total delegated percentage should be the expected");
+    }
+
     function test_DelegateMinimumBalance() public {
-        vm.startPrank(USER1);
-        proxiedManager.delegateBalance(RECEIVER, 1);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, 1, "Delegated amount should be 0.01%");
-        assertEq(totalDelegatedPercentage, 1, "Delegated percentage should be 0.01%");
-        vm.stopPrank();
+        uint32 delegatedAmount = 1;
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, delegatedAmount);
+        proxiedManager.delegateBalance(RECEIVER, delegatedAmount);
+        checkDelegation(USER1, RECEIVER, delegatedAmount, delegatedAmount);
     }
 
     function test_DelegatePartialBalance(uint32 percentageAmount) public {
-        vm.assume(percentageAmount > 0 && percentageAmount < 10_000);
-        vm.startPrank(USER1);
+        vm.assume(percentageAmount > 0 && percentageAmount < proxiedManager.MAX_PERCENTAGE());
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, percentageAmount);
         proxiedManager.delegateBalance(RECEIVER, percentageAmount);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, percentageAmount, "Delegated amount should be %1");
-        assertEq(totalDelegatedPercentage, percentageAmount, "Delegated percentage should be 1%");
-        vm.stopPrank();
+        checkDelegation(USER1, RECEIVER, percentageAmount, percentageAmount);
     }
 
     function test_DelegateFullBalance() public {
+        uint32 delegatedAmount = proxiedManager.MAX_PERCENTAGE();
         vm.startPrank(USER1);
-        proxiedManager.delegateBalance(RECEIVER, 10_000);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, 10_000, "Delegated amount should be 100%");
-        assertEq(totalDelegatedPercentage, 10_000, "Delegated percentage should be 100%");
+        proxiedManager.delegateBalance(RECEIVER, delegatedAmount);
+        checkDelegation(USER1, RECEIVER, delegatedAmount, delegatedAmount);
         vm.stopPrank();
     }
 
@@ -52,140 +66,148 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.assume(percentage1 > 0 && percentage2 > 0);
         vm.assume(percentage1 < proxiedManager.MAX_PERCENTAGE() && percentage2 < proxiedManager.MAX_PERCENTAGE());
         vm.assume(percentage1 + percentage2 <= proxiedManager.MAX_PERCENTAGE());
+
         vm.startPrank(USER1);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, percentage1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
+        vm.expectEmit(true, true, true, true);
+        checkDelegation(USER1, RECEIVER, percentage1, percentage1);
+
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER2, percentage2);
         proxiedManager.delegateBalance(RECEIVER2, percentage2);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, percentage1, "Delegated amount should be the one specified in percentage1");
-        assertEq(delegatedAmount2, percentage2, "Delegated amount should be the one specified in percentage2");
-        assertEq(
-            totalDelegatedPercentage,
-            percentage1 + percentage2,
-            "Total delegated percentage should be the sum of percentage1 and percentage2"
-        );
+        checkDelegation(USER1, RECEIVER, percentage1, percentage1 + percentage2);
+
         vm.stopPrank();
     }
 
     function testRevert_TotalDelegatePercentageOverMax(uint32 percentage1) public {
-        vm.assume(percentage1 > 0 && percentage1 <= proxiedManager.MAX_PERCENTAGE());
-        vm.startPrank(USER1);
-        proxiedManager.delegateBalance(RECEIVER, percentage1);
+        test_DelegatePartialBalance(percentage1);
+
         uint32 percentage2 = proxiedManager.MAX_PERCENTAGE();
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingPercentageUpdate.selector));
         proxiedManager.delegateBalance(RECEIVER2, percentage2);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, percentage1, "First delegated amount should be set");
-        assertEq(delegatedAmount2, 0, "Second delegated amount should be not set");
-        assertEq(totalDelegatedPercentage, percentage1, "Total delegated percentage should be equal to the first delegation");
+        checkDelegationZero(USER1, RECEIVER2, percentage1);
         vm.stopPrank();
     }
 
     function testRevert_DoubleDelegateSameReceiver(uint32 percentage1, uint32 percentage2) public {
         vm.assume(percentage1 > 0 && percentage2 > 0);
         vm.assume(percentage1 <= proxiedManager.MAX_PERCENTAGE() && percentage2 <= proxiedManager.MAX_PERCENTAGE());
+
         vm.startPrank(USER1);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, percentage1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, percentage1, "Delegated amount should be set");
-        assertEq(totalDelegatedPercentage, percentage1, "Total delegated percentage should be set");
+        checkDelegation(USER1, RECEIVER, percentage1, percentage1);
+
         vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationAlreadyExists.selector));
         proxiedManager.delegateBalance(RECEIVER, percentage2);
+
         vm.stopPrank();
     }
 
     function testRevert_InvalidPercentageDelegateBalance() public {
-        vm.startPrank(USER1);
         uint32 maxPlusOne = proxiedManager.MAX_PERCENTAGE() + 1;
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
-        vm.stopPrank();
+    }
+
+    function test_UpdateDelegatedBalance() public {
+        test_DelegateMinimumBalance();
+
+        uint32 updatePercentage = proxiedManager.MAX_PERCENTAGE();
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationUpdated(USER1, RECEIVER, updatePercentage);
+        proxiedManager.updateDelegatedBalance(RECEIVER, updatePercentage);
+        checkDelegation(USER1, RECEIVER, updatePercentage, updatePercentage);
     }
 
     function testRevert_UpdateTotalDelegatePercentageByTheSameUser() public {
-        vm.startPrank(USER1);
-        proxiedManager.delegateBalance(RECEIVER, 1);
-        proxiedManager.updateDelegatedBalance(RECEIVER, proxiedManager.MAX_PERCENTAGE());
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, 1e4, "Delegated amount should be 100%");
-        assertEq(totalDelegatedPercentage, 1e4, "Total delegated percentage should be 100%");
+        test_UpdateDelegatedBalance();
         uint32 maxPlusOne = proxiedManager.MAX_PERCENTAGE() + 1;
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
-        vm.stopPrank();
     }
 
     function testRevert_UpdateTotalDelegatePercentageWithZero() public {
-        vm.startPrank(USER1);
-        proxiedManager.delegateBalance(RECEIVER, 1);
+        test_DelegateMinimumBalance();
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 0);
-        vm.stopPrank();
     }
 
     function testRevert_UpdateTotalDelegatePercentageWithSameBalance() public {
-        vm.startPrank(USER1);
-        proxiedManager.delegateBalance(RECEIVER, 1);
+        test_DelegateMinimumBalance();
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationExistsWithSameValue.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1);
-        vm.stopPrank();
     }
 
     function testRevert_UpdateBalanceNotExisting() public {
-        vm.startPrank(USER1);
+        vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationDoesNotExist.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
-        vm.stopPrank();
     }
 
     function testRevert_UpdateBalanceTooHigh() public {
+        uint32 delegatedAmount1 = 1;
+        uint32 delegatedAmount2 = 1;
+
         vm.startPrank(USER1);
-        proxiedManager.delegateBalance(RECEIVER, 1);
-        proxiedManager.delegateBalance(RECEIVER2, 1);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, 1, "Delegated amount should be 100%");
-        assertEq(delegatedAmount2, 1, "Delegated amount should be 100%");
-        assertEq(totalDelegatedPercentage, 2, "Total delegated percentage should be 100%");
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, delegatedAmount1);
+        proxiedManager.delegateBalance(RECEIVER, delegatedAmount1);
+        checkDelegation(USER1, RECEIVER, delegatedAmount1, delegatedAmount1);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER2, delegatedAmount2);
+        proxiedManager.delegateBalance(RECEIVER2, delegatedAmount1);
+        checkDelegation(USER1, RECEIVER2, delegatedAmount2, delegatedAmount1 + delegatedAmount2);
+
         vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingPercentageUpdate.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
+
         vm.stopPrank();
     }
 
     function test_RemoveDelegateBalance() public {
         test_DelegateFullBalance();
-        vm.startPrank(USER1);
+
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationRemoved(USER1, RECEIVER);
         proxiedManager.removeDelegatedBalance(RECEIVER);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, 0, "Delegated amount should be 0%");
-        assertEq(totalDelegatedPercentage, 0, "Total delegated percentage should be 0%");
-        vm.stopPrank();
+        checkDelegationZero(USER1, RECEIVER, 0);
     }
 
     function test_RemoveDelegatedBalanceAndComputeTotal() public {
-        test_UpdateTotalDelegatedPercentage(100, 200);
+        uint32 delegatedAmount1 = 100;
+        uint32 delegatedAmount2 = 200;
+
+        test_UpdateTotalDelegatedPercentage(delegatedAmount1, delegatedAmount2);
+
         vm.startPrank(USER1);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationRemoved(USER1, RECEIVER);
         proxiedManager.removeDelegatedBalance(RECEIVER);
-        uint256 delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        uint256 delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
-        uint256 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, 0, "Delegated amount should be 0%");
-        assertEq(delegatedAmount2, 200, "Delegated amount should be 0.01%");
-        assertEq(totalDelegatedPercentage, 200, "Total delegated percentage should be 0.01%");
-        proxiedManager.delegateBalance(RECEIVER, 1);
-        delegatedAmount = proxiedManager.delegations(USER1, RECEIVER);
-        delegatedAmount2 = proxiedManager.delegations(USER1, RECEIVER2);
-        totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(USER1);
-        assertEq(delegatedAmount, 1, "Delegated amount should be 0%");
-        assertEq(delegatedAmount2, 200, "Delegated amount should be 0.01%");
-        assertEq(totalDelegatedPercentage, 201, "Total delegated percentage should be 0.01%");
+        checkDelegationZero(USER1, RECEIVER, delegatedAmount2);
+        checkDelegation(USER1, RECEIVER2, delegatedAmount2, delegatedAmount2);
+
+        uint32 newDelegatedAmount1 = 1;
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, newDelegatedAmount1);
+        proxiedManager.delegateBalance(RECEIVER, newDelegatedAmount1);
+        checkDelegation(USER1, RECEIVER, newDelegatedAmount1, newDelegatedAmount1 + delegatedAmount2);
+
         vm.stopPrank();
     }
 
@@ -202,6 +224,16 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.expectEmit(true, false, false, false);
         emit ISSVBasedApps.AccountMetadataURIUpdated(USER1, metadataURI);
         proxiedManager.updateAccountMetadataURI(metadataURI);
+        vm.stopPrank();
+    }
+
+    function test_DoubleUpdateAccountMetadata() public {
+        test_UpdateAccountMetadata();
+        string memory metadataURI2 = "https://account-metadata-2.com";
+        vm.startPrank(USER1);
+        vm.expectEmit(true, false, false, false);
+        emit ISSVBasedApps.AccountMetadataURIUpdated(USER1, metadataURI2);
+        proxiedManager.updateAccountMetadataURI(metadataURI2);
         vm.stopPrank();
     }
 }

@@ -94,6 +94,8 @@ interface IStorage {
     error LengthsNotMatching();
     error NoPendingFeeUpdate();
     error NoPendingObligationUpdate();
+    error NoPendingTokenUpdate();
+    error NoPendingTokenRemoval();
     error NoPendingWithdrawal();
     error NoPendingWithdrawalETH();
     error ObligationAlreadySet();

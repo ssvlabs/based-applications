@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {OwnableUpgradeableBasedApp} from "@ssv/src/middleware/modules/roles/OwnableUpgradeableBasedApp.sol";
+import {OwnableBasedApp} from "@ssv/src/middleware/modules/core+roles/OwnableBasedApp.sol";
 
-contract BasedAppMock is OwnableUpgradeableBasedApp {
+contract BasedAppMock is OwnableBasedApp {
     event OptInToBApp(uint32 indexed strategyId, address[] tokens, uint32[] obligationPercentages, bytes data);
 
     uint32 public counter;
 
-    constructor(address _basedAppManager, address owner) OwnableUpgradeableBasedApp(_basedAppManager, owner) {
+    constructor(address _basedAppManager, address owner) OwnableBasedApp(_basedAppManager, owner) {
         counter = 0;
     }
 
