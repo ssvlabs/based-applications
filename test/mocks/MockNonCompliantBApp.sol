@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 interface ICustomBasedAppManager {
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
 }
 
 contract NonCompliantBApp {
@@ -16,11 +17,12 @@ contract NonCompliantBApp {
         counter = 0;
     }
 
-    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI)
-        external
-        virtual
-    {
+    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
         ICustomBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
+    }
+
+    function slash(uint32 strategyId, address token, uint256 amount) external {
+        ICustomBasedAppManager(BASED_APP_MANAGER).slash(strategyId, address(this), token, amount, "");
     }
 
     function optInToBApp(

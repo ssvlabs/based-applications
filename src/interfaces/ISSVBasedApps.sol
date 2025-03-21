@@ -65,8 +65,7 @@ interface ISSVBasedApps is IBasedAppManager {
 
     function updateAccountMetadataURI(string calldata metadataURI) external;
 
-    function slash(uint32 strategyId, address account, address bApp, address token, uint256 amount, bytes calldata data)
-        external;
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
 
     function optInToBApp(
         uint32 strategyId,

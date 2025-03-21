@@ -61,6 +61,7 @@ contract BasedAppManagerSetupTest is Test {
     uint256 constant INITIAL_USER2_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_RECEIVER_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 constant INITIAL_RECEIVER_BALANCE_ETH = 10 ether;
+    uint256 constant INITIAL_ATTACKER_BALANCE_ERC20 = 100_000_000 * 10 ** 18;
     uint256 constant INITIAL_ATTACKER_BALANCE_ETH = 10 ether;
 
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
@@ -119,6 +120,7 @@ contract BasedAppManagerSetupTest is Test {
         erc20mock = new ERC20Mock();
         erc20mock.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
         erc20mock.transfer(USER2, INITIAL_USER2_BALANCE_ERC20);
+        erc20mock.transfer(ATTACKER, INITIAL_ATTACKER_BALANCE_ERC20);
         erc20mock.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 
         erc20mock2 = new ERC20Mock();

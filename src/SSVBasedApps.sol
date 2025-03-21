@@ -100,8 +100,16 @@ contract SSVBasedApps is
      * @notice Tracks the token balances for individual strategies.
      * @dev Tracks that how much a token account has in a specific strategy
      */
+    // mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) public
+    //     strategyTokenBalances;
+
     mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) public
-        strategyTokenBalances;
+        strategyAccountShares;
+
+    mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalBalance;
+
+    mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalShares;
+
     /**
      * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
@@ -305,7 +313,22 @@ contract SSVBasedApps is
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
 
-        strategyTokenBalances[strategyId][msg.sender][address(token)] += amount;
+        address tokenAddress = address(token);
+        uint256 totalTokenBalance = strategyTotalBalance[strategyId][tokenAddress];
+        uint256 totalShares = strategyTotalShares[strategyId][tokenAddress];
+
+        uint256 shares;
+        if (totalShares == 0 || totalTokenBalance == 0) {
+            shares = amount; // First deposit: 1:1 ratio
+        } else {
+            shares = (amount * totalShares) / totalTokenBalance;
+        }
+
+        strategyAccountShares[strategyId][msg.sender][tokenAddress] += shares;
+        strategyTotalShares[strategyId][tokenAddress] += shares;
+        strategyTotalBalance[strategyId][tokenAddress] += amount;
+
+        // strategyTokenBalances[strategyId][msg.sender][address(token)] += amount;
 
         token.safeTransferFrom(msg.sender, address(this), amount);
 
@@ -317,7 +340,20 @@ contract SSVBasedApps is
     function depositETH(uint32 strategyId) external payable nonReentrant {
         if (msg.value == 0) revert IStorage.InvalidAmount();
 
-        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] += msg.value;
+        uint256 amount = msg.value;
+        uint256 totalEthBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
+        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+
+        uint256 shares;
+        if (totalShares == 0 || totalEthBalance == 0) {
+            shares = amount; // First deposit: 1:1 ratio
+        } else {
+            shares = (amount * totalShares) / totalEthBalance;
+        }
+
+        strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] += shares;
+        strategyTotalShares[strategyId][ETH_ADDRESS] += shares;
+        strategyTotalBalance[strategyId][ETH_ADDRESS] += amount;
 
         emit StrategyDeposit(strategyId, msg.sender, ETH_ADDRESS, msg.value);
     }
@@ -331,9 +367,21 @@ contract SSVBasedApps is
         if (address(token) == ETH_ADDRESS) revert IStorage.InvalidToken();
         if (usedTokens[strategyId][address(token)] != 0) revert IStorage.TokenIsUsedByTheBApp();
 
-        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
+        uint256 totalTokenBalance = strategyTotalBalance[strategyId][address(token)];
+        uint256 totalShares = strategyTotalShares[strategyId][address(token)];
 
-        strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
+        if (totalTokenBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
+
+        // Convert the token amount to shares
+        uint256 shares = (amount * totalShares) / totalTokenBalance;
+
+        // require(strategyAccountShares[strategyId][msg.sender][address(token)] >= shares, "Not enough shares");
+        if (strategyAccountShares[strategyId][msg.sender][address(token)] < shares) revert IStorage.InsufficientBalance();
+
+        // Deduct shares instead of raw token balance
+        strategyAccountShares[strategyId][msg.sender][address(token)] -= shares;
+        strategyTotalShares[strategyId][address(token)] -= shares;
+        strategyTotalBalance[strategyId][address(token)] -= amount;
 
         token.safeTransfer(msg.sender, amount);
 
@@ -346,9 +394,24 @@ contract SSVBasedApps is
     function fastWithdrawETH(uint32 strategyId, uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
         if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert IStorage.TokenIsUsedByTheBApp();
-        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
+        // if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
 
-        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
+        // strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
+
+        uint256 totalETHBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
+        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+
+        if (totalETHBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
+
+        // Convert the ETH amount to shares
+        uint256 shares = (amount * totalShares) / totalETHBalance;
+
+        if (strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] < shares) revert IStorage.InsufficientBalance();
+
+        // Deduct shares instead of raw ETH balance
+        strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] -= shares;
+        strategyTotalShares[strategyId][ETH_ADDRESS] -= shares;
+        strategyTotalBalance[strategyId][ETH_ADDRESS] -= amount;
 
         payable(msg.sender).transfer(amount);
 
@@ -361,12 +424,19 @@ contract SSVBasedApps is
     /// @param amount The amount to withdraw.
     function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
+        //if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
         if (token == ETH_ADDRESS) revert IStorage.InvalidToken();
 
+        uint256 totalTokenBalance = strategyTotalBalance[strategyId][token];
+        uint256 totalShares = strategyTotalShares[strategyId][token];
+
+        if (totalTokenBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
+        uint256 shares = (amount * totalShares) / totalTokenBalance;
+
+        if (strategyAccountShares[strategyId][msg.sender][token] < shares) revert IStorage.InsufficientBalance();
         IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][address(token)];
 
-        request.amount = amount;
+        request.shares = shares;
         request.requestTime = uint32(block.timestamp);
 
         emit StrategyWithdrawalProposed(strategyId, msg.sender, address(token), amount);
@@ -382,9 +452,23 @@ contract SSVBasedApps is
         if (requestTime == 0) revert IStorage.NoPendingWithdrawal();
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
-        uint256 amount = request.amount;
-        if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
-        strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
+        uint256 shares = request.shares;
+
+        //if (strategyTokenBalances[strategyId][msg.sender][address(token)] < amount) revert IStorage.InsufficientBalance();
+        //strategyTokenBalances[strategyId][msg.sender][address(token)] -= amount;
+
+        if (strategyAccountShares[strategyId][msg.sender][address(token)] < shares) revert IStorage.InsufficientBalance();
+
+        uint256 totalTokenBalance = strategyTotalBalance[strategyId][address(token)];
+        uint256 totalShares = strategyTotalShares[strategyId][address(token)];
+
+        if (totalTokenBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
+        uint256 amount = (shares * totalTokenBalance) / totalShares;
+
+        strategyAccountShares[strategyId][msg.sender][address(token)] -= shares;
+        strategyTotalShares[strategyId][address(token)] -= shares;
+        strategyTotalBalance[strategyId][address(token)] -= amount;
+
         delete withdrawalRequests[strategyId][msg.sender][address(token)];
 
         token.safeTransfer(msg.sender, amount);
@@ -397,11 +481,20 @@ contract SSVBasedApps is
     /// @param amount The amount of ETH to withdraw.
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
+        // if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
+
+        uint256 totalETHBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
+        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+
+        if (totalETHBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
+
+        uint256 shares = (amount * totalShares) / totalETHBalance;
+
+        if (strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] < shares) revert IStorage.InsufficientBalance();
 
         IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
 
-        request.amount = amount;
+        request.shares = shares;
         request.requestTime = uint32(block.timestamp);
 
         emit StrategyWithdrawalProposed(strategyId, msg.sender, ETH_ADDRESS, amount);
@@ -416,9 +509,22 @@ contract SSVBasedApps is
         if (requestTime == 0) revert IStorage.NoPendingWithdrawalETH();
         _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
 
-        uint256 amount = request.amount;
-        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
-        strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
+        uint256 shares = request.shares;
+
+        //        if (strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
+        if (strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] < shares) revert IStorage.InsufficientBalance();
+
+        uint256 totalEthBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
+        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+
+        if (totalEthBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
+
+        uint256 amount = (shares * totalEthBalance) / totalShares;
+
+        //  strategyTokenBalances[strategyId][msg.sender][ETH_ADDRESS] -= amount;
+        strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] -= shares;
+        strategyTotalShares[strategyId][ETH_ADDRESS] -= shares;
+        strategyTotalBalance[strategyId][ETH_ADDRESS] -= amount;
         delete withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
 
         payable(msg.sender).transfer(amount);
@@ -557,13 +663,9 @@ contract SSVBasedApps is
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @return slashableBalance The slashable balance
-    function getSlashableBalance(uint32 strategyId, address account, address bApp, address token)
-        public
-        view
-        returns (uint256 slashableBalance)
-    {
+    function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
         uint32 percentage = obligations[strategyId][bApp][token].percentage;
-        uint256 balance = strategyTokenBalances[strategyId][account][token];
+        uint256 balance = strategyTotalBalance[strategyId][token];
         return balance * percentage / MAX_PERCENTAGE;
     }
 
@@ -573,14 +675,11 @@ contract SSVBasedApps is
     /// @param token The address of the token
     /// @param amount The amount to slash
     /// @param data Optional parameter that could be required by the service
-    function slash(uint32 strategyId, address account, address bApp, address token, uint256 amount, bytes calldata data)
-        external
-        nonReentrant
-    {
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
         if (!registeredBApps[bApp]) revert IStorage.BAppNotRegistered();
 
-        uint256 slashableBalance = getSlashableBalance(strategyId, account, bApp, token);
+        uint256 slashableBalance = getSlashableBalance(strategyId, bApp, token);
         if (slashableBalance < amount) revert IStorage.InsufficientBalance();
 
         if (_isBApp(bApp)) {
@@ -592,7 +691,7 @@ contract SSVBasedApps is
         }
 
         // Slash the amount from the strategy
-        strategyTokenBalances[strategyId][account][token] -= amount;
+        strategyTotalBalance[strategyId][token] -= amount;
 
         emit ISSVBasedApps.StrategySlashed(strategyId, bApp, token, amount, data);
     }

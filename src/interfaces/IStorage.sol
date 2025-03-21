@@ -36,8 +36,8 @@ interface IStorage {
 
     /// @notice Represents a request for a withdrawal from a participant of a strategy
     struct WithdrawalRequest {
-        /// @dev The amount requested to withdraw
-        uint256 amount;
+        /// @dev The shares requested to withdraw
+        uint256 shares;
         /// @dev The block time when the withdrawal request was sent
         uint32 requestTime;
     }
@@ -83,6 +83,7 @@ interface IStorage {
     error ExceedingPercentageUpdate();
     error FeeAlreadySet();
     error InsufficientBalance();
+    error InsufficientLiquidity();
     error InvalidAmount();
     error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidMaxFeeIncrement();
