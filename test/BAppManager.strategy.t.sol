@@ -13,10 +13,20 @@ import {BasedAppsTest} from "@ssv/test/BApps.general.t.sol";
 import {TestUtils} from "@ssv/test/Utils.t.sol";
 
 contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest {
-    // // function checkStrategyTokenBalance(uint32 strategyId, address owner, address token, uint256 expectedBalance) internal view {
-    //     uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(strategyId, owner, token);
-    //     assertEq(strategyTokenBalance, expectedBalance, "Should match the expected strategy token balance");
-    // }
+    function checkTotalShares(uint32 strategyId, address token, uint256 expectedTotalShares, uint256 expectedTotalBalance)
+        internal
+        view
+    {
+        uint256 totalShares = proxiedManager.strategyTotalShares(strategyId, token);
+        assertEq(totalShares, expectedTotalShares, "Should match the expected total shares");
+        uint256 totalBalance = proxiedManager.strategyTotalBalance(strategyId, token);
+        assertEq(totalBalance, expectedTotalBalance, "Should match the expected total balance");
+    }
+
+    function checkAccountShares(uint32 strategyId, address owner, address token, uint256 expectedShares) internal view {
+        uint256 accountShares = proxiedManager.strategyAccountShares(strategyId, owner, token);
+        assertEq(accountShares, expectedShares, "Should match the expected account shares");
+    }
 
     function checkProposedFee(
         uint32 strategyId,
@@ -94,10 +104,15 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         assertEq(owner, USER2, "Strategy 4 owner");
         assertEq(delegationFeeOnRewards, STRATEGY4_INITIAL_FEE, "Strategy fee");
 
-        // checkStrategyTokenBalance(STRATEGY1, USER1, address(erc20mock), 0);
-        // checkStrategyTokenBalance(STRATEGY2, USER1, address(erc20mock), 0);
-        // checkStrategyTokenBalance(STRATEGY3, USER1, address(erc20mock), 0);
-        // checkStrategyTokenBalance(STRATEGY4, USER2, address(erc20mock), 0);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), 0);
+        checkAccountShares(STRATEGY2, USER1, address(erc20mock), 0);
+        checkAccountShares(STRATEGY3, USER1, address(erc20mock), 0);
+        checkAccountShares(STRATEGY4, USER2, address(erc20mock), 0);
+
+        checkTotalShares(STRATEGY1, address(erc20mock), 0, 0);
+        checkTotalShares(STRATEGY2, address(erc20mock), 0, 0);
+        checkTotalShares(STRATEGY3, address(erc20mock), 0, 0);
+        checkTotalShares(STRATEGY4, address(erc20mock), 0, 0);
 
         vm.stopPrank();
     }
@@ -117,21 +132,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidStrategyFee.selector));
         proxiedManager.createStrategy(10_001, "");
         vm.stopPrank();
-    }
-
-    function checkTotalShares(uint32 strategyId, address token, uint256 expectedTotalShares, uint256 expectedTotalBalance)
-        internal
-        view
-    {
-        uint256 totalShares = proxiedManager.strategyTotalShares(strategyId, token);
-        assertEq(totalShares, expectedTotalShares, "Should match the expected total shares");
-        uint256 totalBalance = proxiedManager.strategyTotalBalance(strategyId, token);
-        assertEq(totalBalance, expectedTotalBalance, "Should match the expected total balance");
-    }
-
-    function checkAccountShares(uint32 strategyId, address owner, address token, uint256 expectedShares) internal view {
-        uint256 accountShares = proxiedManager.strategyAccountShares(strategyId, owner, token);
-        assertEq(accountShares, expectedShares, "Should match the expected account shares");
     }
 
     function test_BellaCreateStrategyAndSingleDepositA(uint256 amount, uint256 user2Amount, uint256 attackerAmount) public {

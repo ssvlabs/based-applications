@@ -93,6 +93,7 @@ abstract contract BasedAppCore is IBasedApp {
         bytes calldata /*data*/
     ) external virtual onlySSVBasedAppManager returns (bool success) {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
+        ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         return true;
     }
 
@@ -103,6 +104,7 @@ abstract contract BasedAppCore is IBasedApp {
         returns (bool)
     {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
+        ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         return false;
     }
 
