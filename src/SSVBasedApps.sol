@@ -458,7 +458,7 @@ contract SSVBasedApps is
         strategyAccountShares[strategyId][msg.sender][address(token)] -= shares;
         strategyTotalShares[strategyId][address(token)] -= shares;
         strategyTotalBalance[strategyId][address(token)] -= amount;
-
+        
         delete withdrawalRequests[strategyId][msg.sender][address(token)];
 
         token.safeTransfer(msg.sender, amount);

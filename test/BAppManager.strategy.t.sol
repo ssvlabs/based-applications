@@ -26,6 +26,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function checkAccountShares(uint32 strategyId, address owner, address token, uint256 expectedShares) internal view {
         uint256 accountShares = proxiedManager.strategyAccountShares(strategyId, owner, token);
         assertEq(accountShares, expectedShares, "Should match the expected account shares");
+
     }
 
     function checkProposedFee(
@@ -694,6 +695,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
         checkTotalShares(STRATEGY1, ETH_ADDRESS, 1 ether, 1 ether);
+
         vm.stopPrank();
     }
 
@@ -792,6 +794,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_StrategyOwnerDepositERC20WithNoObligation(200);
         checkAccountShares(STRATEGY1, USER1, address(erc20mock2), initialBalance);
         checkTotalShares(STRATEGY1, address(erc20mock2), initialBalance, initialBalance);
+
         vm.startPrank(USER1);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock2), withdrawalAmount, true);
@@ -799,6 +802,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint256 newBalance = initialBalance - withdrawalAmount;
         checkAccountShares(STRATEGY1, USER1, address(erc20mock2), newBalance);
         checkTotalShares(STRATEGY1, address(erc20mock2), newBalance, newBalance);
+
         vm.stopPrank();
     }
 

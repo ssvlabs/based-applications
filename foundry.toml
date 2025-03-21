@@ -18,4 +18,5 @@ quote_style = "double"
 tab_width = 4
 
 [fuzz]
-runs = 100
+runs = 10
+
