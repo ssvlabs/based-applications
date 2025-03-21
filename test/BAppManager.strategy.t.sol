@@ -26,7 +26,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function checkAccountShares(uint32 strategyId, address owner, address token, uint256 expectedShares) internal view {
         uint256 accountShares = proxiedManager.strategyAccountShares(strategyId, owner, token);
         assertEq(accountShares, expectedShares, "Should match the expected account shares");
-
     }
 
     function checkProposedFee(
