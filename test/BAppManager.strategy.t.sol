@@ -189,23 +189,14 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_CreateStrategies();
         vm.startPrank(USER1);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, deposit1S1);
-        // assertEq(
-        //     proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-        //     deposit1S1,
-        //     "Strategy1 balance should be the first deposit"
-        // );
-        // proxiedManager.depositERC20(STRATEGY2, erc20mock, deposit1S2);
-        // assertEq(
-        //     proxiedManager.strategyTokenBalances(STRATEGY2, USER1, address(erc20mock)),
-        //     deposit1S2,
-        //     "Strategy2 balance should be the first deposit"
-        // );
-        // proxiedManager.depositERC20(STRATEGY1, erc20mock, deposit2S1);
-        // assertEq(
-        //     proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-        //     deposit1S1 + deposit2S1,
-        //     "Strategy1 balance should be the sum of first and second deposit"
-        // );
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), deposit1S1);
+        checkTotalShares(STRATEGY1, address(erc20mock), deposit1S1, deposit1S1);
+        proxiedManager.depositERC20(STRATEGY2, erc20mock, deposit1S2);
+        checkAccountShares(STRATEGY2, USER1, address(erc20mock), deposit1S2);
+        checkTotalShares(STRATEGY2, address(erc20mock), deposit1S2, deposit1S2);
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, deposit2S1);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), deposit1S1 + deposit2S1);
+        checkTotalShares(STRATEGY1, address(erc20mock), deposit1S1 + deposit2S1, deposit1S1 + deposit2S1);
         vm.stopPrank();
     }
 
@@ -217,19 +208,13 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyDeposit(STRATEGY1, USER1, address(erc20mock), depositAmount);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, depositAmount);
-        // assertEq(
-        //     proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-        //     100_000,
-        //     "User strategy balance should be 100_000"
-        // );
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), depositAmount);
+        checkTotalShares(STRATEGY1, address(erc20mock), depositAmount, depositAmount);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), withdrawalAmount, true);
         proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, withdrawalAmount);
-        // assertEq(
-        //     proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-        //     50_000,
-        //     "User strategy balance should be 50_000"
-        // );
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), depositAmount - withdrawalAmount);
+        checkTotalShares(STRATEGY1, address(erc20mock), depositAmount - withdrawalAmount, depositAmount - withdrawalAmount);
         vm.stopPrank();
     }
 
@@ -310,24 +295,28 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function test_CreateStrategyAndSingleDepositAndMultipleFastWithdrawals() public {
         test_CreateStrategies();
         vm.startPrank(USER1);
-        proxiedManager.depositERC20(STRATEGY1, erc20mock, 100_000);
-        // assertEq(
-        //     proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-        //     100_000,
-        //     "User strategy balance should be 100_000"
-        // );
+        uint256 depositAmount = 100_000;
+        uint256 withdrawalAmount1 = 50_000;
+        uint256 withdrawalAmount2 = 10_000;
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, depositAmount);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), depositAmount);
+        checkTotalShares(STRATEGY1, address(erc20mock), depositAmount, depositAmount);
         // There was no opt-in so the fast withdraw is allowed
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), 50_000, true);
-        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 50_000);
+        emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), withdrawalAmount1, true);
+        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, withdrawalAmount1);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), depositAmount - withdrawalAmount1);
+        checkTotalShares(STRATEGY1, address(erc20mock), depositAmount - withdrawalAmount1, depositAmount - withdrawalAmount1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), 10_000, true);
-        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 10_000);
-        // assertEq(
-        //     proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)),
-        //     40_000,
-        //     "User strategy balance should be 50_000"
-        // );
+        emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock), withdrawalAmount2, true);
+        proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, withdrawalAmount2);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), depositAmount - withdrawalAmount1 - withdrawalAmount2);
+        checkTotalShares(
+            STRATEGY1,
+            address(erc20mock),
+            depositAmount - withdrawalAmount1 - withdrawalAmount2,
+            depositAmount - withdrawalAmount1 - withdrawalAmount2
+        );
         vm.stopPrank();
     }
 
@@ -656,24 +645,26 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
         test_StrategyOptInToBApp(9000);
         vm.startPrank(USER1);
-        // uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock2));
-        // assertEq(strategyTokenBalance, 0, "User strategy balance should be 0");
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock2), 0);
+        checkTotalShares(STRATEGY1, USER1, 0, 0);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyDeposit(STRATEGY1, USER1, address(erc20mock2), amount);
         proxiedManager.depositERC20(STRATEGY1, erc20mock2, amount);
-        // strategyTokenBalance = proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock2));
-        // assertEq(strategyTokenBalance, amount, "User strategy balance not matching");
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock2), amount);
+        checkTotalShares(STRATEGY1, address(erc20mock2), amount, amount);
         vm.stopPrank();
     }
 
     function test_StrategyOwnerDepositETHWithNoObligation() public {
-        test_StrategyOptInToBApp(9000);
+        uint32 percentage = 9000;
+        uint256 amount = 1_000_000 ether;
+        test_StrategyOptInToBApp(percentage);
         vm.startPrank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategyDeposit(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
-        proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
-        // uint256 strategyTokenBalance = proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS);
-        // assertEq(strategyTokenBalance, 1 ether, "User strategy balance not matching");
+        emit ISSVBasedApps.StrategyDeposit(STRATEGY1, USER1, ETH_ADDRESS, amount);
+        proxiedManager.depositETH{value: amount}(STRATEGY1);
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, amount);
+        checkTotalShares(STRATEGY1, ETH_ADDRESS, amount, amount);
         vm.stopPrank();
     }
 
@@ -701,8 +692,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyDeposit(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
-        // uint256 strategyETHBalance = proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS);
-        // assertEq(strategyETHBalance, 1 ether, "User strategy balance not matching");
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
+        checkTotalShares(STRATEGY1, ETH_ADDRESS, 1 ether, 1 ether);
         vm.stopPrank();
     }
 
@@ -799,25 +790,31 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint256 initialBalance = 200;
         uint256 withdrawalAmount = 50;
         test_StrategyOwnerDepositERC20WithNoObligation(200);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, address(erc20mock2), initialBalance);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock2), initialBalance);
+        checkTotalShares(STRATEGY1, address(erc20mock2), initialBalance, initialBalance);
         vm.startPrank(USER1);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(erc20mock2), withdrawalAmount, true);
         proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock2, withdrawalAmount);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, address(erc20mock2), initialBalance - withdrawalAmount);
+        uint256 newBalance = initialBalance - withdrawalAmount;
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock2), newBalance);
+        checkTotalShares(STRATEGY1, address(erc20mock2), newBalance, newBalance);
         vm.stopPrank();
     }
 
     function test_WithdrawETHFromStrategy() public {
         test_StrategyOwnerDepositETHWithNoObligation();
-        uint256 initialBalance = 1 ether;
+        uint256 initialBalance = 1_000_000 ether;
         uint256 withdrawalAmount = 0.4 ether;
         vm.startPrank(USER1);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, ETH_ADDRESS, initialBalance);
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, initialBalance);
+        checkTotalShares(STRATEGY1, ETH_ADDRESS, initialBalance, initialBalance);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, ETH_ADDRESS, withdrawalAmount, true);
         proxiedManager.fastWithdrawETH(STRATEGY1, withdrawalAmount);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, ETH_ADDRESS, initialBalance - withdrawalAmount);
+        uint256 newBalance = initialBalance - withdrawalAmount;
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, newBalance);
+        checkTotalShares(STRATEGY1, ETH_ADDRESS, newBalance, newBalance);
         vm.stopPrank();
     }
 
@@ -1164,7 +1161,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         emit ISSVBasedApps.StrategyWithdrawalProposed(STRATEGY1, USER1, address(token), withdrawalAmount);
         vm.prank(USER1);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(token), withdrawalAmount);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, address(token), currentBalance);
+        checkAccountShares(STRATEGY1, USER1, address(token), currentBalance);
+        checkTotalShares(STRATEGY1, address(token), currentBalance, currentBalance);
         checkProposedWithdrawal(STRATEGY1, USER1, address(token), block.timestamp, withdrawalAmount);
     }
 
@@ -1175,7 +1173,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(token), withdrawalAmount, false);
         vm.prank(USER1);
         proxiedManager.finalizeWithdrawal(STRATEGY1, token);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, address(token), currentBalance - withdrawalAmount);
+        uint256 newBalance = currentBalance - withdrawalAmount;
+        checkAccountShares(STRATEGY1, USER1, address(token), newBalance);
+        checkTotalShares(STRATEGY1, address(token), newBalance, newBalance);
         checkProposedWithdrawal(STRATEGY1, USER1, address(token), 0, 0);
     }
 
@@ -1194,7 +1194,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         emit ISSVBasedApps.StrategyWithdrawalProposed(STRATEGY1, USER1, ETH_ADDRESS, withdrawalAmount);
         vm.prank(USER1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, withdrawalAmount);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, ETH_ADDRESS, currentBalance);
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, currentBalance);
         checkProposedWithdrawal(STRATEGY1, USER1, ETH_ADDRESS, block.timestamp, withdrawalAmount);
     }
 
@@ -1206,7 +1206,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, ETH_ADDRESS, withdrawalAmount, false);
         vm.prank(USER1);
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
-        // checkStrategyTokenBalance(STRATEGY1, USER1, ETH_ADDRESS, currentBalance - withdrawalAmount);
+        uint256 newBalance = currentBalance - withdrawalAmount;
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, newBalance);
+        checkTotalShares(STRATEGY1, ETH_ADDRESS, newBalance, newBalance);
         checkProposedWithdrawal(STRATEGY1, USER1, ETH_ADDRESS, 0, 0);
     }
 
@@ -1532,8 +1534,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 100_000);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), 200_000);
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER2, address(erc20mock)), 200_000);
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)), 100_000);
+        checkAccountShares(STRATEGY1, USER2, address(erc20mock), 200_000);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), 100_000);
+        checkTotalShares(STRATEGY1, address(erc20mock), 300_000, 300_000);
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
             createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
         vm.prank(USER1);
@@ -1551,8 +1554,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER2, address(erc20mock)), 10_000);
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER1, address(erc20mock)), 100_000);
+        checkAccountShares(STRATEGY1, USER2, address(erc20mock), 10_000);
+        checkAccountShares(STRATEGY1, USER1, address(erc20mock), 100_000);
+        checkTotalShares(STRATEGY1, address(erc20mock), 110_000, 110_000);
         vm.stopPrank();
     }
 
@@ -1564,8 +1568,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         vm.prank(USER2);
         proxiedManager.depositETH{value: 2 ether}(STRATEGY1);
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER2, ETH_ADDRESS), 2 ether);
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS), 1 ether);
+        checkAccountShares(STRATEGY1, USER2, ETH_ADDRESS, 2 ether);
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
+        checkTotalShares(STRATEGY1, ETH_ADDRESS, 3 ether, 3 ether);
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
             createSingleTokenAndSingleObligationPercentage(ETH_ADDRESS, percentage);
         vm.prank(USER1);
@@ -1583,8 +1588,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER2, ETH_ADDRESS), 0.5 ether);
-        // assertEq(proxiedManager.strategyTokenBalances(STRATEGY1, USER1, ETH_ADDRESS), 1 ether);
+        checkAccountShares(STRATEGY1, USER2, ETH_ADDRESS, 0.5 ether);
+        checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
+        checkTotalShares(STRATEGY1, ETH_ADDRESS, 1.5 ether, 1.5 ether);
         vm.stopPrank();
     }
 

@@ -56,7 +56,7 @@ contract BasedAppManagerSetupTest is Test {
     uint32 STRATEGY1_UPDATE_FEE = 10;
 
     uint256 constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
-    uint256 constant INITIAL_USER1_BALANCE_ETH = 10 ether;
+    uint256 constant INITIAL_USER1_BALANCE_ETH = 1_000_000 ether;
     uint256 constant INITIAL_USER2_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 constant INITIAL_USER2_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_RECEIVER_BALANCE_ERC20 = 1000 * 10 ** 18;

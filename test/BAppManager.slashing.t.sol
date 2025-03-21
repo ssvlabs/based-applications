@@ -45,7 +45,8 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         vm.prank(USER1);
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount; // 100,000 - 1,000 = 99,000 ERC20
-        // checkStrategyTokenBalance(STRATEGY1, USER2, token, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkSlashableBalance(STRATEGY1, USER1, token, 89_100); // 99,000 * 90% = 89,100 ERC20
     }
 
@@ -103,7 +104,6 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
     }
 
     function testRevert_SlashBAppNotRegistered() public {
-        // test_StrategyOptInToBAppEOA(2000);
         uint256 depositAmount = 100_000;
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -116,7 +116,6 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
 
     function testRevert_slashWithInsufficientBalance() public {
         uint32 percentage = 9000;
-        uint256 depositAmount = 100_000;
         address token = address(erc20mock);
         uint256 slashAmount = 1;
         test_StrategyOptInToBAppEOA(percentage);
