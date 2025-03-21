@@ -97,19 +97,21 @@ contract SSVBasedApps is
      */
     mapping(address delegator => uint32 totalPercentage) public totalDelegatedPercentage;
     /**
-     * @notice Tracks the token balances for individual strategies.
-     * @dev Tracks that how much a token account has in a specific strategy
+     * @notice Tracks the token shares for individual strategies.
+     * @dev Tracks that how much shares an account owns in a specific strategy.
      */
-    // mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) public
-    //     strategyTokenBalances;
-
     mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) public
         strategyAccountShares;
-
+    /**
+     * @notice Tracks the total balance for individual strategies.
+     * @dev Tracks that how much token balance a strategy has.
+     */
     mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalBalance;
-
+    /**
+     * @notice Tracks the total shares for individual strategies.
+     * @dev Tracks that how much share balance a strategy has.
+     */
     mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalShares;
-
     /**
      * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
