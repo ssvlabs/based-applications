@@ -331,8 +331,6 @@ contract SSVBasedApps is
         strategyTotalShares[strategyId][tokenAddress] += shares;
         strategyTotalBalance[strategyId][tokenAddress] += amount;
 
-        // strategyTokenBalances[strategyId][msg.sender][address(token)] += amount;
-
         token.safeTransferFrom(msg.sender, address(this), amount);
 
         emit StrategyDeposit(strategyId, msg.sender, address(token), amount);
@@ -348,9 +346,9 @@ contract SSVBasedApps is
         uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
 
         uint256 shares;
-        if (totalShares == 0 || totalEthBalance == 0) shares = amount; 
+        if (totalShares == 0 || totalEthBalance == 0) shares = amount;
         else shares = (amount * totalShares) / totalEthBalance;
-        
+
         if (totalShares + shares > MAX_SHARES) revert IStorage.ExceedingMaxShares();
 
         strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] += shares;
@@ -514,7 +512,7 @@ contract SSVBasedApps is
         strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] -= shares;
         strategyTotalShares[strategyId][ETH_ADDRESS] -= shares;
         strategyTotalBalance[strategyId][ETH_ADDRESS] -= amount;
-        
+
         delete withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
 
         payable(msg.sender).transfer(amount);
