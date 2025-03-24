@@ -452,6 +452,7 @@ contract SSVBasedApps is
         uint256 totalShares = strategyTotalShares[strategyId][address(token)];
 
         if (totalTokenBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
+
         uint256 amount = (shares * totalTokenBalance) / totalShares;
 
         strategyAccountShares[strategyId][msg.sender][address(token)] -= shares;

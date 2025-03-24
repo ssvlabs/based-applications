@@ -1623,9 +1623,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    // todo
-    function test_proposeUpdateAndProposeAnotherChangeToUpdate() public {}
-
     function testRevert_withdrawInsufficientLiquidity() public {
         test_CreateObligationETHWithZeroPercentage(); // Registers BApp and does the opt in
         vm.prank(USER1);
@@ -1678,4 +1675,53 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
     }
+
+    function test_FinalizeWithdrawalAfterSlashingEventSucceeds() public {
+        test_StrategyOptInToBApp(10_000);
+        vm.startPrank(USER1);
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
+        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 5000, abi.encode("0x00"));
+        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+        vm.stopPrank();
+    }
+
+    function testRevert_FinalizeWithdrawalAfterSlashingEventFailsCauseBalanceIsZero() public {
+        test_StrategyOptInToBApp(10_000);
+        vm.startPrank(USER1);
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
+        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"));
+        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientLiquidity.selector));
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+        vm.stopPrank();
+    }
+
+    function test_FinalizeWithdrawalETHAfterSlashingEventSucceeds() public {
+        test_StrategyOptInToBAppWithETH();
+        vm.startPrank(USER1);
+        proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
+        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 0.5 ether, abi.encode("0x00"));
+        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+        vm.stopPrank();
+    }
+
+    function testRevert_FinalizeWithdrawalETHAfterSlashingEventFailsCauseBalanceIsZero() public {
+        test_StrategyOptInToBAppWithETH();
+        vm.startPrank(USER1);
+        proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
+        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"));
+        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientLiquidity.selector));
+        proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+        vm.stopPrank();
+    }
+
+    // todo
+    function test_proposeUpdateAndProposeAnotherChangeToUpdate() public {}
 }
