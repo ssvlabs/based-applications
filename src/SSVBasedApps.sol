@@ -72,8 +72,7 @@ contract SSVBasedApps is
     uint32 public constant OBLIGATION_EXPIRE_TIME = 1 days;
     uint32 public constant MAX_PERCENTAGE = 1e4;
     address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
-    uint256 internal constant MAX_SHARES = 1e50;
+    uint256 public constant MAX_SHARES = 1e50;
 
     uint32 private _strategyCounter;
     uint32 public maxFeeIncrement;
@@ -534,24 +533,6 @@ contract SSVBasedApps is
         _createSingleObligation(strategyId, bApp, token, obligationPercentage);
     }
 
-    /// @notice Fast set obligation ratio higher for a bApp
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    /// @param obligationPercentage The obligation percentage
-    /// @dev The used tokens counter cannot be decreased as the fast update can only bring the percentage up
-    function fastUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage)
-        external
-        onlyStrategyOwner(strategyId)
-    {
-        if (obligationPercentage <= obligations[strategyId][bApp][token].percentage) revert IStorage.InvalidPercentage();
-
-        _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage);
-        _updateObligation(strategyId, bApp, token, obligationPercentage);
-
-        emit ObligationUpdated(strategyId, bApp, token, obligationPercentage, true);
-    }
-
     /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
@@ -671,14 +652,14 @@ contract SSVBasedApps is
         if (slashableBalance < amount) revert IStorage.InsufficientBalance();
 
         if (_isBApp(bApp)) {
-            bool success = IBasedApp(bApp).slash(strategyId, token, amount, data);
+            // (bool success, uint32 alpha, uint256 amount) = IBasedApp(bApp).slash(strategyId, token, amount, data);
+            (bool success) = IBasedApp(bApp).slash(strategyId, token, amount, data);
             if (!success) revert IStorage.BAppSlashingFailed();
         } else {
             // Only the bApp EOA or non-compliant bapp owner can slash
             if (msg.sender != bApp) revert IStorage.InvalidBAppOwner(msg.sender, bApp);
         }
 
-        // Slash the amount from the strategy
         strategyTotalBalance[strategyId][token] -= amount;
 
         emit ISSVBasedApps.StrategySlashed(strategyId, bApp, token, amount, data);

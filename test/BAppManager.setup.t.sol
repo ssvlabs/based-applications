@@ -37,9 +37,7 @@ contract BasedAppManagerSetupTest is Test {
     address OWNER = makeAddr("Owner");
     address USER1 = makeAddr("User1");
     address USER2 = makeAddr("User2");
-    address BAPP1 = makeAddr("BApp1");
-    address BAPP2 = makeAddr("BApp2");
-    address BAPP3 = makeAddr("BApp3");
+    address USER3 = makeAddr("User3");
     address NON_EXISTENT_BAPP = makeAddr("NonExistentBApp");
     address ATTACKER = makeAddr("Attacker");
     address RECEIVER = makeAddr("Receiver");
@@ -63,6 +61,8 @@ contract BasedAppManagerSetupTest is Test {
     uint256 constant INITIAL_RECEIVER_BALANCE_ETH = 10 ether;
     uint256 constant INITIAL_ATTACKER_BALANCE_ERC20 = 100_000_000 * 10 ** 18;
     uint256 constant INITIAL_ATTACKER_BALANCE_ETH = 10 ether;
+    uint256 constant INITIAL_USER3_BALANCE_ERC20 = 1e51;
+    uint256 constant INITIAL_USER3_BALANCE_ETH = 1e51;
 
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -77,9 +77,6 @@ contract BasedAppManagerSetupTest is Test {
         vm.label(ATTACKER, "Attacker");
         vm.label(RECEIVER, "Receiver");
         vm.label(RECEIVER2, "Receiver2");
-        vm.label(BAPP1, "BApp1");
-        vm.label(BAPP2, "BApp2");
-        vm.label(BAPP3, "BApp3");
 
         vm.startPrank(OWNER);
         implementation = new SSVBasedApps();
@@ -109,17 +106,22 @@ contract BasedAppManagerSetupTest is Test {
 
         vm.startPrank(OWNER);
         vm.label(address(bApp1), "BasedApp1");
+        vm.label(address(bApp2), "BasedApp2");
+        vm.label(address(bApp3), "BasedApp3");
+        vm.label(address(nonCompliantBApp), "NonCompliantBApp");
         vm.label(address(whitelistExample), "WhitelistExample");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);
         vm.deal(USER2, INITIAL_USER2_BALANCE_ETH);
+        vm.deal(USER3, INITIAL_USER3_BALANCE_ETH);
         vm.deal(RECEIVER, INITIAL_RECEIVER_BALANCE_ETH);
         vm.deal(ATTACKER, INITIAL_ATTACKER_BALANCE_ETH);
 
         erc20mock = new ERC20Mock();
         erc20mock.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
         erc20mock.transfer(USER2, INITIAL_USER2_BALANCE_ERC20);
+        erc20mock.transfer(USER3, INITIAL_USER3_BALANCE_ERC20);
         erc20mock.transfer(ATTACKER, INITIAL_ATTACKER_BALANCE_ERC20);
         erc20mock.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 

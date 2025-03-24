@@ -35,8 +35,6 @@ interface ISSVBasedApps is IBasedAppManager {
 
     function depositETH(uint32 strategyId) external payable;
 
-    function fastUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
-
     function fastWithdrawERC20(uint32 strategyId, IERC20 token, uint256 amount) external;
 
     function fastWithdrawETH(uint32 strategyId, uint256 amount) external;

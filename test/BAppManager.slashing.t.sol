@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.28;
 
-import {IStorage, IBasedAppManager, IERC20, BasedAppMock, ISSVBasedApps} from "@ssv/test/BAppManager.setup.t.sol";
+import {IStorage, IBasedAppManager, IERC20, BasedAppMock, ISSVBasedApps, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
 import {BasedAppManagerStrategyTest} from "@ssv/test/BAppManager.strategy.t.sol";
 import {TestUtils} from "@ssv/test/Utils.t.sol";
 
@@ -88,11 +88,38 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         );
     }
 
-    function test_SlashBApp() public {}
+    function test_SlashBApp(uint256 slashAmount) public {
+        uint32 percentage = 9000;
+        uint256 depositAmount = 100_000;
+        address token = address(erc20mock);
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        test_StrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, newStrategyBalance * percentage / proxiedManager.MAX_PERCENTAGE());
+    }
 
-    function test_SlashBAppButInternalSlashRevert() public {
-        // vm.expectRevert(abi.encodeWithSelector(IStorage.BAppSlashingFailed.selector));
-        // proxiedManager.slash(STRATEGY1, USER1, address(erc20mock), 1000, abi.encodePacked("0x00"));
+    function test_SlashBAppButInternalSlashRevert(uint256 slashAmount) public {
+        uint32 percentage = 9000;
+        uint256 depositAmount = 100_000;
+        address token = address(erc20mock);
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        test_StrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppSlashingFailed.selector));
+        proxiedManager.slash(STRATEGY1, address(bApp2), token, slashAmount, abi.encodePacked("0x00"));
+        checkTotalShares(STRATEGY1, token, depositAmount, depositAmount);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
     }
 
     function testRevert_SlashWithZeroAmount() public {
@@ -137,5 +164,31 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
     }
 
-    function testRevert_SlashNonCompatibleBAppWithNonOwner() public {}
+    function testRevert_SlashNonCompatibleBAppWithNonOwner() public {
+        uint32 percentage = 9000;
+        uint256 depositAmount = 100_000;
+        address token = address(erc20mock);
+        uint256 slashAmount = 2;
+        test_StrategyOptInToBAppNonCompliant(percentage);
+        vm.startPrank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidBAppOwner.selector, USER2, address(nonCompliantBApp)));
+        proxiedManager.slash(STRATEGY1, address(nonCompliantBApp), token, slashAmount, abi.encodePacked("0x00"));
+        vm.stopPrank();
+    }
+
+    function testRevert_SlashBAppWithNonOwner() public {
+        uint32 percentage = 9000;
+        uint256 depositAmount = 100_000;
+        address token = address(erc20mock);
+        uint256 slashAmount = 1000;
+        test_StrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER2);
+            vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
+            bApps[i].slash(STRATEGY1, token, slashAmount, abi.encodePacked("0x00"));
+        }
+    }
 }

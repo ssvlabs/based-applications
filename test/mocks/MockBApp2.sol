@@ -11,4 +11,15 @@ contract BasedAppMock2 is BasedAppCore {
     constructor(address _basedAppManager) BasedAppCore(_basedAppManager) {
         counter = 0;
     }
+
+    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata)
+        external
+        view
+        override
+        onlySSVBasedAppManager
+        returns (bool)
+    {
+        ///@dev return false on purpose to revert
+        return false;
+    }
 }

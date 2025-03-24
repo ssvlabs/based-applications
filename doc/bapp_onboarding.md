@@ -45,8 +45,6 @@ function optInToBApp(
 
 For example, if `tokens = [SSV]` and `obligationPercentages = [50%]`, then 50% of the strategy's `SSV` balance will be obligated to the bApp.
 
-The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation. Obligations can be increased instantly ([`fastUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F7)), but decreasing obligations requires a timelock ([`proposeUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F17) → [`finalizeUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F11)) to ensure slashable capital can’t be pulled out instantly.
-
 ### 2.2 Strategy's Funds
 
 To compose their balances, strategies:
