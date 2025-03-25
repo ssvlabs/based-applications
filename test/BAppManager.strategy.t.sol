@@ -81,7 +81,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function updateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) internal {
         proxiedManager.proposeUpdateObligation(strategyId, bApp, token, obligationPercentage);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         proxiedManager.finalizeUpdateObligation(strategyId, bApp, token);
     }
 
@@ -210,7 +210,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function testRevert_depositAmountHigherThanMaxShares() public {
         test_CreateStrategies();
-        uint256 depositAmount = proxiedManager.MAX_SHARES() + 1;
+        uint256 depositAmount = proxiedManager.__maxShares__() + 1;
         vm.prank(USER3);
         vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingMaxShares.selector));
         proxiedManager.depositERC20(STRATEGY1, erc20mock, depositAmount);
@@ -218,7 +218,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function testRevert_depositETHAmountHigherThanMaxShares() public {
         test_CreateStrategies();
-        uint256 depositAmount = proxiedManager.MAX_SHARES() + 1;
+        uint256 depositAmount = proxiedManager.__maxShares__() + 1;
         vm.prank(USER3);
         vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingMaxShares.selector));
         proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
@@ -345,7 +345,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_StrategyOptInToBApp(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_CreateStrategies();
         test_RegisterBApp();
         vm.startPrank(USER1);
@@ -373,7 +373,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_StrategyOptInToBAppWithEmitEvent(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_CreateStrategies();
         test_RegisterBApp();
         vm.startPrank(USER1);
@@ -398,7 +398,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_StrategyOptInToBAppEOA(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_CreateStrategies();
         test_RegisterBAppWithEOA();
         vm.startPrank(USER1);
@@ -418,7 +418,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_StrategyOptInToBAppNonCompliant(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_CreateStrategies();
         test_RegisterBAppFromNonBAppContract();
         vm.startPrank(USER1);
@@ -440,7 +440,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_StrategyRevertsSecondOptIn(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_StrategyOptInToBApp(percentage);
         vm.startPrank(USER2);
         address[] memory tokensInput = new address[](1);
@@ -472,7 +472,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_StrategyWithTwoTokensOptInToBAppWithFiveTokens(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_CreateStrategies();
         test_RegisterBAppWithFiveTokens();
         vm.startPrank(USER1);
@@ -518,7 +518,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function test_StrategyOptInToBAppWithMultipleTokens(uint32 percentage) public {
         test_CreateStrategies();
         test_RegisterBAppWith2Tokens();
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         vm.startPrank(USER1);
 
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
@@ -542,7 +542,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_CreateStrategies();
         test_RegisterBAppWith2Tokens();
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
-            createSingleTokenAndSingleObligationPercentage(address(erc20mock), proxiedManager.MAX_PERCENTAGE() + 1);
+            createSingleTokenAndSingleObligationPercentage(address(erc20mock), proxiedManager.__maxPercentage__() + 1);
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
@@ -577,7 +577,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_CreateStrategies();
         test_RegisterBAppWithETH();
         vm.startPrank(USER1);
-        uint32 percentage = proxiedManager.MAX_PERCENTAGE();
+        uint32 percentage = proxiedManager.__maxPercentage__();
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
             createSingleTokenAndSingleObligationPercentage(ETH_ADDRESS, percentage);
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -617,7 +617,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(erc20mock2);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
-        obligationPercentagesInput[0] = proxiedManager.MAX_PERCENTAGE(); // 100%
+        obligationPercentagesInput[0] = proxiedManager.__maxPercentage__(); // 100%
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.expectRevert(abi.encodeWithSelector(IStorage.LengthsNotMatching.selector));
             proxiedManager.optInToBApp(
@@ -647,7 +647,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function testRevert_StrategyAlreadyOptedIn(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_StrategyOptInToBApp(9000);
         vm.startPrank(USER1);
         (address owner,) = proxiedManager.strategies(STRATEGY1);
@@ -854,7 +854,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function testRevert_StrategyFeeUpdateFailsWithNonOwner(uint32 fee) public {
         test_StrategyOptInToBApp(9000);
-        vm.assume(fee > 0 && fee <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(fee > 0 && fee <= proxiedManager.__maxPercentage__());
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
         proxiedManager.proposeFeeUpdate(STRATEGY1, fee);
@@ -869,7 +869,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function testRevert_StrategyFeeUpdateFailsWithOverLimitFee(uint32 fee) public {
         test_StrategyOptInToBApp(9000);
-        vm.assume(fee > proxiedManager.MAX_PERCENTAGE());
+        vm.assume(fee > proxiedManager.__maxPercentage__());
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, fee);
@@ -878,7 +878,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevert_StrategyFeeUpdateFailsWithOverLimitIncrement(uint32 proposedFee) public {
         test_StrategyOptInToBApp(9000);
         (, uint32 fee) = proxiedManager.strategies(STRATEGY1);
-        vm.assume(proposedFee < proxiedManager.MAX_PERCENTAGE() && proposedFee > fee + proxiedManager.maxFeeIncrement());
+        vm.assume(proposedFee < proxiedManager.__maxPercentage__() && proposedFee > fee + proxiedManager.__maxFeeIncrement__());
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentageIncrement.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, proposedFee);
@@ -904,9 +904,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_StrategyFeeUpdate(uint256 timeBeforeLimit) public {
-        vm.assume(timeBeforeLimit < proxiedManager.FEE_EXPIRE_TIME());
+        vm.assume(timeBeforeLimit < proxiedManager.__feeExpireTime__());
         uint32 proposedFee = test_StrategyProposeFeeUpdate();
-        vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() + timeBeforeLimit);
+        vm.warp(block.timestamp + proxiedManager.__feeTimelockPeriod__() + timeBeforeLimit);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyFeeUpdated(STRATEGY1, USER1, proposedFee, false);
@@ -915,9 +915,9 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function testRevert_StrategyFeeUpdateTooLate(uint256 timeAfterLimit) public {
-        vm.assume(timeAfterLimit > proxiedManager.FEE_EXPIRE_TIME() && timeAfterLimit < 100 * 365 days);
+        vm.assume(timeAfterLimit > proxiedManager.__feeExpireTime__() && timeAfterLimit < 100 * 365 days);
         test_StrategyProposeFeeUpdate();
-        vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() + timeAfterLimit);
+        vm.warp(block.timestamp + proxiedManager.__feeTimelockPeriod__() + timeAfterLimit);
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.RequestTimeExpired.selector));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
@@ -925,7 +925,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function testRevert_StrategyFeeUpdateTooEarly() public {
         test_StrategyProposeFeeUpdate();
-        vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD() - 1 seconds);
+        vm.warp(block.timestamp + proxiedManager.__feeTimelockPeriod__() - 1 seconds);
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
@@ -968,7 +968,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function testRevert_FinalizeFeeUpdateWithWrongOwner() public {
         test_StrategyProposeFeeUpdate();
-        vm.warp(block.timestamp + proxiedManager.FEE_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__feeTimelockPeriod__());
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
@@ -978,8 +978,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         public
     {
         vm.assume(
-            initialObligationPercentage > 0 && initialObligationPercentage <= proxiedManager.MAX_PERCENTAGE()
-                && proposedObligationPercentage >= 0 && proposedObligationPercentage <= proxiedManager.MAX_PERCENTAGE()
+            initialObligationPercentage > 0 && initialObligationPercentage <= proxiedManager.__maxPercentage__()
+                && proposedObligationPercentage >= 0 && proposedObligationPercentage <= proxiedManager.__maxPercentage__()
                 && proposedObligationPercentage != initialObligationPercentage
         );
 
@@ -1008,7 +1008,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
         test_proposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, true, true);
@@ -1024,7 +1024,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
         test_proposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD() + proxiedManager.OBLIGATION_EXPIRE_TIME());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__() + proxiedManager.__obligationExpireTime__());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, true, true);
@@ -1045,7 +1045,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint32 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
         assertEq(usedTokens, bApps.length, "Used tokens");
 
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD() + proxiedManager.OBLIGATION_EXPIRE_TIME());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__() + proxiedManager.__obligationExpireTime__());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.expectEmit(true, true, true, true);
             emit ISSVBasedApps.ObligationUpdated(
@@ -1063,8 +1063,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
         test_proposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
-        vm.assume(timeAfterLimit > proxiedManager.OBLIGATION_EXPIRE_TIME() && timeAfterLimit < 100 * 365 days);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD() + timeAfterLimit);
+        vm.assume(timeAfterLimit > proxiedManager.__obligationExpireTime__() && timeAfterLimit < 100 * 365 days);
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__() + timeAfterLimit);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectRevert(abi.encodeWithSelector(IStorage.RequestTimeExpired.selector));
@@ -1076,8 +1076,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
         test_proposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
-        vm.assume(timeToLimit > 0 && timeToLimit < proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD() - timeToLimit);
+        vm.assume(timeToLimit > 0 && timeToLimit < proxiedManager.__obligationTimelockPeriod__());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__() - timeToLimit);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
@@ -1089,7 +1089,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
         test_proposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(ATTACKER);
             vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
@@ -1127,7 +1127,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function test_FinalizeWithdrawFromStrategy() public {
         (uint256 withdrawalAmount, IERC20 token, uint256 currentBalance) = test_ProposeWithdrawalFromStrategy();
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, address(token), withdrawalAmount, false);
         vm.prank(USER1);
@@ -1160,7 +1160,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function test_AsyncWithdrawETHFromStrategy(uint256 withdrawalAmount) public {
         vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
         uint256 currentBalance = test_ProposeWithdrawalETHFromStrategy(withdrawalAmount);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyWithdrawal(STRATEGY1, USER1, ETH_ADDRESS, withdrawalAmount, false);
         vm.prank(USER1);
@@ -1188,7 +1188,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevert_AsyncFailedWithdrawETHFromStrategyTooEarly(uint256 withdrawalAmount) public {
         vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
         test_ProposeWithdrawalETHFromStrategy(withdrawalAmount);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() - 1 seconds);
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__() - 1 seconds);
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
@@ -1198,7 +1198,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
         test_ProposeWithdrawalETHFromStrategy(withdrawalAmount);
         vm.warp(
-            block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() + proxiedManager.WITHDRAWAL_EXPIRE_TIME() + 1 seconds
+            block.timestamp + proxiedManager.__withdrawalTimelockPeriod__() + proxiedManager.__withdrawalExpireTime__()
+                + 1 seconds
         );
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.RequestTimeExpired.selector));
@@ -1215,7 +1216,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
     function testRevert_AsyncFailedWithdrawFromStrategyTooEarly() public {
         test_ProposeWithdrawalFromStrategy();
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() - 1 seconds);
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__() - 1 seconds);
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
@@ -1224,7 +1225,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevert_AsyncFailedWithdrawFromStrategyTooLate() public {
         test_ProposeWithdrawalFromStrategy();
         vm.warp(
-            block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD() + proxiedManager.WITHDRAWAL_EXPIRE_TIME() + 1 seconds
+            block.timestamp + proxiedManager.__withdrawalTimelockPeriod__() + proxiedManager.__withdrawalExpireTime__()
+                + 1 seconds
         );
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.RequestTimeExpired.selector));
@@ -1232,7 +1234,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     function test_CreateObligationETH(uint32 percentage) public {
-        vm.assume(percentage > 0 && percentage <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage > 0 && percentage <= proxiedManager.__maxPercentage__());
         test_CreateStrategies();
         test_RegisterBAppWithETHAndErc20();
         vm.startPrank(USER1);
@@ -1247,10 +1249,10 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
             checkObligationInfo(STRATEGY1, address(bApps[i]), address(erc20mock), percentage, uint32(i) + 1, true, proxiedManager);
 
             vm.expectEmit(true, true, true, true);
-            emit ISSVBasedApps.ObligationCreated(STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.MAX_PERCENTAGE());
-            proxiedManager.createObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.MAX_PERCENTAGE());
+            emit ISSVBasedApps.ObligationCreated(STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.__maxPercentage__());
+            proxiedManager.createObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.__maxPercentage__());
             checkObligationInfo(
-                STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.MAX_PERCENTAGE(), uint32(i) + 1, true, proxiedManager
+                STRATEGY1, address(bApps[i]), ETH_ADDRESS, proxiedManager.__maxPercentage__(), uint32(i) + 1, true, proxiedManager
             );
         }
         vm.stopPrank();
@@ -1284,7 +1286,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
             proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000);
-            vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+            vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS);
             checkObligationInfo(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000, uint32(i) + 1, true, proxiedManager);
         }
@@ -1350,7 +1352,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
 
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 0);
         checkProposedObligation(STRATEGY1, address(bApp1), TOKEN, 9700, 0, block.timestamp, true);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), TOKEN);
         checkProposedObligation(STRATEGY1, address(bApp1), TOKEN, 0, 0, 0, true);
         checkObligationInfo(STRATEGY1, address(bApp1), TOKEN, 0, uint32(bApps.length) - 1, true, proxiedManager);
@@ -1384,7 +1386,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
         usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
         assertEq(usedTokens, 2, "Used tokens");
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
         usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
         assertEq(usedTokens, 1, "Used tokens");
@@ -1393,7 +1395,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), address(erc20mock), 0);
         usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
         assertEq(usedTokens, 1, "Used tokens");
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), address(erc20mock));
         usedTokens = proxiedManager.usedTokens(strategyId, address(erc20mock));
         assertEq(usedTokens, 0, "Used tokens");
@@ -1431,7 +1433,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS, 0);
         checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, percentage, 2, true, proxiedManager);
 
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
 
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS);
         checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, 0, 1, true, proxiedManager);
@@ -1442,7 +1444,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS, 0);
         checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, percentage, 1, true, proxiedManager);
 
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
 
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), ETH_ADDRESS);
         checkObligationInfo(STRATEGY1, address(bApp1), ETH_ADDRESS, 0, 0, true, proxiedManager);
@@ -1492,7 +1494,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 80_000);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
         checkAccountShares(STRATEGY1, USER2, address(erc20mock), 10_000);
         checkAccountShares(STRATEGY1, USER1, address(erc20mock), 100_000);
@@ -1527,7 +1529,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 10 ** 18);
         vm.expectRevert(abi.encodeWithSelector(IStorage.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         checkAccountShares(STRATEGY1, USER2, ETH_ADDRESS, 0.5 ether);
         checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
@@ -1556,7 +1558,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
         uint32 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
         assertEq(usedTokens, bApps.length, "Used tokens");
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
         usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
         assertEq(usedTokens, bApps.length - 1, "Used tokens");
@@ -1581,12 +1583,12 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock), 0);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), address(erc20mock));
         checkObligationInfo(STRATEGY1, address(bApp2), address(erc20mock), 0, 0, true, proxiedManager);
         vm.startPrank(ATTACKER);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 100_000);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         proxiedManager.fastWithdrawERC20(STRATEGY1, IERC20(erc20mock), 200_000);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
@@ -1611,12 +1613,12 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
         vm.startPrank(USER1);
         proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS, 0);
-        vm.warp(block.timestamp + proxiedManager.OBLIGATION_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__());
         proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp2), ETH_ADDRESS);
         checkObligationInfo(STRATEGY1, address(bApp2), ETH_ADDRESS, 0, 0, true, proxiedManager);
         vm.startPrank(ATTACKER);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         proxiedManager.fastWithdrawETH(STRATEGY1, 2 ether);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
@@ -1658,7 +1660,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
         proxiedManager.fastWithdrawERC20(STRATEGY1, erc20mock, 10_000);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
@@ -1670,7 +1672,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
         proxiedManager.fastWithdrawETH(STRATEGY1, 1 ether);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
@@ -1682,7 +1684,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
         proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 5000, abi.encode("0x00"), USER1);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
     }
@@ -1693,7 +1695,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
         proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"), USER1);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientLiquidity.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
@@ -1705,7 +1707,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
         proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 0.5 ether, abi.encode("0x00"), USER1);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
     }
@@ -1716,7 +1718,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
         proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"), USER1);
-        vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
+        vm.warp(block.timestamp + proxiedManager.__withdrawalTimelockPeriod__());
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientLiquidity.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();

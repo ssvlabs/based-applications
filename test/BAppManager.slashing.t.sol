@@ -36,7 +36,9 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         vm.prank(USER1);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
-        checkSlashableBalance(STRATEGY1, USER1, address(erc20mock), depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        checkSlashableBalance(
+            STRATEGY1, USER1, address(erc20mock), depositAmount * percentage / proxiedManager.__maxPercentage__()
+        );
     }
 
     function test_slashEOABasic() public {
@@ -60,7 +62,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
         test_StrategyOptInToBAppEOA(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -71,7 +73,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.MAX_PERCENTAGE());
+        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.__maxPercentage__());
         checkSlashingFund(USER2, token, slashAmount);
     }
 
@@ -79,7 +81,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
         test_StrategyOptInToBAppNonCompliant(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -91,7 +93,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
         checkSlashableBalance(
-            STRATEGY1, address(nonCompliantBApp), token, newStrategyBalance * percentage / proxiedManager.MAX_PERCENTAGE()
+            STRATEGY1, address(nonCompliantBApp), token, newStrategyBalance * percentage / proxiedManager.__maxPercentage__()
         );
         checkSlashingFund(address(nonCompliantBApp), token, slashAmount);
     }
@@ -100,7 +102,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
         test_StrategyOptInToBApp(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -111,7 +113,9 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(bApp1), token, newStrategyBalance * percentage / proxiedManager.MAX_PERCENTAGE());
+        checkSlashableBalance(
+            STRATEGY1, address(bApp1), token, newStrategyBalance * percentage / proxiedManager.__maxPercentage__()
+        );
         checkSlashingFund(USER1, token, slashAmount);
     }
 
@@ -119,7 +123,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
         test_StrategyOptInToBApp(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -128,7 +132,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.slash(STRATEGY1, address(bApp2), token, slashAmount, abi.encodePacked("0x00"), USER1);
         checkTotalShares(STRATEGY1, token, depositAmount, depositAmount);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(bApp1), token, depositAmount * percentage / proxiedManager.MAX_PERCENTAGE());
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, depositAmount * percentage / proxiedManager.__maxPercentage__());
         checkSlashingFund(USER1, token, 0);
     }
 

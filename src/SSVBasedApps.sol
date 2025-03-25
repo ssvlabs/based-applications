@@ -11,6 +11,7 @@ import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
 import {BasedAppManagement} from "src/BasedAppManagement.sol";
+import {SSVBasedAppStorage} from "src/SSVBasedAppStorage.sol";
 
 /**
  * @title SSVBasedApps
@@ -60,96 +61,9 @@ contract SSVBasedApps is
     UUPSUpgradeable,
     ReentrancyGuardTransient,
     BasedAppManagement,
-    ISSVBasedApps
+    SSVBasedAppStorage
 {
     using SafeERC20 for IERC20;
-
-    uint32 public constant FEE_TIMELOCK_PERIOD = 7 days;
-    uint32 public constant FEE_EXPIRE_TIME = 1 days;
-    uint32 public constant WITHDRAWAL_TIMELOCK_PERIOD = 5 days;
-    uint32 public constant WITHDRAWAL_EXPIRE_TIME = 1 days;
-    uint32 public constant OBLIGATION_TIMELOCK_PERIOD = 7 days;
-    uint32 public constant OBLIGATION_EXPIRE_TIME = 1 days;
-    uint32 public constant MAX_PERCENTAGE = 1e4;
-    address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint256 public constant MAX_SHARES = 1e50;
-
-    uint32 private _strategyCounter;
-    uint32 public maxFeeIncrement;
-
-    /**
-     * @notice Tracks the strategies created
-     * @dev The strategy ID is incremental and unique
-     */
-    mapping(uint32 strategyId => IStorage.Strategy) public strategies;
-    /**
-     * @notice Links an account to a single strategy for a specific bApp
-     * @dev Guarantees that an account cannot have more than one strategy for a given bApp
-     */
-    mapping(address account => mapping(address bApp => uint32 strategyId)) public accountBAppStrategy;
-    /**
-     * @notice Tracks the percentage of validator balance a delegator has delegated to a specific receiver account
-     * @dev Each delegator can allocate a portion of their validator balance to multiple accounts including itself
-     */
-    mapping(address delegator => mapping(address account => uint32 percentage)) public delegations;
-    /**
-     * @notice Tracks the total percentage of validator balance a delegator has delegated across all receiver accounts
-     * @dev Ensures that a delegator cannot delegate more than 100% of their validator balance
-     */
-    mapping(address delegator => uint32 totalPercentage) public totalDelegatedPercentage;
-    /**
-     * @notice Tracks the token shares for individual strategies.
-     * @dev Tracks that how much shares an account owns in a specific strategy.
-     */
-    mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) public
-        strategyAccountShares;
-    /**
-     * @notice Tracks the total balance for individual strategies.
-     * @dev Tracks that how much token balance a strategy has.
-     */
-    mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalBalance;
-    /**
-     * @notice Tracks the total shares for individual strategies.
-     * @dev Tracks that how much share balance a strategy has.
-     */
-    mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalShares;
-    /**
-     * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
-     * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
-     */
-    mapping(uint32 strategyId => mapping(address bApp => mapping(address token => IStorage.Obligation))) public obligations;
-    /**
-     * @notice Tracks unallocated tokens in a strategy.
-     * @dev Count the number of bApps that have one obligation set for the token.
-     * If the counter is 0, the token is unused and we can allow fast withdrawal.
-     */
-    mapping(uint32 strategyId => mapping(address token => uint32 bAppsCounter)) public usedTokens;
-    /**
-     * @notice Tracks all the withdrawal requests divided by token per strategy.
-     * @dev User can have only one pending withdrawal request per token.
-     *  Submitting a new request will overwrite the previous one and reset the timer.
-     */
-    mapping(uint32 strategyId => mapping(address account => mapping(address token => IStorage.WithdrawalRequest))) public
-        withdrawalRequests;
-    /**
-     * @notice Tracks all the obligation change requests divided by token per strategy.
-     * @dev Strategy can have only one pending obligation change request per token.
-     * Only the strategy owner can submit one.
-     * Submitting a new request will overwrite the previous one and reset the timer.
-     */
-    mapping(uint32 strategyId => mapping(address token => mapping(address bApp => IStorage.ObligationRequest))) public
-        obligationRequests;
-    /**
-     * @notice Tracks the fee update requests for a strategy
-     * @dev Only the strategy owner can submit one.
-     * Submitting a new request will overwrite the previous one and reset the timer.
-     */
-    mapping(uint32 strategyId => IStorage.FeeUpdateRequest) public feeUpdateRequests;
-    /**
-     * @notice Tracks the slashing fund for a specific token
-     * @dev The slashing fund is used to store the tokens that are slashed from the strategies
-     */
-    mapping(address owner => mapping(address token => uint256 amount)) public slashingFund;
 
     /// @notice Prevents the initialization of the implementation contract itself during deployment
     constructor() {
@@ -158,16 +72,26 @@ contract SSVBasedApps is
 
     /// @notice Initialize the contract
     /// @param owner The owner of the contract
-    /// @param _maxFeeIncrement The maximum fee increment
-    function initialize(address owner, uint32 _maxFeeIncrement) public initializer {
-        if (_maxFeeIncrement == 0 || _maxFeeIncrement > MAX_PERCENTAGE) revert IStorage.InvalidMaxFeeIncrement();
+    /// @param maxFeeIncrement The maximum fee increment
+    function initialize(address owner, uint32 maxFeeIncrement) public initializer {
+        if (maxFeeIncrement == 0 || maxFeeIncrement > 1e4) revert IStorage.InvalidMaxFeeIncrement();
 
         __Ownable_init(owner);
         __UUPSUpgradeable_init();
 
-        maxFeeIncrement = _maxFeeIncrement;
+        __feeTimelockPeriod__ = 7 days;
+        __feeExpireTime__ = 1 days;
+        __withdrawalTimelockPeriod__ = 5 days;
+        __withdrawalExpireTime__ = 1 days;
+        __obligationTimelockPeriod__ = 7 days;
+        __obligationExpireTime__ = 1 days;
+        __maxPercentage__ = 1e4;
+        __ethAddress__ = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        __maxShares__ = 1e50;
 
-        emit MaxFeeIncrementSet(_maxFeeIncrement);
+        __maxFeeIncrement__ = maxFeeIncrement;
+
+        emit MaxFeeIncrementSet(__maxFeeIncrement__);
     }
 
     /// @notice Allow the function to be called only by the strategy owner
@@ -202,12 +126,12 @@ contract SSVBasedApps is
     /// @param percentage The percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function delegateBalance(address account, uint32 percentage) external {
-        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
+        if (percentage == 0 || percentage > __maxPercentage__) revert IStorage.InvalidPercentage();
         if (delegations[msg.sender][account] != 0) revert IStorage.DelegationAlreadyExists();
 
         unchecked {
             uint32 newTotal = totalDelegatedPercentage[msg.sender] + percentage;
-            if (newTotal > MAX_PERCENTAGE) {
+            if (newTotal > __maxPercentage__) {
                 revert IStorage.ExceedingPercentageUpdate();
             }
             totalDelegatedPercentage[msg.sender] = newTotal;
@@ -222,7 +146,7 @@ contract SSVBasedApps is
     /// @param percentage The updated percentage of the account's balance to delegate
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function updateDelegatedBalance(address account, uint32 percentage) external {
-        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
+        if (percentage == 0 || percentage > __maxPercentage__) revert IStorage.InvalidPercentage();
 
         uint32 existingPercentage = delegations[msg.sender][account];
         if (existingPercentage == 0) revert IStorage.DelegationDoesNotExist();
@@ -230,7 +154,7 @@ contract SSVBasedApps is
 
         unchecked {
             uint32 newTotalPercentage = totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
-            if (newTotalPercentage > MAX_PERCENTAGE) revert IStorage.ExceedingPercentageUpdate();
+            if (newTotalPercentage > __maxPercentage__) revert IStorage.ExceedingPercentageUpdate();
             totalDelegatedPercentage[msg.sender] = newTotalPercentage;
         }
 
@@ -262,7 +186,7 @@ contract SSVBasedApps is
     /// @param metadataURI The metadata URI of the strategy
     /// @return strategyId The ID of the new Strategy
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
-        if (fee > MAX_PERCENTAGE) revert IStorage.InvalidStrategyFee();
+        if (fee > __maxPercentage__) revert IStorage.InvalidStrategyFee();
 
         unchecked {
             strategyId = ++_strategyCounter;
@@ -329,7 +253,7 @@ contract SSVBasedApps is
         if (totalShares == 0 || totalTokenBalance == 0) shares = amount;
         else shares = (amount * totalShares) / totalTokenBalance;
 
-        if (totalShares + shares > MAX_SHARES) revert IStorage.ExceedingMaxShares();
+        if (totalShares + shares > __maxShares__) revert IStorage.ExceedingMaxShares();
 
         strategyAccountShares[strategyId][msg.sender][tokenAddress] += shares;
         strategyTotalShares[strategyId][tokenAddress] += shares;
@@ -346,20 +270,20 @@ contract SSVBasedApps is
         if (msg.value == 0) revert IStorage.InvalidAmount();
 
         uint256 amount = msg.value;
-        uint256 totalEthBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
-        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+        uint256 totalEthBalance = strategyTotalBalance[strategyId][__ethAddress__];
+        uint256 totalShares = strategyTotalShares[strategyId][__ethAddress__];
 
         uint256 shares;
         if (totalShares == 0 || totalEthBalance == 0) shares = amount;
         else shares = (amount * totalShares) / totalEthBalance;
 
-        if (totalShares + shares > MAX_SHARES) revert IStorage.ExceedingMaxShares();
+        if (totalShares + shares > __maxShares__) revert IStorage.ExceedingMaxShares();
 
-        strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] += shares;
-        strategyTotalShares[strategyId][ETH_ADDRESS] += shares;
-        strategyTotalBalance[strategyId][ETH_ADDRESS] += amount;
+        strategyAccountShares[strategyId][msg.sender][__ethAddress__] += shares;
+        strategyTotalShares[strategyId][__ethAddress__] += shares;
+        strategyTotalBalance[strategyId][__ethAddress__] += amount;
 
-        emit StrategyDeposit(strategyId, msg.sender, ETH_ADDRESS, msg.value);
+        emit StrategyDeposit(strategyId, msg.sender, __ethAddress__, msg.value);
     }
 
     /// @notice Withdraw ERC20 tokens from the strategy
@@ -368,7 +292,7 @@ contract SSVBasedApps is
     /// @param amount The amount to withdraw
     function fastWithdrawERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (address(token) == ETH_ADDRESS) revert IStorage.InvalidToken();
+        if (address(token) == __ethAddress__) revert IStorage.InvalidToken();
         if (usedTokens[strategyId][address(token)] != 0) revert IStorage.TokenIsUsedByTheBApp();
 
         uint256 totalTokenBalance = strategyTotalBalance[strategyId][address(token)];
@@ -395,25 +319,25 @@ contract SSVBasedApps is
     /// @param amount The amount to withdraw
     function fastWithdrawETH(uint32 strategyId, uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (usedTokens[strategyId][ETH_ADDRESS] != 0) revert IStorage.TokenIsUsedByTheBApp();
+        if (usedTokens[strategyId][__ethAddress__] != 0) revert IStorage.TokenIsUsedByTheBApp();
 
-        uint256 totalETHBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
-        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+        uint256 totalETHBalance = strategyTotalBalance[strategyId][__ethAddress__];
+        uint256 totalShares = strategyTotalShares[strategyId][__ethAddress__];
 
         if (totalETHBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
 
         uint256 shares = (amount * totalShares) / totalETHBalance;
 
-        if (strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] < shares) revert IStorage.InsufficientBalance();
+        if (strategyAccountShares[strategyId][msg.sender][__ethAddress__] < shares) revert IStorage.InsufficientBalance();
 
         // Deduct shares instead of raw ETH balance
-        strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] -= shares;
-        strategyTotalShares[strategyId][ETH_ADDRESS] -= shares;
-        strategyTotalBalance[strategyId][ETH_ADDRESS] -= amount;
+        strategyAccountShares[strategyId][msg.sender][__ethAddress__] -= shares;
+        strategyTotalShares[strategyId][__ethAddress__] -= shares;
+        strategyTotalBalance[strategyId][__ethAddress__] -= amount;
 
         payable(msg.sender).transfer(amount);
 
-        emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount, true);
+        emit StrategyWithdrawal(strategyId, msg.sender, __ethAddress__, amount, true);
     }
 
     /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
@@ -422,7 +346,7 @@ contract SSVBasedApps is
     /// @param amount The amount to withdraw.
     function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (token == ETH_ADDRESS) revert IStorage.InvalidToken();
+        if (token == __ethAddress__) revert IStorage.InvalidToken();
 
         uint256 totalTokenBalance = strategyTotalBalance[strategyId][token];
         uint256 totalShares = strategyTotalShares[strategyId][token];
@@ -447,7 +371,7 @@ contract SSVBasedApps is
         uint256 requestTime = request.requestTime;
 
         if (requestTime == 0) revert IStorage.NoPendingWithdrawal();
-        _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
+        _checkTimelocks(requestTime, __withdrawalTimelockPeriod__, __withdrawalExpireTime__);
 
         uint256 shares = request.shares;
 
@@ -477,52 +401,52 @@ contract SSVBasedApps is
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
         if (amount == 0) revert IStorage.InvalidAmount();
 
-        uint256 totalETHBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
-        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+        uint256 totalETHBalance = strategyTotalBalance[strategyId][__ethAddress__];
+        uint256 totalShares = strategyTotalShares[strategyId][__ethAddress__];
 
         if (totalETHBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
 
         uint256 shares = (amount * totalShares) / totalETHBalance;
 
-        if (strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] < shares) revert IStorage.InsufficientBalance();
+        if (strategyAccountShares[strategyId][msg.sender][__ethAddress__] < shares) revert IStorage.InsufficientBalance();
 
-        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][__ethAddress__];
 
         request.shares = shares;
         request.requestTime = uint32(block.timestamp);
 
-        emit StrategyWithdrawalProposed(strategyId, msg.sender, ETH_ADDRESS, amount);
+        emit StrategyWithdrawalProposed(strategyId, msg.sender, __ethAddress__, amount);
     }
 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(uint32 strategyId) external nonReentrant {
-        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+        IStorage.WithdrawalRequest storage request = withdrawalRequests[strategyId][msg.sender][__ethAddress__];
         uint256 requestTime = request.requestTime;
 
         if (requestTime == 0) revert IStorage.NoPendingWithdrawalETH();
-        _checkTimelocks(requestTime, WITHDRAWAL_TIMELOCK_PERIOD, WITHDRAWAL_EXPIRE_TIME);
+        _checkTimelocks(requestTime, __withdrawalTimelockPeriod__, __withdrawalExpireTime__);
 
         uint256 shares = request.shares;
 
-        if (strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] < shares) revert IStorage.InsufficientBalance();
+        if (strategyAccountShares[strategyId][msg.sender][__ethAddress__] < shares) revert IStorage.InsufficientBalance();
 
-        uint256 totalEthBalance = strategyTotalBalance[strategyId][ETH_ADDRESS];
-        uint256 totalShares = strategyTotalShares[strategyId][ETH_ADDRESS];
+        uint256 totalEthBalance = strategyTotalBalance[strategyId][__ethAddress__];
+        uint256 totalShares = strategyTotalShares[strategyId][__ethAddress__];
 
         if (totalEthBalance == 0 || totalShares == 0) revert IStorage.InsufficientLiquidity();
 
         uint256 amount = (shares * totalEthBalance) / totalShares;
 
-        strategyAccountShares[strategyId][msg.sender][ETH_ADDRESS] -= shares;
-        strategyTotalShares[strategyId][ETH_ADDRESS] -= shares;
-        strategyTotalBalance[strategyId][ETH_ADDRESS] -= amount;
+        strategyAccountShares[strategyId][msg.sender][__ethAddress__] -= shares;
+        strategyTotalShares[strategyId][__ethAddress__] -= shares;
+        strategyTotalBalance[strategyId][__ethAddress__] -= amount;
 
-        delete withdrawalRequests[strategyId][msg.sender][ETH_ADDRESS];
+        delete withdrawalRequests[strategyId][msg.sender][__ethAddress__];
 
         payable(msg.sender).transfer(amount);
 
-        emit StrategyWithdrawal(strategyId, msg.sender, ETH_ADDRESS, amount, false);
+        emit StrategyWithdrawal(strategyId, msg.sender, __ethAddress__, amount, false);
     }
 
     /// @notice Add a new obligation for a bApp
@@ -567,7 +491,7 @@ contract SSVBasedApps is
         uint32 percentage = request.percentage;
 
         if (requestTime == 0) revert IStorage.NoPendingObligationUpdate();
-        _checkTimelocks(requestTime, OBLIGATION_TIMELOCK_PERIOD, OBLIGATION_EXPIRE_TIME);
+        _checkTimelocks(requestTime, __obligationTimelockPeriod__, __obligationExpireTime__);
 
         if (percentage == 0 && obligations[strategyId][bApp][address(token)].percentage > 0) {
             usedTokens[strategyId][address(token)] -= 1;
@@ -595,13 +519,13 @@ contract SSVBasedApps is
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
     function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
-        if (proposedFee > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
+        if (proposedFee > __maxPercentage__) revert IStorage.InvalidPercentage();
 
         IStorage.Strategy storage strategy = strategies[strategyId];
         uint32 fee = strategy.fee;
 
         if (proposedFee == fee) revert IStorage.FeeAlreadySet();
-        if (proposedFee > fee + maxFeeIncrement) revert IStorage.InvalidPercentageIncrement();
+        if (proposedFee > fee + __maxFeeIncrement__) revert IStorage.InvalidPercentageIncrement();
 
         IStorage.FeeUpdateRequest storage request = feeUpdateRequests[strategyId];
 
@@ -620,7 +544,7 @@ contract SSVBasedApps is
         uint256 feeRequestTime = request.requestTime;
 
         if (feeRequestTime == 0) revert IStorage.NoPendingFeeUpdate();
-        _checkTimelocks(feeRequestTime, FEE_TIMELOCK_PERIOD, FEE_EXPIRE_TIME);
+        _checkTimelocks(feeRequestTime, __feeTimelockPeriod__, __feeExpireTime__);
 
         strategy.fee = request.percentage;
         delete request.percentage;
@@ -641,7 +565,7 @@ contract SSVBasedApps is
     function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
         uint32 percentage = obligations[strategyId][bApp][token].percentage;
         uint256 balance = strategyTotalBalance[strategyId][token];
-        return balance * percentage / MAX_PERCENTAGE;
+        return balance * percentage / __maxPercentage__;
     }
 
     /// @notice Slash a strategy
@@ -681,7 +605,7 @@ contract SSVBasedApps is
     function withdrawSlashingFund(address token, uint256 amount) external {
         if (amount == 0) revert IStorage.InvalidAmount();
         if (slashingFund[msg.sender][token] < amount) revert IStorage.InsufficientBalance();
-        if (token == ETH_ADDRESS) revert IStorage.InvalidToken();
+        if (token == __ethAddress__) revert IStorage.InvalidToken();
 
         slashingFund[msg.sender][token] -= amount;
         IERC20(token).safeTransfer(msg.sender, amount);
@@ -693,12 +617,12 @@ contract SSVBasedApps is
     /// @param amount The amount to withdraw
     function withdrawETHSlashingFund(uint256 amount) external {
         if (amount == 0) revert IStorage.InvalidAmount();
-        if (slashingFund[msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
+        if (slashingFund[msg.sender][__ethAddress__] < amount) revert IStorage.InsufficientBalance();
 
-        slashingFund[msg.sender][ETH_ADDRESS] -= amount;
+        slashingFund[msg.sender][__ethAddress__] -= amount;
         payable(msg.sender).transfer(amount);
 
-        emit ISSVBasedApps.SlashingFundWithdrawn(ETH_ADDRESS, amount);
+        emit ISSVBasedApps.SlashingFundWithdrawn(__ethAddress__, amount);
     }
 
     // **********************
@@ -732,7 +656,7 @@ contract SSVBasedApps is
     /// @param obligationPercentage The obligation percentage
     function _createSingleObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
         if (!bAppTokens[bApp][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
-        if (obligationPercentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
+        if (obligationPercentage > __maxPercentage__) revert IStorage.InvalidPercentage();
         if (obligations[strategyId][bApp][token].isSet) revert IStorage.ObligationAlreadySet();
 
         if (obligationPercentage != 0) {
@@ -755,7 +679,7 @@ contract SSVBasedApps is
         view
     {
         if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert IStorage.BAppNotOptedIn();
-        if (obligationPercentage > MAX_PERCENTAGE) revert IStorage.InvalidPercentage();
+        if (obligationPercentage > __maxPercentage__) revert IStorage.InvalidPercentage();
         if (obligationPercentage == obligations[strategyId][bApp][token].percentage) {
             revert IStorage.ObligationAlreadySet();
         }
@@ -771,5 +695,48 @@ contract SSVBasedApps is
             usedTokens[strategyId][token] += 1;
         }
         obligations[strategyId][bApp][token].percentage = obligationPercentage;
+    }
+
+    // *****************************************
+    // ** Section: Setters **
+    // *****************************************
+    function setFeeTimelockPeriod(uint32 value) external onlyOwner {
+        __feeTimelockPeriod__ = value;
+    }
+
+    function setFeeExpireTime(uint32 value) external onlyOwner {
+        __feeExpireTime__ = value;
+    }
+
+    function setWithdrawalTimelockPeriod(uint32 value) external onlyOwner {
+        __withdrawalTimelockPeriod__ = value;
+    }
+
+    function setWithdrawalExpireTime(uint32 value) external onlyOwner {
+        __withdrawalExpireTime__ = value;
+    }
+
+    function setObligationTimelockPeriod(uint32 value) external onlyOwner {
+        __obligationTimelockPeriod__ = value;
+    }
+
+    function setObligationExpireTime(uint32 value) external onlyOwner {
+        __obligationExpireTime__ = value;
+    }
+
+    function setMaxPercentage(uint32 value) external onlyOwner {
+        __maxPercentage__ = value;
+    }
+
+    function setEthAddress(address value) external onlyOwner {
+        __ethAddress__ = value;
+    }
+
+    function setMaxShares(uint256 value) external onlyOwner {
+        __maxShares__ = value;
+    }
+
+    function setMaxFeeIncrement(uint32 value) external onlyOwner {
+        __maxFeeIncrement__ = value;
     }
 }

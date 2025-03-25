@@ -33,7 +33,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     }
 
     function test_DelegatePartialBalance(uint32 percentageAmount) public {
-        vm.assume(percentageAmount > 0 && percentageAmount < proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentageAmount > 0 && percentageAmount < proxiedManager.__maxPercentage__());
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, percentageAmount);
@@ -42,7 +42,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     }
 
     function test_DelegateFullBalance() public {
-        uint32 delegatedAmount = proxiedManager.MAX_PERCENTAGE();
+        uint32 delegatedAmount = proxiedManager.__maxPercentage__();
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, delegatedAmount);
         checkDelegation(USER1, RECEIVER, delegatedAmount, delegatedAmount);
@@ -56,7 +56,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     }
 
     function testRevert_DelegateBalanceTooHigh(uint32 highBalance) public {
-        vm.assume(highBalance > proxiedManager.MAX_PERCENTAGE());
+        vm.assume(highBalance > proxiedManager.__maxPercentage__());
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, highBalance);
@@ -64,8 +64,8 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
     function test_UpdateTotalDelegatedPercentage(uint32 percentage1, uint32 percentage2) public {
         vm.assume(percentage1 > 0 && percentage2 > 0);
-        vm.assume(percentage1 < proxiedManager.MAX_PERCENTAGE() && percentage2 < proxiedManager.MAX_PERCENTAGE());
-        vm.assume(percentage1 + percentage2 <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage1 < proxiedManager.__maxPercentage__() && percentage2 < proxiedManager.__maxPercentage__());
+        vm.assume(percentage1 + percentage2 <= proxiedManager.__maxPercentage__());
 
         vm.startPrank(USER1);
 
@@ -85,7 +85,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function testRevert_TotalDelegatePercentageOverMax(uint32 percentage1) public {
         test_DelegatePartialBalance(percentage1);
 
-        uint32 percentage2 = proxiedManager.MAX_PERCENTAGE();
+        uint32 percentage2 = proxiedManager.__maxPercentage__();
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingPercentageUpdate.selector));
         proxiedManager.delegateBalance(RECEIVER2, percentage2);
@@ -95,7 +95,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
     function testRevert_DoubleDelegateSameReceiver(uint32 percentage1, uint32 percentage2) public {
         vm.assume(percentage1 > 0 && percentage2 > 0);
-        vm.assume(percentage1 <= proxiedManager.MAX_PERCENTAGE() && percentage2 <= proxiedManager.MAX_PERCENTAGE());
+        vm.assume(percentage1 <= proxiedManager.__maxPercentage__() && percentage2 <= proxiedManager.__maxPercentage__());
 
         vm.startPrank(USER1);
 
@@ -111,7 +111,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     }
 
     function testRevert_InvalidPercentageDelegateBalance() public {
-        uint32 maxPlusOne = proxiedManager.MAX_PERCENTAGE() + 1;
+        uint32 maxPlusOne = proxiedManager.__maxPercentage__() + 1;
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
@@ -120,7 +120,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function test_UpdateDelegatedBalance() public {
         test_DelegateMinimumBalance();
 
-        uint32 updatePercentage = proxiedManager.MAX_PERCENTAGE();
+        uint32 updatePercentage = proxiedManager.__maxPercentage__();
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.DelegationUpdated(USER1, RECEIVER, updatePercentage);
@@ -130,7 +130,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
     function testRevert_UpdateTotalDelegatePercentageByTheSameUser() public {
         test_UpdateDelegatedBalance();
-        uint32 maxPlusOne = proxiedManager.MAX_PERCENTAGE() + 1;
+        uint32 maxPlusOne = proxiedManager.__maxPercentage__() + 1;
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
