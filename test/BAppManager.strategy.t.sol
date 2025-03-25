@@ -1681,7 +1681,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
-        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 5000, abi.encode("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 5000, abi.encode("0x00"), USER1);
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
@@ -1692,7 +1692,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
-        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"), USER1);
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientLiquidity.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
@@ -1704,7 +1704,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
-        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 0.5 ether, abi.encode("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 0.5 ether, abi.encode("0x00"), USER1);
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
@@ -1715,7 +1715,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
-        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"), USER1);
         vm.warp(block.timestamp + proxiedManager.WITHDRAWAL_TIMELOCK_PERIOD());
         vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientLiquidity.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);

@@ -145,6 +145,11 @@ contract SSVBasedApps is
      * Submitting a new request will overwrite the previous one and reset the timer.
      */
     mapping(uint32 strategyId => IStorage.FeeUpdateRequest) public feeUpdateRequests;
+    /**
+     * @notice Tracks the slashing fund for a specific token
+     * @dev The slashing fund is used to store the tokens that are slashed from the strategies
+     */
+    mapping(address owner => mapping(address token => uint256 amount)) public slashingFund;
 
     /// @notice Prevents the initialization of the implementation contract itself during deployment
     constructor() {
@@ -645,7 +650,10 @@ contract SSVBasedApps is
     /// @param token The address of the token
     /// @param amount The amount to slash
     /// @param data Optional parameter that could be required by the service
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external nonReentrant {
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver)
+        external
+        nonReentrant
+    {
         if (amount == 0) revert IStorage.InvalidAmount();
         if (!registeredBApps[bApp]) revert IStorage.BAppNotRegistered();
 
@@ -662,8 +670,35 @@ contract SSVBasedApps is
         }
 
         strategyTotalBalance[strategyId][token] -= amount;
+        slashingFund[receiver][token] += amount;
 
         emit ISSVBasedApps.StrategySlashed(strategyId, bApp, token, amount, data);
+    }
+
+    /// @notice Withdraw the slashing fund for a token
+    /// @param token The address of the token
+    /// @param amount The amount to withdraw
+    function withdrawSlashingFund(address token, uint256 amount) external {
+        if (amount == 0) revert IStorage.InvalidAmount();
+        if (slashingFund[msg.sender][token] < amount) revert IStorage.InsufficientBalance();
+        if (token == ETH_ADDRESS) revert IStorage.InvalidToken();
+
+        slashingFund[msg.sender][token] -= amount;
+        IERC20(token).safeTransfer(msg.sender, amount);
+
+        emit ISSVBasedApps.SlashingFundWithdrawn(token, amount);
+    }
+
+    /// @notice Withdraw the slashing fund for ETH
+    /// @param amount The amount to withdraw
+    function withdrawETHSlashingFund(uint256 amount) external {
+        if (amount == 0) revert IStorage.InvalidAmount();
+        if (slashingFund[msg.sender][ETH_ADDRESS] < amount) revert IStorage.InsufficientBalance();
+
+        slashingFund[msg.sender][ETH_ADDRESS] -= amount;
+        payable(msg.sender).transfer(amount);
+
+        emit ISSVBasedApps.SlashingFundWithdrawn(ETH_ADDRESS, amount);
     }
 
     // **********************

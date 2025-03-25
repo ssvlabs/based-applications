@@ -24,6 +24,7 @@ interface ISSVBasedApps is IBasedAppManager {
         uint32 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages
     );
     event StrategySlashed(uint32 indexed strategyId, address indexed bApp, address token, uint256 amount, bytes data);
+    event SlashingFundWithdrawn(address token, uint256 amount);
 
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
 
@@ -63,7 +64,8 @@ interface ISSVBasedApps is IBasedAppManager {
 
     function updateAccountMetadataURI(string calldata metadataURI) external;
 
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver)
+        external;
 
     function optInToBApp(
         uint32 strategyId,
