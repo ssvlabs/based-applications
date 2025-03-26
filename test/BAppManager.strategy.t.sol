@@ -936,7 +936,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
         emit ISSVBasedApps.StrategyFeeUpdated(STRATEGY1, USER1, 1, true);
-        proxiedManager.fastUpdateFee(STRATEGY1, 1);
+        proxiedManager.reduceFee(STRATEGY1, 1);
         checkFee(STRATEGY1, USER1, 1);
     }
 
@@ -944,7 +944,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_StrategyOptInToBApp(9000);
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentageIncrement.selector));
-        proxiedManager.fastUpdateFee(STRATEGY1, 100);
+        proxiedManager.reduceFee(STRATEGY1, 100);
     }
 
     function testRevert_ProposeUpdateObligationWithNonOwner() public {
@@ -1012,9 +1012,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, true, true);
-            emit ISSVBasedApps.ObligationUpdated(
-                STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage, false
-            );
+            emit ISSVBasedApps.ObligationUpdated(STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage);
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock));
             checkProposedObligation(STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage, 0, 0, true);
         }
@@ -1028,9 +1026,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, true, true);
-            emit ISSVBasedApps.ObligationUpdated(
-                STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage, false
-            );
+            emit ISSVBasedApps.ObligationUpdated(STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage);
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock));
             checkProposedObligation(STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage, 0, 0, true);
         }
@@ -1048,9 +1044,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.warp(block.timestamp + proxiedManager.__obligationTimelockPeriod__() + proxiedManager.__obligationExpireTime__());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.expectEmit(true, true, true, true);
-            emit ISSVBasedApps.ObligationUpdated(
-                STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage, false
-            );
+            emit ISSVBasedApps.ObligationUpdated(STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage);
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock));
             checkProposedObligation(STRATEGY1, address(bApps[i]), address(erc20mock), proposedObligationPercentage, 0, 0, true);
         }

@@ -70,7 +70,7 @@ contract SSVBasedApps is
         _disableInitializers();
     }
 
-    /// @notice Initialize the contract
+    /// @notice Initialize the contractz
     /// @param owner The owner of the contract
     /// @param maxFeeIncrement The maximum fee increment
     function initialize(address owner, uint32 maxFeeIncrement) public initializer {
@@ -226,7 +226,7 @@ contract SSVBasedApps is
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (accountBAppStrategy[msg.sender][bApp] != 0) revert IStorage.BAppAlreadyOptedIn();
 
-        _createObligations(strategyId, bApp, tokens, obligationPercentages);
+        _createObligations(strategyId, bApp, tokens, obligationPercentages, true);
 
         accountBAppStrategy[msg.sender][bApp] = strategyId;
 
@@ -461,6 +461,8 @@ contract SSVBasedApps is
         if (accountBAppStrategy[msg.sender][bApp] != strategyId) revert IStorage.BAppNotOptedIn();
 
         _createSingleObligation(strategyId, bApp, token, obligationPercentage);
+
+        emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
     }
 
     /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
@@ -499,7 +501,7 @@ contract SSVBasedApps is
 
         _updateObligation(strategyId, bApp, address(token), percentage);
 
-        emit ObligationUpdated(strategyId, bApp, address(token), percentage, false);
+        emit ObligationUpdated(strategyId, bApp, address(token), percentage);
 
         delete obligationRequests[strategyId][bApp][address(token)];
     }
@@ -507,7 +509,7 @@ contract SSVBasedApps is
     /// @notice Instantly lowers the fee for a strategy
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
-    function fastUpdateFee(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
+    function reduceFee(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
         if (proposedFee >= strategies[strategyId].fee) revert IStorage.InvalidPercentageIncrement();
 
         strategies[strategyId].fee = proposedFee;
@@ -638,11 +640,15 @@ contract SSVBasedApps is
         uint32 strategyId,
         address bApp,
         address[] calldata tokens,
-        uint32[] calldata obligationPercentages
+        uint32[] calldata obligationPercentages,
+        bool isOptIn
     ) private {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length;) {
             _createSingleObligation(strategyId, bApp, tokens[i], obligationPercentages[i]);
+
+            if (!isOptIn) emit ObligationCreated(strategyId, bApp, tokens[i], obligationPercentages[i]);
+
             unchecked {
                 i++;
             }
@@ -665,8 +671,6 @@ contract SSVBasedApps is
         }
 
         obligations[strategyId][bApp][token].isSet = true;
-
-        emit ObligationCreated(strategyId, bApp, token, obligationPercentage);
     }
 
     /// @notice Validate the input for the obligation creation or update

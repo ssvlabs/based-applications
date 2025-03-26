@@ -11,7 +11,7 @@ interface ISSVBasedApps is IBasedAppManager {
     event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);
     event MaxFeeIncrementSet(uint32 newMaxFeeIncrement);
     event ObligationCreated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
-    event ObligationUpdated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage, bool isFast);
+    event ObligationUpdated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
     event ObligationUpdateProposed(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
     event StrategyCreated(uint32 indexed strategyId, address indexed owner, uint32 fee, string metadataURI);
     event StrategyDeposit(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
