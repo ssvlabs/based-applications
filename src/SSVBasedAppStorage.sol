@@ -5,16 +5,16 @@ import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
 
 abstract contract SSVBasedAppStorage is ISSVBasedApps {
-    uint32 public __feeTimelockPeriod__ = 7 days;
-    uint32 public __feeExpireTime__ = 1 days;
-    uint32 public __withdrawalTimelockPeriod__ = 5 days;
-    uint32 public __withdrawalExpireTime__ = 1 days;
-    uint32 public __obligationTimelockPeriod__ = 7 days;
-    uint32 public __obligationExpireTime__ = 1 days;
-    uint32 public __maxPercentage__ = 1e4;
-    address public __ethAddress__ = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint256 public __maxShares__ = 1e50;
-    uint32 public __maxFeeIncrement__;
+    uint32 public feeTimelockPeriod = 7 days;
+    uint32 public feeExpireTime = 1 days;
+    uint32 public withdrawalTimelockPeriod = 5 days;
+    uint32 public withdrawalExpireTime = 1 days;
+    uint32 public obligationTimelockPeriod = 7 days;
+    uint32 public obligationExpireTime = 1 days;
+    uint32 public maxPercentage = 1e4;
+    address public ethAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    uint256 public maxShares = 1e50;
+    uint32 public maxFeeIncrement;
 
     uint32 internal _strategyCounter;
 

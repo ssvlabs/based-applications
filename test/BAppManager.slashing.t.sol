@@ -36,9 +36,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         vm.prank(USER1);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
-        checkSlashableBalance(
-            STRATEGY1, USER1, address(erc20mock), depositAmount * percentage / proxiedManager.__maxPercentage__()
-        );
+        checkSlashableBalance(STRATEGY1, USER1, address(erc20mock), depositAmount * percentage / proxiedManager.maxPercentage());
     }
 
     function test_slashEOABasic() public {
@@ -62,7 +60,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.maxPercentage());
         test_StrategyOptInToBAppEOA(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -73,7 +71,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.__maxPercentage__());
+        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
         checkSlashingFund(USER2, token, slashAmount);
     }
 
@@ -81,7 +79,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.maxPercentage());
         test_StrategyOptInToBAppNonCompliant(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -93,7 +91,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
         checkSlashableBalance(
-            STRATEGY1, address(nonCompliantBApp), token, newStrategyBalance * percentage / proxiedManager.__maxPercentage__()
+            STRATEGY1, address(nonCompliantBApp), token, newStrategyBalance * percentage / proxiedManager.maxPercentage()
         );
         checkSlashingFund(address(nonCompliantBApp), token, slashAmount);
     }
@@ -102,7 +100,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.maxPercentage());
         test_StrategyOptInToBApp(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -113,9 +111,27 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(
-            STRATEGY1, address(bApp1), token, newStrategyBalance * percentage / proxiedManager.__maxPercentage__()
-        );
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
+        checkSlashingFund(USER1, token, slashAmount);
+    }
+
+    function test_SlashBAppWithEth(uint256 slashAmount) public {
+        test_StrategyOptInToBAppWithETH();
+        uint32 percentage = 10_000;
+        uint256 depositAmount = 1 ether;
+        address token = ETH_ADDRESS;
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.maxPercentage());
+        // test_StrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"), USER1);
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
         checkSlashingFund(USER1, token, slashAmount);
     }
 
@@ -123,7 +139,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.__maxPercentage__());
+        vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.maxPercentage());
         test_StrategyOptInToBApp(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
@@ -132,7 +148,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.slash(STRATEGY1, address(bApp2), token, slashAmount, abi.encodePacked("0x00"), USER1);
         checkTotalShares(STRATEGY1, token, depositAmount, depositAmount);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(bApp1), token, depositAmount * percentage / proxiedManager.__maxPercentage__());
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, depositAmount * percentage / proxiedManager.maxPercentage());
         checkSlashingFund(USER1, token, 0);
     }
 
@@ -204,5 +220,59 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
             vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
             bApps[i].slash(STRATEGY1, token, slashAmount, abi.encodePacked("0x00"));
         }
+    }
+
+    function test_withdrawSlashingFundErc20() public {
+        uint256 slashAmount = 100;
+        test_SlashBApp(slashAmount);
+        vm.prank(USER1);
+        proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount);
+    }
+
+    function test_withdrawSlashingFundEth() public {
+        uint256 slashAmount = 0.2 ether;
+        test_SlashBAppWithEth(slashAmount);
+        vm.prank(USER1);
+        proxiedManager.withdrawETHSlashingFund(slashAmount);
+    }
+
+    function testRevert_withdrawSlashingFundErc20WithEth() public {
+        uint256 slashAmount = 100;
+        test_SlashBApp(slashAmount);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidToken.selector));
+        proxiedManager.withdrawSlashingFund(ETH_ADDRESS, slashAmount);
+    }
+
+    function testRevert_withdrawSlashingFundErc20WithInsufficientBalance() public {
+        uint256 slashAmount = 100;
+        test_SlashBApp(slashAmount);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
+        proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount + 1);
+    }
+
+    function testRevert_withdrawSlashingFundErc20WithZeroAmount() public {
+        uint256 slashAmount = 100;
+        test_SlashBApp(slashAmount);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidAmount.selector));
+        proxiedManager.withdrawSlashingFund(address(erc20mock), 0);
+    }
+
+    function testRevert_withdrawETHSlashingFundErc20WithInsufficientBalance() public {
+        uint256 slashAmount = 100;
+        test_SlashBApp(slashAmount);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
+        proxiedManager.withdrawETHSlashingFund(slashAmount + 1);
+    }
+
+    function testRevert_withdrawETHSlashingFundErc20WithZeroAmount() public {
+        uint256 slashAmount = 100;
+        test_SlashBApp(slashAmount);
+        vm.prank(USER1);
+        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidAmount.selector));
+        proxiedManager.withdrawETHSlashingFund(0);
     }
 }

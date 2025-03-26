@@ -6,12 +6,14 @@ import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165C
 import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
 import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
+import {OwnableUpgradeable, Initializable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract BasedAppManagement is IBasedAppManager {
-    uint32 public constant TOKEN_UPDATE_TIMELOCK_PERIOD = 7 days;
-    uint32 public constant TOKEN_UPDATE_EXPIRE_TIME = 1 days;
-    uint32 public constant TOKEN_REMOVAL_TIMELOCK_PERIOD = 7 days;
-    uint32 public constant TOKEN_REMOVAL_EXPIRE_TIME = 1 days;
+contract BasedAppManagement is IBasedAppManager, Initializable, OwnableUpgradeable {
+    uint32 public tokenUpdateTimelockPeriod;
+    uint32 public tokenUpdateExpireTime;
+    uint32 public tokenRemovalTimelockPeriod;
+    uint32 public tokenRemovalExpireTime;
+
     /**
      * @notice Tracks the owners of the bApps
      * @dev The bApp is identified with its address
@@ -37,6 +39,13 @@ contract BasedAppManagement is IBasedAppManager {
     modifier onlyRegisteredBApp() {
         if (!registeredBApps[msg.sender]) revert IStorage.BAppNotRegistered();
         _;
+    }
+
+    function initializeBasedAppManagement() internal onlyInitializing {
+        tokenUpdateTimelockPeriod = 7 days;
+        tokenUpdateExpireTime = 1 days;
+        tokenRemovalTimelockPeriod = 7 days;
+        tokenRemovalExpireTime = 1 days;
     }
 
     /// @notice Get the token update request for a bApp
@@ -134,7 +143,7 @@ contract BasedAppManagement is IBasedAppManager {
         uint256 requestTime = request.requestTime;
         if (requestTime == 0) revert IStorage.NoPendingTokenUpdate();
 
-        _checkTimelocks(requestTime, TOKEN_UPDATE_TIMELOCK_PERIOD, TOKEN_UPDATE_EXPIRE_TIME);
+        _checkTimelocks(requestTime, tokenUpdateTimelockPeriod, tokenUpdateExpireTime);
 
         address[] memory tokens = request.tokens;
         uint32[] memory sharedRiskLevels = request.sharedRiskLevels;
@@ -184,7 +193,7 @@ contract BasedAppManagement is IBasedAppManager {
         uint256 requestTime = request.requestTime;
         if (requestTime == 0) revert IStorage.NoPendingTokenRemoval();
 
-        _checkTimelocks(requestTime, TOKEN_REMOVAL_TIMELOCK_PERIOD, TOKEN_REMOVAL_EXPIRE_TIME);
+        _checkTimelocks(requestTime, tokenRemovalTimelockPeriod, tokenRemovalExpireTime);
 
         address[] memory tokens = request.tokens;
         uint256 length = tokens.length;
@@ -199,6 +208,22 @@ contract BasedAppManagement is IBasedAppManager {
         delete request.requestTime;
 
         emit BAppTokensRemoved(msg.sender, tokens);
+    }
+
+    function setTokenUpdateTimelockPeriod(uint32 value) external onlyOwner {
+        tokenUpdateTimelockPeriod = value;
+    }
+
+    function setTokenUpdateExpireTime(uint32 value) external onlyOwner {
+        tokenUpdateExpireTime = value;
+    }
+
+    function setTokenRemovalTimelockPeriod(uint32 value) external onlyOwner {
+        tokenRemovalTimelockPeriod = value;
+    }
+
+    function setTokenRemovalExpireTime(uint32 value) external onlyOwner {
+        tokenRemovalExpireTime = value;
     }
 
     /// @notice Function to add tokens to a bApp

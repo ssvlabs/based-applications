@@ -544,7 +544,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
 
     function test_finalizeBAppTokensUpdateOneToken() public {
         test_proposeBAppTokensUpdate();
-        vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_TIMELOCK_PERIOD() + 1 minutes);
+        vm.warp(block.timestamp + proxiedManager.tokenUpdateTimelockPeriod() + 1 minutes);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
             createSingleTokenAndSingleRiskLevel(address(erc20mock), 500);
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -557,7 +557,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
 
     function test_finalizeBAppTokensUpdateOneTokenETH() public {
         test_proposeBAppTokensUpdateETH();
-        vm.warp(block.timestamp + proxiedManager.TOKEN_UPDATE_TIMELOCK_PERIOD() + 1 minutes);
+        vm.warp(block.timestamp + proxiedManager.tokenUpdateTimelockPeriod() + 1 minutes);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelsInput) =
             createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 500);
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -570,7 +570,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
 
     function test_finalizeBAppTokensRemovalOneToken() public {
         test_proposeBAppTokensRemoval();
-        vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD() + 1 minutes);
+        vm.warp(block.timestamp + proxiedManager.tokenRemovalTimelockPeriod() + 1 minutes);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             bApps[i].finalizeBAppTokensRemoval();
@@ -581,7 +581,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
 
     function test_finalizeBAppTokensRemovalFiveTokens() public {
         test_proposeBAppTokensRemovalFiveTokens();
-        vm.warp(block.timestamp + proxiedManager.TOKEN_REMOVAL_TIMELOCK_PERIOD() + 1 minutes);
+        vm.warp(block.timestamp + proxiedManager.tokenRemovalTimelockPeriod() + 1 minutes);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             bApps[i].finalizeBAppTokensRemoval();

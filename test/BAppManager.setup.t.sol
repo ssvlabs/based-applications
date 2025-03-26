@@ -85,7 +85,7 @@ contract BasedAppManagerSetupTest is Test {
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
 
-        assertEq(proxiedManager.__maxFeeIncrement__(), 500, "Initialization failed");
+        assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();
 
         vm.startPrank(USER1);
