@@ -605,7 +605,7 @@ contract SSVBasedApps is
     /// @notice Withdraw the slashing fund for a token
     /// @param token The address of the token
     /// @param amount The amount to withdraw
-    function withdrawSlashingFund(address token, uint256 amount) external {
+    function withdrawSlashingFund(address token, uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
         if (token == ethAddress) revert IStorage.InvalidToken();
         if (slashingFund[msg.sender][token] < amount) revert IStorage.InsufficientBalance();
@@ -618,7 +618,7 @@ contract SSVBasedApps is
 
     /// @notice Withdraw the slashing fund for ETH
     /// @param amount The amount to withdraw
-    function withdrawETHSlashingFund(uint256 amount) external {
+    function withdrawETHSlashingFund(uint256 amount) external nonReentrant {
         if (amount == 0) revert IStorage.InvalidAmount();
         if (slashingFund[msg.sender][ethAddress] < amount) revert IStorage.InsufficientBalance();
 
