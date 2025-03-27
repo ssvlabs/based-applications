@@ -393,7 +393,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
             createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNotSupportedByBApp.selector, address(erc20mock2)));
             bApps[i].proposeBAppTokensUpdate(tokensInput, sharedRiskLevelInput);
         }
     }
@@ -403,7 +403,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         (address[] memory tokensInput,) = createSingleTokenAndSingleRiskLevel(address(erc20mock2), 100);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNotSupportedByBApp.selector, address(erc20mock2)));
             bApps[i].proposeBAppTokensRemoval(tokensInput);
         }
     }

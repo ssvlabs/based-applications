@@ -123,7 +123,7 @@ contract BasedAppManagement is IBasedAppManager, Initializable, OwnableUpgradeab
             token = tokens[i];
             _validateTokenInput(token);
             IStorage.SharedRiskLevel storage tokenData = bAppTokens[msg.sender][token];
-            if (!tokenData.isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+            if (!tokenData.isSet) revert IStorage.TokenNotSupportedByBApp(token);
             if (tokenData.value == sharedRiskLevels[i]) {
                 revert IStorage.SharedRiskLevelAlreadySet();
             }
@@ -173,7 +173,7 @@ contract BasedAppManagement is IBasedAppManager, Initializable, OwnableUpgradeab
         for (uint256 i = 0; i < length;) {
             token = tokens[i];
             _validateTokenInput(token);
-            if (!bAppTokens[msg.sender][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+            if (!bAppTokens[msg.sender][token].isSet) revert IStorage.TokenNotSupportedByBApp(token);
             unchecked {
                 i++;
             }

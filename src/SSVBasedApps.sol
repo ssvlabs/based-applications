@@ -70,7 +70,7 @@ contract SSVBasedApps is
         _disableInitializers();
     }
 
-    /// @notice Initialize the contractz
+    /// @notice Initialize the contract
     /// @param owner The owner of the contract
     /// @param _maxFeeIncrement The maximum fee increment
     function initialize(address owner, uint32 _maxFeeIncrement) public initializer {
@@ -658,7 +658,7 @@ contract SSVBasedApps is
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function _createSingleObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
-        if (!bAppTokens[bApp][token].isSet) revert IStorage.TokenNoTSupportedByBApp(token);
+        if (!bAppTokens[bApp][token].isSet) revert IStorage.TokenNotSupportedByBApp(token);
         if (obligationPercentage > maxPercentage) revert IStorage.InvalidPercentage();
         if (obligations[strategyId][bApp][token].isSet) revert IStorage.ObligationAlreadySet();
 

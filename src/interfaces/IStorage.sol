@@ -109,7 +109,7 @@ interface IStorage {
     error TimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();
-    error TokenNoTSupportedByBApp(address token);
+    error TokenNotSupportedByBApp(address token);
     error UpdateObligationExpired();
     error ZeroAddressNotAllowed();
 }

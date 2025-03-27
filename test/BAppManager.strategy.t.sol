@@ -499,7 +499,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
             createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock)));
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNotSupportedByBApp.selector, address(erc20mock)));
             proxiedManager.optInToBApp(
                 STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
             );
@@ -638,7 +638,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         obligationPercentagesInput[0] = 6000; // 60%
         obligationPercentagesInput[1] = 5000; // 50%
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNotSupportedByBApp.selector, address(erc20mock2)));
             proxiedManager.optInToBApp(
                 STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00")
             );
@@ -704,7 +704,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         test_StrategyOptInToBApp(9000);
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNoTSupportedByBApp.selector, address(erc20mock2)));
+            vm.expectRevert(abi.encodeWithSelector(IStorage.TokenNotSupportedByBApp.selector, address(erc20mock2)));
             proxiedManager.createObligation(STRATEGY1, address(bApps[i]), address(erc20mock2), 100);
         }
         vm.stopPrank();
