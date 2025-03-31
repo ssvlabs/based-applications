@@ -80,35 +80,42 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     // ** Section: External Functions **
     // *********************************
 
-    // solhint-disable no-unused-vars
+    // solhint-disable-next-line
     function updateBAppMetadataURI(string calldata metadataURI) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_BASED_APPS_MANAGER]);
     }
 
+    // solhint-disable--next-line no-unused-vars
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_BASED_APPS_MANAGER]);
     }
 
+    // solhint-disable--next-line no-unused-vars
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
+    // solhint-disable--next-line no-unused-vars
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
+    // solhint-disable--next-line no-unused-vars
     function delegateBalance(address receiver, uint32 percentage) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
+    // solhint-disable--next-line no-unused-vars
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
+    // solhint-disable--next-line no-unused-vars
     function depositETH(uint32 strategyId) external payable {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
+    // solhint-disable--next-line no-unused-vars
     function finalizeFeeUpdate(uint32 strategyId) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }

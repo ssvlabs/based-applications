@@ -42,7 +42,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelInput[4] = 106;
     }
 
-    function test_RegisterBApp() public {
+    function testRegisterBApp() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -53,14 +53,14 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function test_RegisterBAppWithEOA() public {
+    function testRegisterBAppWithEOA() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         vm.prank(USER1);
         proxiedManager.registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[0]);
         checkBAppInfo(tokensInput, sharedRiskLevelInput, USER1, proxiedManager);
     }
 
-    function test_RegisterBAppWith2Tokens() public {
+    function testRegisterBAppWith2Tokens() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndRiskInputs();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -69,7 +69,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function test_RegisterBAppWithETH() public {
+    function testRegisterBAppWithETH() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 100);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -78,7 +78,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function test_RegisterBAppWithNoTokens() public {
+    function testRegisterBAppWithNoTokens() public {
         address[] memory tokensInput = new address[](0);
         uint32[] memory sharedRiskLevelInput = new uint32[](0);
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -88,7 +88,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function test_RegisterBAppWithFiveTokens() public {
+    function testRegisterBAppWithFiveTokens() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createFiveTokenAndRiskInputs();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -97,7 +97,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function test_RegisterBAppWithETHAndErc20() public {
+    function testRegisterBAppWithETHAndErc20() public {
         address[] memory tokensInput = new address[](2);
         tokensInput[0] = ETH_ADDRESS;
         tokensInput[1] = address(erc20mock);
@@ -111,7 +111,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function testRevert_RegisterBAppTwice() public {
+    function testRevertRegisterBAppTwice() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
@@ -129,7 +129,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         vm.stopPrank();
     }
 
-    function test_RegisterBAppFromNonBAppContract() public {
+    function testRegisterBAppFromNonBAppContract() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
@@ -141,14 +141,14 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
     }
 
     // TODO
-    // function test_isBapp() public {
+    // function testisBapp() public {
     //     vm.prank(USER1);
     //     bool success = CoreLib.isBApp(address(bApp1));
     //     assertEq(success, true, "isBApp");
     // }
 
-    function test_UpdateBAppMetadata() public {
-        test_RegisterBApp();
+    function testUpdateBAppMetadata() public {
+        testRegisterBApp();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.expectEmit(true, false, false, false);
             emit IBasedAppManager.BAppMetadataURIUpdated(address(bApps[i]), metadataURI);
@@ -157,8 +157,8 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function testRevert_UpdateBAppMetadataWithWrongOwner() public {
-        test_RegisterBApp();
+    function testRevertUpdateBAppMetadataWithWrongOwner() public {
+        testRegisterBApp();
         vm.startPrank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         bApp1.updateBAppMetadataURI(metadataURI);
@@ -167,7 +167,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         vm.stopPrank();
     }
 
-    function testRevert_UpdateBAppMetadataWithNonRegisteredBApp() public {
+    function testRevertUpdateBAppMetadataWithNonRegisteredBApp() public {
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotRegistered.selector));
@@ -175,7 +175,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function testRevert_callBAppWithNoManager() public {
+    function testRevertcallBAppWithNoManager() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -184,7 +184,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function test_supportInterface() public {
+    function testsupportInterface() public {
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
             bool success = bApps[i].supportsInterface(type(IBasedApp).interfaceId);

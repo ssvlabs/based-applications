@@ -7,7 +7,7 @@ import {BasedAppManagerStrategyTest} from "@ssv/test/BAppManager.strategy.t.sol"
 import {TestUtils} from "@ssv/test/Utils.t.sol";
 
 contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
-    function test_CreateStrategies() public {
+    function testCreateStrategies() public {
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
         erc20mock2.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
@@ -19,7 +19,7 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
         vm.stopPrank();
     }
 
-    function test_registerWhitelistExampleBApp() public {
+    function testRegisterWhitelistExampleBApp() public {
         vm.startPrank(USER1);
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         whitelistExample.registerBApp(tokensInput, sharedRiskLevelInput, "");
@@ -27,58 +27,58 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
         vm.stopPrank();
     }
 
-    function testRevert_optInToBAppWithUnauthorizedCaller() public {
+    function testRevertOptInToBAppWithUnauthorizedCaller() public {
         vm.prank(USER1);
         (address[] memory tokensInput, uint32[] memory riskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
         vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
         whitelistExample.optInToBApp(STRATEGY1, tokensInput, riskLevelInput, "");
     }
 
-    function testRevert_optInToBAppWithNonWhitelistedCaller() public {
-        test_CreateStrategies();
-        test_registerWhitelistExampleBApp();
+    function testRevertOptInToBAppWithNonWhitelistedCaller() public {
+        testCreateStrategies();
+        testRegisterWhitelistExampleBApp();
         vm.prank(USER1);
         (address[] memory tokensInput, uint32[] memory riskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
         vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.NonWhitelistedCaller.selector));
         proxiedManager.optInToBApp(STRATEGY1, address(whitelistExample), tokensInput, riskLevelInput, "");
     }
 
-    function test_addWhitelistedAccount() public {
+    function testAddWhitelistedAccount() public {
         vm.prank(USER1);
         whitelistExample.addWhitelisted(STRATEGY1);
         assertEq(whitelistExample.isWhitelisted(STRATEGY1), true);
     }
 
-    function test_optInToBApp() public {
-        test_CreateStrategies();
-        test_registerWhitelistExampleBApp();
-        test_addWhitelistedAccount();
+    function testOptInToBApp() public {
+        testCreateStrategies();
+        testRegisterWhitelistExampleBApp();
+        testAddWhitelistedAccount();
         vm.prank(USER1);
         (address[] memory tokensInput, uint32[] memory riskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
         proxiedManager.optInToBApp(STRATEGY1, address(whitelistExample), tokensInput, riskLevelInput, "");
     }
 
-    function test_removeWhitelistedAccount() public {
-        test_addWhitelistedAccount();
+    function testremoveWhitelistedAccount() public {
+        testAddWhitelistedAccount();
         vm.prank(USER1);
         whitelistExample.removeWhitelisted(STRATEGY1);
         assertEq(whitelistExample.isWhitelisted(STRATEGY1), false);
     }
 
-    function testRevert_addWhitelistedAccount() public {
-        test_addWhitelistedAccount();
+    function testRevertOddWhitelistedAccount() public {
+        testAddWhitelistedAccount();
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.AlreadyWhitelisted.selector));
         whitelistExample.addWhitelisted(STRATEGY1);
     }
 
-    function testRevert_removeWhitelistedAccount() public {
+    function testRevertOemoveWhitelistedAccount() public {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.NotWhitelisted.selector));
         whitelistExample.removeWhitelisted(STRATEGY1);
     }
 
-    function testRevert_addWhitelistedZeroID() public {
+    function testRevertOddWhitelistedZeroID() public {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.ZeroID.selector));
         whitelistExample.addWhitelisted(0);

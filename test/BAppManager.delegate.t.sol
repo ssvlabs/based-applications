@@ -18,7 +18,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         assertEq(totalDelegatedPercentage, expectedTotalDelegatedPercentage, "Total delegated percentage should be the expected");
     }
 
-    function test_DelegateMinimumBalance() public {
+    function testDelegateMinimumBalance() public {
         uint32 delegatedAmount = 1;
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
@@ -27,7 +27,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         checkDelegation(USER1, RECEIVER, delegatedAmount, delegatedAmount);
     }
 
-    function test_DelegatePartialBalance(uint32 percentageAmount) public {
+    function testDelegatePartialBalance(uint32 percentageAmount) public {
         vm.assume(percentageAmount > 0 && percentageAmount < proxiedManager.maxPercentage());
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
@@ -36,7 +36,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         checkDelegation(USER1, RECEIVER, percentageAmount, percentageAmount);
     }
 
-    function test_DelegateFullBalance() public {
+    function testDelegateFullBalance() public {
         uint32 delegatedAmount = proxiedManager.maxPercentage();
         vm.startPrank(USER1);
         proxiedManager.delegateBalance(RECEIVER, delegatedAmount);
@@ -44,20 +44,20 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_DelegateBalanceTooLow() public {
+    function testRevertDelegateBalanceTooLow() public {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, 0);
     }
 
-    function testRevert_DelegateBalanceTooHigh(uint32 highBalance) public {
+    function testRevertDelegateBalanceTooHigh(uint32 highBalance) public {
         vm.assume(highBalance > proxiedManager.maxPercentage());
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, highBalance);
     }
 
-    function test_UpdateTotalDelegatedPercentage(uint32 percentage1, uint32 percentage2) public {
+    function testUpdateTotalDelegatedPercentage(uint32 percentage1, uint32 percentage2) public {
         vm.assume(percentage1 > 0 && percentage2 > 0);
         vm.assume(percentage1 < proxiedManager.maxPercentage() && percentage2 < proxiedManager.maxPercentage());
         vm.assume(percentage1 + percentage2 <= proxiedManager.maxPercentage());
@@ -77,8 +77,8 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_TotalDelegatePercentageOverMax(uint32 percentage1) public {
-        test_DelegatePartialBalance(percentage1);
+    function testRevertTotalDelegatePercentageOverMax(uint32 percentage1) public {
+        testDelegatePartialBalance(percentage1);
 
         uint32 percentage2 = proxiedManager.maxPercentage();
         vm.prank(USER1);
@@ -88,7 +88,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_DoubleDelegateSameReceiver(uint32 percentage1, uint32 percentage2) public {
+    function testRevertDoubleDelegateSameReceiver(uint32 percentage1, uint32 percentage2) public {
         vm.assume(percentage1 > 0 && percentage2 > 0);
         vm.assume(percentage1 <= proxiedManager.maxPercentage() && percentage2 <= proxiedManager.maxPercentage());
 
@@ -105,15 +105,15 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_InvalidPercentageDelegateBalance() public {
+    function testRevertInvalidPercentageDelegateBalance() public {
         uint32 maxPlusOne = proxiedManager.maxPercentage() + 1;
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
     }
 
-    function test_UpdateDelegatedBalance() public {
-        test_DelegateMinimumBalance();
+    function testUpdateDelegatedBalance() public {
+        testDelegateMinimumBalance();
 
         uint32 updatePercentage = proxiedManager.maxPercentage();
         vm.prank(USER1);
@@ -123,35 +123,35 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         checkDelegation(USER1, RECEIVER, updatePercentage, updatePercentage);
     }
 
-    function testRevert_UpdateTotalDelegatePercentageByTheSameUser() public {
-        test_UpdateDelegatedBalance();
+    function testRevertUpdateTotalDelegatePercentageByTheSameUser() public {
+        testUpdateDelegatedBalance();
         uint32 maxPlusOne = proxiedManager.maxPercentage() + 1;
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
     }
 
-    function testRevert_UpdateTotalDelegatePercentageWithZero() public {
-        test_DelegateMinimumBalance();
+    function testRevertUpdateTotalDelegatePercentageWithZero() public {
+        testDelegateMinimumBalance();
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 0);
     }
 
-    function testRevert_UpdateTotalDelegatePercentageWithSameBalance() public {
-        test_DelegateMinimumBalance();
+    function testRevertUpdateTotalDelegatePercentageWithSameBalance() public {
+        testDelegateMinimumBalance();
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.DelegationExistsWithSameValue.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1);
     }
 
-    function testRevert_UpdateBalanceNotExisting() public {
+    function testRevertUpdateBalanceNotExisting() public {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
     }
 
-    function testRevert_UpdateBalanceTooHigh() public {
+    function testRevertUpdateBalanceTooHigh() public {
         uint32 delegatedAmount1 = 1;
         uint32 delegatedAmount2 = 1;
 
@@ -173,8 +173,8 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function test_RemoveDelegateBalance() public {
-        test_DelegateFullBalance();
+    function testRemoveDelegateBalance() public {
+        testDelegateFullBalance();
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
@@ -183,11 +183,11 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         checkDelegationZero(USER1, RECEIVER, 0);
     }
 
-    function test_RemoveDelegatedBalanceAndComputeTotal() public {
+    function testRemoveDelegatedBalanceAndComputeTotal() public {
         uint32 delegatedAmount1 = 100;
         uint32 delegatedAmount2 = 200;
 
-        test_UpdateTotalDelegatedPercentage(delegatedAmount1, delegatedAmount2);
+        testUpdateTotalDelegatedPercentage(delegatedAmount1, delegatedAmount2);
 
         vm.startPrank(USER1);
 
@@ -206,14 +206,14 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function testRevert_RemoveNonExistingBalance() public {
+    function testRevertRemoveNonExistingBalance() public {
         vm.startPrank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
         proxiedManager.removeDelegatedBalance(RECEIVER);
         vm.stopPrank();
     }
 
-    function test_UpdateAccountMetadata() public {
+    function testUpdateAccountMetadata() public {
         string memory metadataURI = "https://account-metadata.com";
         vm.startPrank(USER1);
         vm.expectEmit(true, false, false, false);
@@ -222,8 +222,8 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.stopPrank();
     }
 
-    function test_DoubleUpdateAccountMetadata() public {
-        test_UpdateAccountMetadata();
+    function testDoubleUpdateAccountMetadata() public {
+        testUpdateAccountMetadata();
         string memory metadataURI2 = "https://account-metadata-2.com";
         vm.startPrank(USER1);
         vm.expectEmit(true, false, false, false);
