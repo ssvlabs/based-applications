@@ -2,7 +2,6 @@
 pragma solidity 0.8.29;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IBasedAppManager} from "./IBasedAppManager.sol";
 
 interface IStrategyManager {
     event AccountMetadataURIUpdated(address indexed account, string metadataURI);
@@ -20,9 +19,7 @@ interface IStrategyManager {
     event StrategyWithdrawal(uint32 indexed strategyId, address indexed account, address token, uint256 amount, bool isFast);
     event StrategyWithdrawalProposed(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
     event StrategyMetadataURIUpdated(uint32 indexed strategyId, string metadataURI);
-    event BAppOptedInByStrategy(
-        uint32 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages
-    );
+    event BAppOptedInByStrategy(uint32 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages);
     event StrategySlashed(uint32 indexed strategyId, address indexed bApp, address token, uint256 amount, bytes data);
     event SlashingFundWithdrawn(address token, uint256 amount);
 
@@ -62,18 +59,11 @@ interface IStrategyManager {
 
     function updateAccountMetadataURI(string calldata metadataURI) external;
 
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver)
-        external;
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver) external;
 
     function withdrawSlashingFund(address token, uint256 amount) external;
 
     function withdrawETHSlashingFund(uint256 amount) external;
 
-    function optInToBApp(
-        uint32 strategyId,
-        address bApp,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages,
-        bytes calldata data
-    ) external;
+    function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data) external;
 }

@@ -7,12 +7,13 @@ import {OwnableBasedApp} from "@ssv/src/middleware/modules/core+roles/OwnableBas
 contract WhitelistExample is OwnableBasedApp, BasedAppWhitelisted {
     constructor(address _basedAppManager, address _initOwner) OwnableBasedApp(_basedAppManager, _initOwner) {}
 
-    function optInToBApp(
-        uint32 strategyId,
-        address[] calldata, /*tokens*/
-        uint32[] calldata, /*obligationPercentages*/
-        bytes calldata /*data*/
-    ) external view override onlySSVBasedAppManager returns (bool success) {
+    function optInToBApp(uint32 strategyId, address[] calldata, /*tokens*/ uint32[] calldata, /*obligationPercentages*/ bytes calldata /*data*/ )
+        external
+        view
+        override
+        onlySSVBasedAppManager
+        returns (bool success)
+    {
         if (!isWhitelisted[strategyId]) revert NonWhitelistedCaller();
         return true;
     }

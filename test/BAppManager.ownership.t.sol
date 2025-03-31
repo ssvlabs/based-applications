@@ -3,15 +3,7 @@ pragma solidity 0.8.29;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import {
-    BasedAppManagerSetupTest,
-    IStrategyManager,
-    IBasedAppManager,
-    ISSVDAO,
-    SSVBasedApps,
-    ICore,
-    ERC1967Proxy
-} from "@ssv/test/BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest, IStrategyManager, IBasedAppManager, ISSVDAO, SSVBasedApps, ICore, ERC1967Proxy} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgradeable {
     function testOwnerOfBasedAppManager() public view {
@@ -19,8 +11,7 @@ contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgrad
     }
 
     function testImplementation() public view {
-        address currentImplementation =
-            address(uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)))));
+        address currentImplementation = address(uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)))));
         assertEq(currentImplementation, address(implementation), "Implementation should be the SSVBasedApps contract");
     }
 
@@ -37,25 +28,20 @@ contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgrad
         vm.prank(OWNER);
         proxiedManager.upgradeToAndCall(address(newImplementation), bytes(""));
 
-        address currentImplementation =
-            address(uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)))));
+        address currentImplementation = address(uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)))));
         assertEq(currentImplementation, address(newImplementation), "Implementation should be upgraded");
     }
 
     function testRevertTryToCallInitializeAgainFromAttacker() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(ATTACKER);
-        proxiedManager.initialize(
-            address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10
-        );
+        proxiedManager.initialize(address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10);
     }
 
     function testRevertTryToCallInitializeAgainFromOwner() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(OWNER);
-        proxiedManager.initialize(
-            address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10
-        );
+        proxiedManager.initialize(address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10);
     }
 
     function testRevertInitializeWithZeroFee() public {

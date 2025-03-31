@@ -11,7 +11,7 @@ gas_reports_ignore = ["ERC20Mock", "BasedAppMock", "BasedAppMock2", "BasedAppMoc
 [fmt]
 bracket_spacing = false
 int_types = "long"
-line_length = 130
+line_length = 160
 multiline_func_header = "attributes_first"
 number_underscore = "thousands"
 quote_style = "double"

@@ -21,8 +21,7 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
 
     function test_registerWhitelistExampleBApp() public {
         vm.startPrank(USER1);
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         whitelistExample.registerBApp(tokensInput, sharedRiskLevelInput, "");
         checkBAppInfo(tokensInput, sharedRiskLevelInput, address(whitelistExample), proxiedManager);
         vm.stopPrank();
@@ -30,8 +29,7 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
 
     function testRevert_optInToBAppWithUnauthorizedCaller() public {
         vm.prank(USER1);
-        (address[] memory tokensInput, uint32[] memory riskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
+        (address[] memory tokensInput, uint32[] memory riskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
         vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));
         whitelistExample.optInToBApp(STRATEGY1, tokensInput, riskLevelInput, "");
     }
@@ -40,8 +38,7 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
         test_CreateStrategies();
         test_registerWhitelistExampleBApp();
         vm.prank(USER1);
-        (address[] memory tokensInput, uint32[] memory riskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
+        (address[] memory tokensInput, uint32[] memory riskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
         vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.NonWhitelistedCaller.selector));
         proxiedManager.optInToBApp(STRATEGY1, address(whitelistExample), tokensInput, riskLevelInput, "");
     }
@@ -57,8 +54,7 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
         test_registerWhitelistExampleBApp();
         test_addWhitelistedAccount();
         vm.prank(USER1);
-        (address[] memory tokensInput, uint32[] memory riskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
+        (address[] memory tokensInput, uint32[] memory riskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
         proxiedManager.optInToBApp(STRATEGY1, address(whitelistExample), tokensInput, riskLevelInput, "");
     }
 

@@ -12,7 +12,7 @@
     "func-name-mixedcase": "error",
     "max-line-length": [
       "error",
-      130
+      160
     ],
     "no-unused-vars": "off"
   }

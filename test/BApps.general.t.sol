@@ -18,11 +18,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
 
     string[] metadataURIs = ["http://metadata.com", "http://metadata2.com", "http://metadata3.com"];
 
-    function createTwoTokenAndRiskInputs()
-        private
-        view
-        returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
-    {
+    function createTwoTokenAndRiskInputs() private view returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
         tokensInput = new address[](2);
         sharedRiskLevelInput = new uint32[](2);
         tokensInput[0] = address(erc20mock);
@@ -31,11 +27,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelInput[1] = 103;
     }
 
-    function createFiveTokenAndRiskInputs()
-        private
-        view
-        returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput)
-    {
+    function createFiveTokenAndRiskInputs() private view returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
         tokensInput = new address[](5);
         sharedRiskLevelInput = new uint32[](5);
         tokensInput[0] = address(erc20mock);
@@ -51,8 +43,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
     }
 
     function test_RegisterBApp() public {
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, true, true);
@@ -63,8 +54,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
     }
 
     function test_RegisterBAppWithEOA() public {
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
         vm.prank(USER1);
         proxiedManager.registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[0]);
         checkBAppInfo(tokensInput, sharedRiskLevelInput, USER1, proxiedManager);
@@ -80,8 +70,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
     }
 
     function test_RegisterBAppWithETH() public {
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 100);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 100);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
@@ -173,11 +162,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         vm.startPrank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         bApp1.updateBAppMetadataURI(metadataURI);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector, address(ATTACKER), bApp3.MANAGER_ROLE()
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, address(ATTACKER), bApp3.MANAGER_ROLE()));
         bApp3.updateBAppMetadataURI(metadataURI);
         vm.stopPrank();
     }
@@ -191,8 +176,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
     }
 
     function testRevert_callBAppWithNoManager() public {
-        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectRevert(abi.encodeWithSelector(IBasedApp.UnauthorizedCaller.selector));

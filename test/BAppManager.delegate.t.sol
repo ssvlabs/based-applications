@@ -4,12 +4,7 @@ pragma solidity 0.8.29;
 import {BasedAppManagerSetupTest, IStrategyManager, ICore} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
-    function checkDelegation(
-        address owner,
-        address receiver,
-        uint32 expectedDelegatedAmount,
-        uint32 expectedTotalDelegatedPercentage
-    ) internal view {
+    function checkDelegation(address owner, address receiver, uint32 expectedDelegatedAmount, uint32 expectedTotalDelegatedPercentage) internal view {
         uint32 delegatedAmount = proxiedManager.delegations(owner, receiver);
         uint32 totalDelegatedPercentage = proxiedManager.totalDelegatedPercentage(owner);
         assertEq(delegatedAmount, expectedDelegatedAmount, "Delegated percentage to the receiver should be the expected one");

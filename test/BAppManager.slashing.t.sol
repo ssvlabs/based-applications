@@ -5,10 +5,7 @@ import {ICore, IERC20, IStrategyManager, IBasedApp} from "@ssv/test/BAppManager.
 import {BasedAppManagerStrategyTest} from "@ssv/test/BAppManager.strategy.t.sol";
 
 contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
-    function checkSlashableBalance(uint32 strategyId, address bApp, address token, uint256 expectedSlashableBalance)
-        internal
-        view
-    {
+    function checkSlashableBalance(uint32 strategyId, address bApp, address token, uint256 expectedSlashableBalance) internal view {
         (uint256 slashableBalance) = proxiedManager.getSlashableBalance(strategyId, bApp, token);
         assertEq(slashableBalance, expectedSlashableBalance);
     }
@@ -89,9 +86,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(
-            STRATEGY1, address(nonCompliantBApp), token, newStrategyBalance * percentage / proxiedManager.maxPercentage()
-        );
+        checkSlashableBalance(STRATEGY1, address(nonCompliantBApp), token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
         checkSlashingFund(address(nonCompliantBApp), token, slashAmount);
     }
 

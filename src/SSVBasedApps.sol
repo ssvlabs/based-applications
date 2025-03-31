@@ -25,13 +25,12 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     // *********************************
     // ** Section: Initializers **
     // *********************************
-    function initialize(
-        address owner_,
-        IBasedAppManager ssvBasedAppManger_,
-        IStrategyManager ssvStrategyManager_,
-        ISSVDAO ssvDAO_,
-        uint32 maxFeeIncrement_
-    ) external override initializer onlyProxy {
+    function initialize(address owner_, IBasedAppManager ssvBasedAppManger_, IStrategyManager ssvStrategyManager_, ISSVDAO ssvDAO_, uint32 maxFeeIncrement_)
+        external
+        override
+        initializer
+        onlyProxy
+    {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
         __SSVBasedApplications_init_unchained(ssvBasedAppManger_, ssvStrategyManager_, ssvDAO_, maxFeeIncrement_);
@@ -172,9 +171,7 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver)
-        external
-    {
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
@@ -186,13 +183,7 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
-    function optInToBApp(
-        uint32 strategyId,
-        address bApp,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages,
-        bytes calldata data
-    ) external {
+    function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
@@ -308,25 +299,14 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return (s.feeUpdateRequests[strategyId].percentage, s.feeUpdateRequests[strategyId].requestTime);
     }
 
-    function withdrawalRequests(uint32 strategyId, address account, address token)
-        external
-        view
-        returns (uint256 shares, uint32 requestTime)
-    {
+    function withdrawalRequests(uint32 strategyId, address account, address token) external view returns (uint256 shares, uint32 requestTime) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return (
-            s.withdrawalRequests[strategyId][account][token].shares, s.withdrawalRequests[strategyId][account][token].requestTime
-        );
+        return (s.withdrawalRequests[strategyId][account][token].shares, s.withdrawalRequests[strategyId][account][token].requestTime);
     }
 
-    function obligationRequests(uint32 strategyId, address token, address bApp)
-        external
-        view
-        returns (uint32 percentage, uint32 requestTime)
-    {
+    function obligationRequests(uint32 strategyId, address token, address bApp) external view returns (uint32 percentage, uint32 requestTime) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return
-            (s.obligationRequests[strategyId][token][bApp].percentage, s.obligationRequests[strategyId][token][bApp].requestTime);
+        return (s.obligationRequests[strategyId][token][bApp].percentage, s.obligationRequests[strategyId][token][bApp].requestTime);
     }
 
     function slashingFund(address owner, address token) external view returns (uint256) {

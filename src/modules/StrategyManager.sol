@@ -8,7 +8,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import {StorageData, SSVBasedAppsStorage} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
 import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
 import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
@@ -186,13 +185,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param tokens The list of tokens to opt-in with
     /// @param obligationPercentages The list of obligation percentages for each token
     /// @param data Optional parameter that could be required by the service
-    function optInToBApp(
-        uint32 strategyId,
-        address bApp,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages,
-        bytes calldata data
-    ) external onlyStrategyOwner(strategyId) {
+    function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data)
+        external
+        onlyStrategyOwner(strategyId)
+    {
         if (tokens.length != obligationPercentages.length) revert ICore.LengthsNotMatching();
         StorageData storage s = SSVBasedAppsStorage.load();
         // Check if a strategy exists for the given bApp.
@@ -391,10 +387,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage)
-        external
-        onlyStrategyOwner(strategyId)
-    {
+    function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external onlyStrategyOwner(strategyId) {
         StorageData storage s = SSVBasedAppsStorage.load();
 
         if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
@@ -408,10 +401,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
     /// @param obligationPercentage The new percentage of the obligation
-    function proposeUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage)
-        external
-        onlyStrategyOwner(strategyId)
-    {
+    function proposeUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external onlyStrategyOwner(strategyId) {
         _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage);
 
         StorageData storage s = SSVBasedAppsStorage.load();
@@ -516,11 +506,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @return slashableBalance The slashable balance
-    function getSlashableBalance(uint32 strategyId, address bApp, address token)
-        internal
-        view
-        returns (uint256 slashableBalance)
-    {
+    function getSlashableBalance(uint32 strategyId, address bApp, address token) internal view returns (uint256 slashableBalance) {
         StorageData storage s = SSVBasedAppsStorage.load();
 
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
@@ -536,10 +522,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param amount The amount to slash
     /// @param data Optional parameter that could be required by the service
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver)
-        external
-        nonReentrant
-    {
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver) external nonReentrant {
         if (amount == 0) revert ICore.InvalidAmount();
         StorageData storage s = SSVBasedAppsStorage.load();
 
@@ -604,12 +587,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp
     /// @param tokens The list of tokens to set s.obligations for
     /// @param obligationPercentages The list of obligation percentages for each token
-    function _createOptInObligations(
-        uint32 strategyId,
-        address bApp,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages
-    ) private {
+    function _createOptInObligations(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages) private {
         uint256 length = tokens.length;
         for (uint256 i = 0; i < length;) {
             _createSingleObligation(strategyId, bApp, tokens[i], obligationPercentages[i]);
@@ -647,10 +625,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function _validateObligationUpdateInput(uint32 strategyId, address bApp, address token, uint32 obligationPercentage)
-        private
-        view
-    {
+    function _validateObligationUpdateInput(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private view {
         StorageData storage s = SSVBasedAppsStorage.load();
 
         if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();

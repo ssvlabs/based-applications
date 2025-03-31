@@ -12,12 +12,12 @@ contract BasedAppMock is OwnableBasedApp {
         counter = 0;
     }
 
-    function optInToBApp(
-        uint32 strategyId,
-        address[] calldata tokens,
-        uint32[] calldata obligationPercentages,
-        bytes calldata data
-    ) external override onlySSVBasedAppManager returns (bool success) {
+    function optInToBApp(uint32 strategyId, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data)
+        external
+        override
+        onlySSVBasedAppManager
+        returns (bool success)
+    {
         counter++;
         emit OptInToBApp(strategyId, tokens, obligationPercentages, data);
         if (counter % 2 == 0) return false;

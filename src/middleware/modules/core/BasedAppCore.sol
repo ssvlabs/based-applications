@@ -24,7 +24,8 @@ abstract contract BasedAppCore is IBasedApp {
         _;
     }
 
-    /// @notice constructor for the BasedAppCore contract, initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
+    /// @notice constructor for the BasedAppCore contract,
+    /// initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
     /// @param _basedAppManager address of the SSVBasedApps contract
     constructor(address _basedAppManager) {
         BASED_APP_MANAGER = _basedAppManager;
@@ -42,10 +43,7 @@ abstract contract BasedAppCore is IBasedApp {
     ///        "logo": "https://link-to-your-logo.png",
     ///        "social": "https://x.com/ssv_network"
     ///    }
-    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI)
-        external
-        virtual
-    {
+    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external virtual {
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
@@ -56,23 +54,18 @@ abstract contract BasedAppCore is IBasedApp {
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
-    function optInToBApp(
-        uint32, /*strategyId*/
-        address[] calldata, /*tokens*/
-        uint32[] calldata, /*obligationPercentages*/
-        bytes calldata /*data*/
-    ) external virtual onlySSVBasedAppManager returns (bool success) {
+    function optInToBApp(uint32, /*strategyId*/ address[] calldata, /*tokens*/ uint32[] calldata, /*obligationPercentages*/ bytes calldata /*data*/ )
+        external
+        virtual
+        onlySSVBasedAppManager
+        returns (bool success)
+    {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         return true;
     }
 
-    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata)
-        external
-        virtual
-        onlySSVBasedAppManager
-        returns (bool)
-    {
+    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata) external virtual onlySSVBasedAppManager returns (bool) {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         return true;

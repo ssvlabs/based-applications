@@ -23,11 +23,7 @@ abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     ///        "logo": "https://link-to-your-logo.png",
     ///        "social": "https://x.com/ssv_network"
     ///    }
-    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI)
-        external
-        override
-        onlyOwner
-    {
+    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external override onlyOwner {
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
