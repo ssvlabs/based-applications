@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {IStorage, IBasedAppManager, IERC20, BasedAppMock, ISSVBasedApps, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
+import {ICore, IERC20, IStrategyManager, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
 import {BasedAppManagerStrategyTest} from "@ssv/test/BAppManager.strategy.t.sol";
-import {TestUtils} from "@ssv/test/Utils.t.sol";
 
 contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
     function checkSlashableBalance(uint32 strategyId, address bApp, address token, uint256 expectedSlashableBalance)
@@ -85,7 +84,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategySlashed(STRATEGY1, address(nonCompliantBApp), token, slashAmount, "");
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(nonCompliantBApp), token, slashAmount, "");
         nonCompliantBApp.slash(STRATEGY1, token, slashAmount);
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -106,7 +105,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"), USER1);
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -126,7 +125,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"), USER1);
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalShares(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -144,7 +143,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppSlashingFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppSlashingFailed.selector));
         proxiedManager.slash(STRATEGY1, address(bApp2), token, slashAmount, abi.encodePacked("0x00"), USER1);
         checkTotalShares(STRATEGY1, token, depositAmount, depositAmount);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -156,7 +155,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         test_StrategyOptInToBAppEOA(1000);
         vm.prank(USER1);
         uint256 slashAmount = 0;
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
         proxiedManager.slash(STRATEGY1, USER1, address(erc20mock), slashAmount, abi.encodePacked("0x00"), USER1);
     }
 
@@ -167,7 +166,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         vm.prank(USER1);
         uint256 slashAmount = 1;
         // todo should check if there is an obligation? But the 0 percentage will make the value go to 0
-        vm.expectRevert(abi.encodeWithSelector(IStorage.BAppNotRegistered.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotRegistered.selector));
         proxiedManager.slash(STRATEGY1, USER1, address(erc20mock), slashAmount, abi.encodePacked("0x00"), USER1);
     }
 
@@ -177,7 +176,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 slashAmount = 1;
         test_StrategyOptInToBAppEOA(percentage);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"), USER1);
     }
 
@@ -202,7 +201,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         test_StrategyOptInToBAppNonCompliant(percentage);
         vm.startPrank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidBAppOwner.selector, USER2, address(nonCompliantBApp)));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidBAppOwner.selector, USER2, address(nonCompliantBApp)));
         proxiedManager.slash(STRATEGY1, address(nonCompliantBApp), token, slashAmount, abi.encodePacked("0x00"), USER1);
         vm.stopPrank();
     }
@@ -240,7 +239,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 slashAmount = 100;
         test_SlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidToken.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
         proxiedManager.withdrawSlashingFund(ETH_ADDRESS, slashAmount);
     }
 
@@ -248,7 +247,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 slashAmount = 100;
         test_SlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
         proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount + 1);
     }
 
@@ -256,7 +255,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 slashAmount = 100;
         test_SlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
         proxiedManager.withdrawSlashingFund(address(erc20mock), 0);
     }
 
@@ -264,7 +263,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 slashAmount = 100;
         test_SlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
         proxiedManager.withdrawETHSlashingFund(slashAmount + 1);
     }
 
@@ -272,7 +271,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 slashAmount = 100;
         test_SlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
         proxiedManager.withdrawETHSlashingFund(0);
     }
 }

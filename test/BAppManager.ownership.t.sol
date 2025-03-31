@@ -1,29 +1,37 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import "@ssv/test/BAppManager.setup.t.sol";
+import {
+    BasedAppManagerSetupTest,
+    IStrategyManager,
+    IBasedAppManager,
+    ISSVDAO,
+    SSVBasedApps,
+    ICore,
+    ERC1967Proxy
+} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgradeable {
-    function test_OwnerOfBasedAppManager() public view {
+    function testOwnerOfBasedAppManager() public view {
         assertEq(proxiedManager.owner(), OWNER, "Owner should be the deployer");
     }
 
-    function test_Implementation() public view {
+    function testImplementation() public view {
         address currentImplementation =
             address(uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)))));
         assertEq(currentImplementation, address(implementation), "Implementation should be the SSVBasedApps contract");
     }
 
-    function testRevert_UpgradeUnauthorizedFromNonOwner() public {
+    function testRevertUpgradeUnauthorizedFromNonOwner() public {
         SSVBasedApps newImplementation = new SSVBasedApps();
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         proxiedManager.upgradeToAndCall(address(newImplementation), bytes(""));
     }
 
-    function test_UpgradeAuthorized() public {
+    function testUpgradeAuthorized() public {
         SSVBasedApps newImplementation = new SSVBasedApps();
 
         vm.prank(OWNER);
@@ -34,27 +42,45 @@ contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgrad
         assertEq(currentImplementation, address(newImplementation), "Implementation should be upgraded");
     }
 
-    function testRevert_TryToCallInitializeAgainFromAttacker() public {
+    function testRevertTryToCallInitializeAgainFromAttacker() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(ATTACKER);
-        proxiedManager.initialize(address(OWNER), 10);
+        proxiedManager.initialize(
+            address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10
+        );
     }
 
-    function testRevert_TryToCallInitializeAgainFromOwner() public {
+    function testRevertTryToCallInitializeAgainFromOwner() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(OWNER);
-        proxiedManager.initialize(address(OWNER), 10);
+        proxiedManager.initialize(
+            address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10
+        );
     }
 
-    function testRevert_InitializeWithZeroFee() public {
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidMaxFeeIncrement.selector));
-        bytes memory initData = abi.encodeWithSignature("initialize(address,uint32)", address(OWNER), 0);
+    function testRevertInitializeWithZeroFee() public {
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
+        bytes memory initData = abi.encodeWithSignature(
+            "initialize(address,address,address,address,uint32)",
+            address(OWNER),
+            address(basedAppsManagerMod),
+            address(strategyManagerMod),
+            address(ssvDAOMod),
+            0
+        );
         proxy = new ERC1967Proxy(address(implementation), initData);
     }
 
-    function testRevert_InitializeWithExcessiveFee() public {
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidMaxFeeIncrement.selector));
-        bytes memory initData = abi.encodeWithSignature("initialize(address,uint32)", address(OWNER), 10_001);
+    function testRevertInitializeWithExcessiveFee() public {
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
+        bytes memory initData = abi.encodeWithSignature(
+            "initialize(address,address,address,address,uint32)",
+            address(OWNER),
+            address(basedAppsManagerMod),
+            address(strategyManagerMod),
+            address(ssvDAOMod),
+            10_001
+        );
         proxy = new ERC1967Proxy(address(implementation), initData);
     }
 }

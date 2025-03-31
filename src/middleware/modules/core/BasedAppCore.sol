@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
+import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
@@ -47,36 +47,6 @@ abstract contract BasedAppCore is IBasedApp {
         virtual
     {
         IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
-    }
-
-    /// @notice Adds tokens to a BApp
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
-    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).addTokensToBApp(tokens, sharedRiskLevels);
-    }
-
-    /// @notice Updates the tokens of a BApp
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
-    function proposeBAppTokensUpdate(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensUpdate(tokens, sharedRiskLevels);
-    }
-
-    /// @notice Finalizes the update of the tokens of a BApp
-    function finalizeBAppTokensUpdate() external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensUpdate();
-    }
-
-    /// @notice Removes tokens from a BApp
-    /// @param tokens array of token addresses
-    function proposeBAppTokensRemoval(address[] calldata tokens) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensRemoval(tokens);
-    }
-
-    /// @notice Finalizes the removal of the tokens of a BApp
-    function finalizeBAppTokensRemoval() external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensRemoval();
     }
 
     /// @notice Updates the metadata URI of a BApp

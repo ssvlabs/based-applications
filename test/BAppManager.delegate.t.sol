@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {BasedAppManagerSetupTest, IBasedAppManager, ISSVBasedApps, IStorage} from "@ssv/test/BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest, IStrategyManager, ICore} from "@ssv/test/BAppManager.setup.t.sol";
 
 contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function checkDelegation(
@@ -27,7 +27,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         uint32 delegatedAmount = 1;
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, delegatedAmount);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER, delegatedAmount);
         proxiedManager.delegateBalance(RECEIVER, delegatedAmount);
         checkDelegation(USER1, RECEIVER, delegatedAmount, delegatedAmount);
     }
@@ -36,7 +36,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.assume(percentageAmount > 0 && percentageAmount < proxiedManager.maxPercentage());
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, percentageAmount);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER, percentageAmount);
         proxiedManager.delegateBalance(RECEIVER, percentageAmount);
         checkDelegation(USER1, RECEIVER, percentageAmount, percentageAmount);
     }
@@ -51,14 +51,14 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
     function testRevert_DelegateBalanceTooLow() public {
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, 0);
     }
 
     function testRevert_DelegateBalanceTooHigh(uint32 highBalance) public {
         vm.assume(highBalance > proxiedManager.maxPercentage());
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, highBalance);
     }
 
@@ -70,12 +70,12 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
 
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, percentage1);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER, percentage1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
         vm.expectEmit(true, true, true, true);
         checkDelegation(USER1, RECEIVER, percentage1, percentage1);
 
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER2, percentage2);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER2, percentage2);
         proxiedManager.delegateBalance(RECEIVER2, percentage2);
         checkDelegation(USER1, RECEIVER, percentage1, percentage1 + percentage2);
 
@@ -87,7 +87,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
         uint32 percentage2 = proxiedManager.maxPercentage();
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingPercentageUpdate.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingPercentageUpdate.selector));
         proxiedManager.delegateBalance(RECEIVER2, percentage2);
         checkDelegationZero(USER1, RECEIVER2, percentage1);
         vm.stopPrank();
@@ -100,11 +100,11 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
 
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, percentage1);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER, percentage1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
         checkDelegation(USER1, RECEIVER, percentage1, percentage1);
 
-        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationAlreadyExists.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationAlreadyExists.selector));
         proxiedManager.delegateBalance(RECEIVER, percentage2);
 
         vm.stopPrank();
@@ -113,7 +113,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function testRevert_InvalidPercentageDelegateBalance() public {
         uint32 maxPlusOne = proxiedManager.maxPercentage() + 1;
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
     }
 
@@ -123,7 +123,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         uint32 updatePercentage = proxiedManager.maxPercentage();
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationUpdated(USER1, RECEIVER, updatePercentage);
+        emit IStrategyManager.DelegationUpdated(USER1, RECEIVER, updatePercentage);
         proxiedManager.updateDelegatedBalance(RECEIVER, updatePercentage);
         checkDelegation(USER1, RECEIVER, updatePercentage, updatePercentage);
     }
@@ -132,27 +132,27 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         test_UpdateDelegatedBalance();
         uint32 maxPlusOne = proxiedManager.maxPercentage() + 1;
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.delegateBalance(RECEIVER, maxPlusOne);
     }
 
     function testRevert_UpdateTotalDelegatePercentageWithZero() public {
         test_DelegateMinimumBalance();
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 0);
     }
 
     function testRevert_UpdateTotalDelegatePercentageWithSameBalance() public {
         test_DelegateMinimumBalance();
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationExistsWithSameValue.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationExistsWithSameValue.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1);
     }
 
     function testRevert_UpdateBalanceNotExisting() public {
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationDoesNotExist.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
     }
 
@@ -163,16 +163,16 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
 
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, delegatedAmount1);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER, delegatedAmount1);
         proxiedManager.delegateBalance(RECEIVER, delegatedAmount1);
         checkDelegation(USER1, RECEIVER, delegatedAmount1, delegatedAmount1);
 
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER2, delegatedAmount2);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER2, delegatedAmount2);
         proxiedManager.delegateBalance(RECEIVER2, delegatedAmount1);
         checkDelegation(USER1, RECEIVER2, delegatedAmount2, delegatedAmount1 + delegatedAmount2);
 
-        vm.expectRevert(abi.encodeWithSelector(IStorage.ExceedingPercentageUpdate.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingPercentageUpdate.selector));
         proxiedManager.updateDelegatedBalance(RECEIVER, 1e4);
 
         vm.stopPrank();
@@ -183,7 +183,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationRemoved(USER1, RECEIVER);
+        emit IStrategyManager.DelegationRemoved(USER1, RECEIVER);
         proxiedManager.removeDelegatedBalance(RECEIVER);
         checkDelegationZero(USER1, RECEIVER, 0);
     }
@@ -197,14 +197,14 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         vm.startPrank(USER1);
 
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationRemoved(USER1, RECEIVER);
+        emit IStrategyManager.DelegationRemoved(USER1, RECEIVER);
         proxiedManager.removeDelegatedBalance(RECEIVER);
         checkDelegationZero(USER1, RECEIVER, delegatedAmount2);
         checkDelegation(USER1, RECEIVER2, delegatedAmount2, delegatedAmount2);
 
         uint32 newDelegatedAmount1 = 1;
         vm.expectEmit(true, true, true, true);
-        emit ISSVBasedApps.DelegationCreated(USER1, RECEIVER, newDelegatedAmount1);
+        emit IStrategyManager.DelegationCreated(USER1, RECEIVER, newDelegatedAmount1);
         proxiedManager.delegateBalance(RECEIVER, newDelegatedAmount1);
         checkDelegation(USER1, RECEIVER, newDelegatedAmount1, newDelegatedAmount1 + delegatedAmount2);
 
@@ -213,7 +213,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
 
     function testRevert_RemoveNonExistingBalance() public {
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(IStorage.DelegationDoesNotExist.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.DelegationDoesNotExist.selector));
         proxiedManager.removeDelegatedBalance(RECEIVER);
         vm.stopPrank();
     }
@@ -222,7 +222,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         string memory metadataURI = "https://account-metadata.com";
         vm.startPrank(USER1);
         vm.expectEmit(true, false, false, false);
-        emit ISSVBasedApps.AccountMetadataURIUpdated(USER1, metadataURI);
+        emit IStrategyManager.AccountMetadataURIUpdated(USER1, metadataURI);
         proxiedManager.updateAccountMetadataURI(metadataURI);
         vm.stopPrank();
     }
@@ -232,7 +232,7 @@ contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
         string memory metadataURI2 = "https://account-metadata-2.com";
         vm.startPrank(USER1);
         vm.expectEmit(true, false, false, false);
-        emit ISSVBasedApps.AccountMetadataURIUpdated(USER1, metadataURI2);
+        emit IStrategyManager.AccountMetadataURIUpdated(USER1, metadataURI2);
         proxiedManager.updateAccountMetadataURI(metadataURI2);
         vm.stopPrank();
     }

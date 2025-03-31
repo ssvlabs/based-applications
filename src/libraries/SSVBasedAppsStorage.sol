@@ -1,94 +1,109 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {IStorage} from "@ssv/src/interfaces/IStorage.sol";
-import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
+import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
-abstract contract SSVBasedAppStorage is ISSVBasedApps {
-    uint32 public feeTimelockPeriod = 7 days;
-    uint32 public feeExpireTime = 1 days;
-    uint32 public withdrawalTimelockPeriod = 5 days;
-    uint32 public withdrawalExpireTime = 1 days;
-    uint32 public obligationTimelockPeriod = 7 days;
-    uint32 public obligationExpireTime = 1 days;
-    uint32 public maxPercentage = 1e4;
-    address public ethAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint256 public maxShares = 1e50;
-    uint32 public maxFeeIncrement;
+enum SSVBasedAppsModules {
+    SSV_BASED_APPS_MANAGER,
+    SSV_STRATEGY_MANAGER,
+    SSV_DAO
+}
 
-    uint32 internal _strategyCounter;
-
+/// @title SSV Based Applications Storage Data
+/// @notice Represents all operational state required by the SSV Based Application platform.
+struct StorageData {
+    uint32 _strategyCounter;
+    /// @notice Maps each SSVBasedAppsModules' module to its corresponding contract address
+    mapping(SSVBasedAppsModules => address) ssvContracts;
     /**
      * @notice Tracks the strategies created
      * @dev The strategy ID is incremental and unique
      */
-    mapping(uint32 strategyId => IStorage.Strategy) public strategies;
+    mapping(uint32 strategyId => ICore.Strategy) strategies;
     /**
      * @notice Links an account to a single strategy for a specific bApp
      * @dev Guarantees that an account cannot have more than one strategy for a given bApp
      */
-    mapping(address account => mapping(address bApp => uint32 strategyId)) public accountBAppStrategy;
+    mapping(address account => mapping(address bApp => uint32 strategyId)) accountBAppStrategy;
     /**
      * @notice Tracks the percentage of validator balance a delegator has delegated to a specific receiver account
      * @dev Each delegator can allocate a portion of their validator balance to multiple accounts including itself
      */
-    mapping(address delegator => mapping(address account => uint32 percentage)) public delegations;
+    mapping(address delegator => mapping(address account => uint32 percentage)) delegations;
     /**
      * @notice Tracks the total percentage of validator balance a delegator has delegated across all receiver accounts
      * @dev Ensures that a delegator cannot delegate more than 100% of their validator balance
      */
-    mapping(address delegator => uint32 totalPercentage) public totalDelegatedPercentage;
+    mapping(address delegator => uint32 totalPercentage) totalDelegatedPercentage;
     /**
      * @notice Tracks the token shares for individual strategies.
      * @dev Tracks that how much shares an account owns in a specific strategy.
      */
-    mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) public
-        strategyAccountShares;
+    mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) strategyAccountShares;
     /**
      * @notice Tracks the total balance for individual strategies.
      * @dev Tracks that how much token balance a strategy has.
      */
-    mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalBalance;
+    mapping(uint32 strategyId => mapping(address token => uint256 balance)) strategyTotalBalance;
     /**
      * @notice Tracks the total shares for individual strategies.
      * @dev Tracks that how much share balance a strategy has.
      */
-    mapping(uint32 strategyId => mapping(address token => uint256 balance)) public strategyTotalShares;
+    mapping(uint32 strategyId => mapping(address token => uint256 balance)) strategyTotalShares;
     /**
      * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
      */
-    mapping(uint32 strategyId => mapping(address bApp => mapping(address token => IStorage.Obligation))) public obligations;
+    mapping(uint32 strategyId => mapping(address bApp => mapping(address token => ICore.Obligation))) obligations;
     /**
      * @notice Tracks unallocated tokens in a strategy.
      * @dev Count the number of bApps that have one obligation set for the token.
      * If the counter is 0, the token is unused and we can allow fast withdrawal.
      */
-    mapping(uint32 strategyId => mapping(address token => uint32 bAppsCounter)) public usedTokens;
+    mapping(uint32 strategyId => mapping(address token => uint32 bAppsCounter)) usedTokens;
     /**
      * @notice Tracks all the withdrawal requests divided by token per strategy.
      * @dev User can have only one pending withdrawal request per token.
      *  Submitting a new request will overwrite the previous one and reset the timer.
      */
-    mapping(uint32 strategyId => mapping(address account => mapping(address token => IStorage.WithdrawalRequest))) public
-        withdrawalRequests;
+    mapping(uint32 strategyId => mapping(address account => mapping(address token => ICore.WithdrawalRequest))) withdrawalRequests;
     /**
      * @notice Tracks all the obligation change requests divided by token per strategy.
      * @dev Strategy can have only one pending obligation change request per token.
      * Only the strategy owner can submit one.
      * Submitting a new request will overwrite the previous one and reset the timer.
      */
-    mapping(uint32 strategyId => mapping(address token => mapping(address bApp => IStorage.ObligationRequest))) public
-        obligationRequests;
+    mapping(uint32 strategyId => mapping(address token => mapping(address bApp => ICore.ObligationRequest))) obligationRequests;
     /**
      * @notice Tracks the fee update requests for a strategy
      * @dev Only the strategy owner can submit one.
      * Submitting a new request will overwrite the previous one and reset the timer.
      */
-    mapping(uint32 strategyId => IStorage.FeeUpdateRequest) public feeUpdateRequests;
+    mapping(uint32 strategyId => ICore.FeeUpdateRequest) feeUpdateRequests;
     /**
      * @notice Tracks the slashing fund for a specific token
      * @dev The slashing fund is used to store the tokens that are slashed from the strategies
      */
-    mapping(address owner => mapping(address token => uint256 amount)) public slashingFund;
+    mapping(address owner => mapping(address token => uint256 amount)) slashingFund;
+    /**
+     * @notice Tracks the owners of the bApps
+     * @dev The bApp is identified with its address
+     */
+    mapping(address bApp => bool isRegistered) registeredBApps;
+    /**
+     * @notice Tracks the tokens supported by the bApps
+     * @dev The bApp is identified with its address
+     */
+    mapping(address bApp => mapping(address token => ICore.SharedRiskLevel)) bAppTokens;
+}
+
+library SSVBasedAppsStorage {
+    uint256 private constant SSV_BASED_APPS_STORAGE_POSITION = uint256(keccak256("ssv.based-apps.storage.main")) - 1;
+
+    function load() internal pure returns (StorageData storage sd) {
+        uint256 position = SSV_BASED_APPS_STORAGE_POSITION;
+        assembly {
+            sd.slot := position
+        }
+    }
 }

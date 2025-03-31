@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {IBasedAppWhitelisted} from "@ssv/src/interfaces/IBasedAppWhitelisted.sol";
-import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
-
-import {BasedAppManagerSetupTest} from "@ssv/test/BAppManager.setup.t.sol";
+import {IBasedAppWhitelisted} from "@ssv/src/interfaces/middleware/IBasedAppWhitelisted.sol";
+import {BasedAppManagerSetupTest, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
 import {BasedAppManagerStrategyTest} from "@ssv/test/BAppManager.strategy.t.sol";
 import {TestUtils} from "@ssv/test/Utils.t.sol";
 
@@ -18,17 +16,6 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
         (address owner, uint32 delegationFeeOnRewards) = proxiedManager.strategies(strategyId1);
         assertEq(owner, USER1, "Strategy owner");
         assertEq(delegationFeeOnRewards, STRATEGY1_INITIAL_FEE, "Strategy fee");
-        vm.stopPrank();
-    }
-
-    function test_addTokensToBApp() public {
-        test_CreateStrategies();
-        test_registerWhitelistExampleBApp();
-        vm.startPrank(USER1);
-        (address[] memory tokensInput, uint32[] memory riskLevelInput) =
-            createSingleTokenAndSingleRiskLevel(address(erc20mock2), 10_000);
-        whitelistExample.addTokensToBApp(tokensInput, riskLevelInput);
-        checkBAppInfo(tokensInput, riskLevelInput, address(whitelistExample), proxiedManager);
         vm.stopPrank();
     }
 

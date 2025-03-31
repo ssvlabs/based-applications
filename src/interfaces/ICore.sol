@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-interface IStorage {
+interface ICore {
     /// @notice Represents a SharedRiskLevel
     struct SharedRiskLevel {
         /// @dev The shared risk level
@@ -27,6 +27,7 @@ interface IStorage {
         uint32 fee;
     }
 
+    /// @notice Represents a FeeUpdateRequest
     struct FeeUpdateRequest {
         /// @dev The new fee percentage
         uint32 percentage;
@@ -47,24 +48,6 @@ interface IStorage {
         /// @dev The new obligation percentage
         uint32 percentage;
         /// @dev The block time when the update obligation request was sent
-        uint32 requestTime;
-    }
-
-    /// @notice Represents a request to update the tokens of a bApp
-    struct TokenUpdateRequest {
-        /// @dev The new tokens
-        address[] tokens;
-        /// @dev The new shared risk levels
-        uint32[] sharedRiskLevels;
-        /// @dev The block time when the update token request was sent
-        uint32 requestTime;
-    }
-
-    /// @notice Represents a request to update the tokens of a bApp
-    struct TokenRemovalRequest {
-        /// @dev The tokens to remove
-        address[] tokens;
-        /// @dev The block time when the removal token request was sent
         uint32 requestTime;
     }
 
@@ -112,4 +95,5 @@ interface IStorage {
     error TokenNotSupportedByBApp(address token);
     error UpdateObligationExpired();
     error ZeroAddressNotAllowed();
+    error TargetModuleDoesNotExistWithData(uint8 moduleId); // 0x208bb85d
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
@@ -12,16 +12,6 @@ interface IBasedApp is IERC165 {
         uint32[] calldata obligationPercentages,
         bytes calldata data
     ) external returns (bool);
-
-    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
-
-    function proposeBAppTokensUpdate(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external;
-
-    function finalizeBAppTokensUpdate() external;
-
-    function proposeBAppTokensRemoval(address[] calldata tokens) external;
-
-    function finalizeBAppTokensRemoval() external;
 
     function updateBAppMetadataURI(string calldata metadataURI) external;
 
