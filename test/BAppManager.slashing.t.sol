@@ -167,7 +167,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.slash(STRATEGY1, USER1, address(erc20mock), slashAmount, abi.encodePacked("0x00"), USER1);
     }
 
-    function testRevertslashWithInsufficientBalance() public {
+    function testRevertSlashWithInsufficientBalance() public {
         uint32 percentage = 9000;
         address token = address(erc20mock);
         uint256 slashAmount = 1;
@@ -218,21 +218,21 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         }
     }
 
-    function testwithdrawSlashingFundErc20() public {
+    function testWithdrawSlashingFundErc20() public {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
         proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount);
     }
 
-    function testwithdrawSlashingFundEth() public {
+    function testWithdrawSlashingFundEth() public {
         uint256 slashAmount = 0.2 ether;
         testSlashBAppWithEth(slashAmount);
         vm.prank(USER1);
         proxiedManager.withdrawETHSlashingFund(slashAmount);
     }
 
-    function testRevertwithdrawSlashingFundErc20WithEth() public {
+    function testRevertWithdrawSlashingFundErc20WithEth() public {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
@@ -240,7 +240,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.withdrawSlashingFund(ETH_ADDRESS, slashAmount);
     }
 
-    function testRevertwithdrawSlashingFundErc20WithInsufficientBalance() public {
+    function testRevertWithdrawSlashingFundErc20WithInsufficientBalance() public {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
@@ -248,7 +248,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount + 1);
     }
 
-    function testRevertwithdrawSlashingFundErc20WithZeroAmount() public {
+    function testRevertWithdrawSlashingFundErc20WithZeroAmount() public {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
@@ -256,7 +256,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.withdrawSlashingFund(address(erc20mock), 0);
     }
 
-    function testRevertwithdrawETHSlashingFundErc20WithInsufficientBalance() public {
+    function testRevertWithdrawETHSlashingFundErc20WithInsufficientBalance() public {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
@@ -264,7 +264,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.withdrawETHSlashingFund(slashAmount + 1);
     }
 
-    function testRevertwithdrawETHSlashingFundErc20WithZeroAmount() public {
+    function testRevertWithdrawETHSlashingFundErc20WithZeroAmount() public {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);

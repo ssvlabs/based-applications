@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
-
+import {Test} from "forge-std/Test.sol";
 import {SSVBasedApps} from "src/SSVBasedApps.sol";
 
 contract TestUtils is Test {

@@ -54,18 +54,18 @@ interface ICore {
 
     error BAppAlreadyOptedIn();
     error BAppAlreadyRegistered();
-    error BAppNotRegistered();
+    error BAppDoesNotSupportInterface();
     error BAppNotOptedIn();
+    error BAppNotRegistered();
     error BAppOptInFailed();
     error BAppSlashingFailed();
-    error BAppDoesNotSupportInterface();
+    error DelegateCallFailed(bytes returnData);
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();
-    error DelegateCallFailed(bytes returnData);
     error EmptyTokenList();
-    error ExceedingPercentageUpdate();
     error ExceedingMaxShares();
+    error ExceedingPercentageUpdate();
     error FeeAlreadySet();
     error InsufficientBalance();
     error InsufficientLiquidity();
@@ -81,8 +81,8 @@ interface ICore {
     error LengthsNotMatching();
     error NoPendingFeeUpdate();
     error NoPendingObligationUpdate();
-    error NoPendingTokenUpdate();
     error NoPendingTokenRemoval();
+    error NoPendingTokenUpdate();
     error NoPendingWithdrawal();
     error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
@@ -90,11 +90,11 @@ interface ICore {
     error PercentageAlreadySet();
     error RequestTimeExpired();
     error SharedRiskLevelAlreadySet();
+    error TargetModuleDoesNotExistWithData(uint8 moduleId); // 0x208bb85d
     error TimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();
     error TokenNotSupportedByBApp(address token);
     error UpdateObligationExpired();
     error ZeroAddressNotAllowed();
-    error TargetModuleDoesNotExistWithData(uint8 moduleId); // 0x208bb85d
 }

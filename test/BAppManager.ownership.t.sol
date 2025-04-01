@@ -2,9 +2,7 @@
 pragma solidity 0.8.29;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-
 import {BasedAppManagerSetupTest, IStrategyManager, IBasedAppManager, ISSVDAO, SSVBasedApps, ERC1967Proxy} from "@ssv/test/BAppManager.setup.t.sol";
-
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 

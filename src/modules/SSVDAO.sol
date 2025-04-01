@@ -5,7 +5,6 @@ import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
 import {SSVBasedAppsStorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
 
 contract SSVDAO is ISSVDAO {
-    // *****************************************
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
         SSVBasedAppsStorageProtocol.load().feeTimelockPeriod = feeTimelockPeriod;
         emit FeeTimelockPeriodUpdated(feeTimelockPeriod);

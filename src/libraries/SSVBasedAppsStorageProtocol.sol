@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-/// @title SSV Network Storage Protocol
-/// @notice Represents the operational settings and parameters required by the SSV Network
+/// @title SSV Based Apps Storage Protocol
+/// @notice Represents the operational settings and parameters required by the SSV Based Application Platform
 struct StorageProtocol {
-    // Strategy Manager
     uint32 feeTimelockPeriod;
     uint32 feeExpireTime;
     uint32 withdrawalTimelockPeriod;

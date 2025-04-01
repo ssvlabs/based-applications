@@ -16,7 +16,6 @@ library CoreLib {
     /// @notice Function to check if an address uses the correct bApp interface
     /// @param bApp The address of the bApp
     /// @return True if the address uses the correct bApp interface
-    // todo library
     function isBApp(address bApp) public view returns (bool) {
         return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }

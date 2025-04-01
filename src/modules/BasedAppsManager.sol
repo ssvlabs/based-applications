@@ -13,10 +13,6 @@ contract BasedAppsManager is IBasedAppManager {
         _;
     }
 
-    // ********************
-    // ** Section: bApps **
-    // ********************
-
     /// @notice Registers a bApp.
     /// @param tokens The list of tokens the bApp accepts; can be empty.
     /// @param sharedRiskLevels The shared risk level of the bApp.

@@ -188,7 +188,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testRevertdepositAmountHigherThanMaxShares() public {
+    function testRevertDepositAmountHigherThanMaxShares() public {
         testCreateStrategies();
         uint256 depositAmount = proxiedManager.maxShares() + 1;
         vm.prank(USER3);
@@ -196,7 +196,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.depositERC20(STRATEGY1, erc20mock, depositAmount);
     }
 
-    function testRevertdepositETHAmountHigherThanMaxShares() public {
+    function testRevertDepositETHAmountHigherThanMaxShares() public {
         testCreateStrategies();
         uint256 depositAmount = proxiedManager.maxShares() + 1;
         vm.prank(USER3);
@@ -345,7 +345,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testoptInToBAppWithNoTokensWithNoTokens() public {
+    function testOptInToBAppWithNoTokensWithNoTokens() public {
         testCreateStrategies();
         testRegisterBAppWithNoTokens();
         vm.startPrank(USER1);
@@ -378,7 +378,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testRevertoptInToBAppWithNoTokensWithAToken(uint32 percentage) public {
+    function testRevertOptInToBAppWithNoTokensWithAToken(uint32 percentage) public {
         testCreateStrategies();
         testRegisterBAppWithNoTokens();
         vm.startPrank(USER1);
@@ -762,7 +762,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
     }
 
-    function testproposeStrategyObligationPercentage(uint32 initialObligationPercentage, uint32 proposedObligationPercentage) public {
+    function testProposeStrategyObligationPercentage(uint32 initialObligationPercentage, uint32 proposedObligationPercentage) public {
         vm.assume(
             initialObligationPercentage > 0 && initialObligationPercentage <= proxiedManager.maxPercentage() && proposedObligationPercentage >= 0
                 && proposedObligationPercentage <= proxiedManager.maxPercentage() && proposedObligationPercentage != initialObligationPercentage
@@ -782,7 +782,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testUpdateStrategyObligationFinalizeOnInitialLimit() public {
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
-        testproposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
+        testProposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -796,7 +796,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testUpdateStrategyObligationFinalizeOnLatestLimit() public {
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
-        testproposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
+        testProposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod() + proxiedManager.obligationExpireTime());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -810,7 +810,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testUpdateStrategyObligationFinalizeWithZeroValue() public {
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 0;
-        testproposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
+        testProposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
 
         vm.startPrank(USER1);
         uint32 usedTokens = proxiedManager.usedTokens(STRATEGY1, address(erc20mock));
@@ -831,7 +831,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevertUpdateStrategyObligationFinalizeTooLate(uint256 timeAfterLimit) public {
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
-        testproposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
+        testProposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
         vm.assume(timeAfterLimit > proxiedManager.obligationExpireTime() && timeAfterLimit < 100 * 365 days);
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod() + timeAfterLimit);
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -844,7 +844,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevertUpdateStrategyObligationFinalizeTooEarly(uint256 timeToLimit) public {
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
-        testproposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
+        testProposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
         vm.assume(timeToLimit > 0 && timeToLimit < proxiedManager.obligationTimelockPeriod());
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod() - timeToLimit);
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -857,7 +857,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevertUpdateStrategyObligationWithNonOwner() public {
         uint32 initialObligationPercentage = 9000;
         uint32 proposedObligationPercentage = 1000;
-        testproposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
+        testProposeStrategyObligationPercentage(initialObligationPercentage, proposedObligationPercentage);
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(ATTACKER);
@@ -1034,7 +1034,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testupdateObligationFromZeroToHigher() public {
+    function testUpdateObligationFromZeroToHigher() public {
         testCreateObligationETHWithZeroPercentage();
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -1046,7 +1046,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testRevertproposeUpdateObligationWithBAppNotOptedIN() public {
+    function testRevertProposeUpdateObligationWithBAppNotOptedIN() public {
         testCreateStrategies();
         testRegisterBApp();
         for (uint256 i = 0; i < bApps.length; i++) {
@@ -1056,7 +1056,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         }
     }
 
-    function testRevertproposeUpdateObligationWithSamePercentage() public {
+    function testRevertProposeUpdateObligationWithSamePercentage() public {
         testCreateObligationETH(10_000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -1066,7 +1066,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         }
     }
 
-    function testRevertproposeUpdateObligationNotCreated() public {
+    function testRevertProposeUpdateObligationNotCreated() public {
         testCreateObligationETH(10_000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -1095,25 +1095,25 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testupdateUsedTokensCorrectly() public {
+    function testUpdateUsedTokensCorrectly() public {
         testCreateNewObligationSuccessful();
         vm.startPrank(USER1);
-        address TOKEN = address(erc20mock2);
+        address token = address(erc20mock2);
 
-        updateObligation(STRATEGY1, address(bApp1), TOKEN, 9700);
-        checkObligationInfo(STRATEGY1, address(bApp1), TOKEN, 9700, uint32(bApps.length), true, proxiedManager);
+        updateObligation(STRATEGY1, address(bApp1), token, 9700);
+        checkObligationInfo(STRATEGY1, address(bApp1), token, 9700, uint32(bApps.length), true, proxiedManager);
 
-        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), TOKEN, 0);
-        checkProposedObligation(STRATEGY1, address(bApp1), TOKEN, 9700, 0, block.timestamp, true);
+        proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApp1), token, 0);
+        checkProposedObligation(STRATEGY1, address(bApp1), token, 9700, 0, block.timestamp, true);
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod());
-        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), TOKEN);
-        checkProposedObligation(STRATEGY1, address(bApp1), TOKEN, 0, 0, 0, true);
-        checkObligationInfo(STRATEGY1, address(bApp1), TOKEN, 0, uint32(bApps.length) - 1, true, proxiedManager);
+        proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApp1), token);
+        checkProposedObligation(STRATEGY1, address(bApp1), token, 0, 0, 0, true);
+        checkObligationInfo(STRATEGY1, address(bApp1), token, 0, uint32(bApps.length) - 1, true, proxiedManager);
 
         vm.expectRevert(abi.encodeWithSelector(ICore.ObligationAlreadySet.selector));
-        proxiedManager.createObligation(STRATEGY1, address(bApp1), TOKEN, 1000);
-        updateObligation(STRATEGY1, address(bApp1), TOKEN, 1000);
-        checkObligationInfo(STRATEGY1, address(bApp1), TOKEN, 1000, uint32(bApps.length), true, proxiedManager);
+        proxiedManager.createObligation(STRATEGY1, address(bApp1), token, 1000);
+        updateObligation(STRATEGY1, address(bApp1), token, 1000);
+        checkObligationInfo(STRATEGY1, address(bApp1), token, 1000, uint32(bApps.length), true, proxiedManager);
         vm.stopPrank();
     }
 
@@ -1252,7 +1252,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testadvancedWithdrawalFlowETH() public {
+    function testAdvancedWithdrawalFlowETH() public {
         uint32 percentage = 0;
         testCreateStrategies();
         testRegisterBAppWithETH();
@@ -1346,21 +1346,21 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     //     vm.stopPrank();
     // }
 
-    function testRevertproposeWithdrawInsufficientLiquidity() public {
+    function testRevertProposeWithdrawInsufficientLiquidity() public {
         testCreateObligationETHWithZeroPercentage(); // Registers BApp and does the opt in
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientLiquidity.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
     }
 
-    function testRevertproposeWithdrawInsufficientLiquidityETH() public {
+    function testRevertProposeWithdrawInsufficientLiquidityETH() public {
         testCreateObligationETHWithZeroPercentage(); // Registers BApp and does the opt in
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientLiquidity.selector));
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
     }
 
-    // function testRevertfinalizeWithdrawInsufficientBalance() public {
+    // function testRevertFinalizeWithdrawInsufficientBalance() public {
     //     testCreateObligationETHWithZeroPercentage(); // Registers BApp and does the opt in
     //     vm.startPrank(USER1);
 
@@ -1373,7 +1373,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     //     vm.stopPrank();
     // }
 
-    // function testRevertfinalizeWithdrawInsufficientBalanceETH() public {
+    // function testRevertFinalizeWithdrawInsufficientBalanceETH() public {
     //     testCreateObligationETHWithZeroPercentage(); // Registers BApp and does the opt in
     //     vm.startPrank(USER1);
     //     proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
@@ -1432,7 +1432,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     }
 
     // todo
-    function testproposeUpdateAndProposeAnotherChangeToUpdate() public {}
+    function testProposeUpdateAndProposeAnotherChangeToUpdate() public {}
 
     // todo check the expire time
 }

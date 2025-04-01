@@ -3,7 +3,6 @@ pragma solidity 0.8.29;
 
 import {IBasedAppWhitelisted} from "@ssv/src/interfaces/middleware/IBasedAppWhitelisted.sol";
 import {BasedAppManagerSetupTest, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
-import {BasedAppManagerStrategyTest} from "@ssv/test/BAppManager.strategy.t.sol";
 import {TestUtils} from "@ssv/test/Utils.t.sol";
 
 contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
@@ -58,7 +57,7 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
         proxiedManager.optInToBApp(STRATEGY1, address(whitelistExample), tokensInput, riskLevelInput, "");
     }
 
-    function testremoveWhitelistedAccount() public {
+    function testRemoveWhitelistedAccount() public {
         testAddWhitelistedAccount();
         vm.prank(USER1);
         whitelistExample.removeWhitelisted(STRATEGY1);
@@ -72,7 +71,7 @@ contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
         whitelistExample.addWhitelisted(STRATEGY1);
     }
 
-    function testRevertOemoveWhitelistedAccount() public {
+    function testRevertRemoveWhitelistedAccount() public {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(IBasedAppWhitelisted.NotWhitelisted.selector));
         whitelistExample.removeWhitelisted(STRATEGY1);

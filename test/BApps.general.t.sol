@@ -14,11 +14,11 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
-    string metadataURI = "http://metadata.com";
-    string metadataURI2 = "http://metadata2.com";
-    string metadataURI3 = "http://metadata3.com";
+    string public metadataURI = "http://metadata.com";
+    string public metadataURI2 = "http://metadata2.com";
+    string public metadataURI3 = "http://metadata3.com";
 
-    string[] metadataURIs = ["http://metadata.com", "http://metadata2.com", "http://metadata3.com"];
+    string[] public metadataURIs = ["http://metadata.com", "http://metadata2.com", "http://metadata3.com"];
 
     function createTwoTokenAndRiskInputs() private view returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
         tokensInput = new address[](2);
@@ -177,7 +177,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function testRevertcallBAppWithNoManager() public {
+    function testRevertCallBAppWithNoManager() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 1000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
@@ -186,7 +186,7 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
-    function testsupportInterface() public {
+    function testSupportInterface() public {
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
             bool success = bApps[i].supportsInterface(type(IBasedApp).interfaceId);

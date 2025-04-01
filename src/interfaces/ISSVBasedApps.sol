@@ -8,10 +8,8 @@ import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
 import {SSVBasedAppsModules} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
 
 interface ISSVBasedApps {
+    function getVersion() external pure returns (string memory version);
     function initialize(address owner_, IBasedAppManager ssvBasedAppManger_, IStrategyManager ssvStrategyManager_, ISSVDAO ssvDAO_, uint32 maxFeeIncrement_)
         external;
-
-    function getVersion() external pure returns (string memory version);
-
     function updateModule(SSVBasedAppsModules moduleId, address moduleAddress) external;
 }
