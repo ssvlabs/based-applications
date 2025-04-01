@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {BasedAppManagerSetupTest, ICore, IBasedAppManager, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest, IBasedAppManager, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
+
+import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";

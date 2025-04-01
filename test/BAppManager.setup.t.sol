@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import {SSVBasedApps} from "src/SSVBasedApps.sol";
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
 import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
 import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
@@ -20,9 +17,8 @@ import {BasedAppMock3} from "@ssv/test/mocks/MockBAppAccessControl.sol";
 import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 import {SSVDAO} from "@ssv/src/modules/SSVDAO.sol";
-import {SSVProxy} from "src/SSVProxy.sol";
-import {BasedAppsManager} from "@ssv/src/modules/BasedAppsManager.sol";
 import {StrategyManager} from "@ssv/src/modules/StrategyManager.sol";
+import {BasedAppsManager} from "@ssv/src/modules/BasedAppsManager.sol";
 
 contract BasedAppManagerSetupTest is Test {
     // Main Contract
@@ -92,11 +88,9 @@ contract BasedAppManagerSetupTest is Test {
         vm.label(RECEIVER2, "Receiver2");
 
         vm.startPrank(OWNER);
-
         basedAppsManagerMod = new BasedAppsManager();
         strategyManagerMod = new StrategyManager();
         ssvDAOMod = new SSVDAO();
-
         implementation = new SSVBasedApps();
         bytes memory data = abi.encodeWithSelector(
             implementation.initialize.selector,
@@ -105,11 +99,11 @@ contract BasedAppManagerSetupTest is Test {
             IStrategyManager(strategyManagerMod),
             ISSVDAO(ssvDAOMod),
             MAX_FEE_INCREMENT
-        ); // Encodes initialize() call
+        );
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
         assertEq(proxiedManager.getVersion(), "v0.0.0", "Version mismatch");
-        // assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
+        assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();
 
         vm.startPrank(USER1);
@@ -144,19 +138,20 @@ contract BasedAppManagerSetupTest is Test {
         vm.deal(ATTACKER, INITIAL_ATTACKER_BALANCE_ETH);
 
         erc20mock = new ERC20Mock();
+        erc20mock2 = new ERC20Mock();
+        erc20mock3 = new ERC20Mock();
+        erc20mock4 = new ERC20Mock();
+        erc20mock5 = new ERC20Mock();
+
         erc20mock.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
         erc20mock.transfer(USER2, INITIAL_USER2_BALANCE_ERC20);
         erc20mock.transfer(USER3, INITIAL_USER3_BALANCE_ERC20);
         erc20mock.transfer(ATTACKER, INITIAL_ATTACKER_BALANCE_ERC20);
         erc20mock.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 
-        erc20mock2 = new ERC20Mock();
         erc20mock2.transfer(USER1, INITIAL_USER1_BALANCE_ERC20);
         erc20mock2.transfer(RECEIVER, INITIAL_RECEIVER_BALANCE_ERC20);
 
-        erc20mock3 = new ERC20Mock();
-        erc20mock4 = new ERC20Mock();
-        erc20mock5 = new ERC20Mock();
         vm.stopPrank();
     }
 }

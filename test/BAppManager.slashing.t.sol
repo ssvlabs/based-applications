@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {ICore, IERC20, IStrategyManager, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
+import {IERC20, IStrategyManager, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
 import {BasedAppManagerStrategyTest} from "@ssv/test/BAppManager.strategy.t.sol";
+
+import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
 contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
     function checkSlashableBalance(uint32 strategyId, address bApp, address token, uint256 expectedSlashableBalance) internal view {

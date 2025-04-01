@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {BasedAppManagerSetupTest, IStrategyManager, ICore} from "@ssv/test/BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest} from "@ssv/test/BAppManager.setup.t.sol";
+
+import {ICore} from "@ssv/src/interfaces/ICore.sol";
+import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 
 contract BasedAppManagerDelegateTest is BasedAppManagerSetupTest {
     function checkDelegation(address owner, address receiver, uint32 expectedDelegatedAmount, uint32 expectedTotalDelegatedPercentage) internal view {

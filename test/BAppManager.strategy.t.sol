@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {BasedAppManagerSetupTest, ICore, IERC20, BasedAppMock, IStrategyManager} from "@ssv/test/BAppManager.setup.t.sol";
+import {BasedAppManagerSetupTest, IERC20, BasedAppMock} from "@ssv/test/BAppManager.setup.t.sol";
 import {BasedAppsTest} from "@ssv/test/BApps.general.t.sol";
-import {TestUtils} from "@ssv/test/Utils.t.sol";
+import {ICore} from "@ssv/src/interfaces/ICore.sol";
+import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 
 contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest {
     // HELPERS
