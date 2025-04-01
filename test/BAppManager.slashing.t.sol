@@ -347,4 +347,10 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         checkSlashableBalance(STRATEGY1, address(bApp1), token, 49_950);
         checkSlashingFund(USER1, token, slashAmount);
     }
+
+    // todo
+    function testSlashTotalBalance() public {}
+
+    // todo
+    function testDepositAfterSlashingTotalBalance() public {}
 }

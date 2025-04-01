@@ -254,10 +254,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         if (totalShares + shares > sp.maxShares) revert ICore.ExceedingMaxShares();
 
-        // s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] += shares;
-        // s.strategyTotalShares[strategyId][sp.ethAddress] += shares;
-        // s.strategyTotalBalance[strategyId][sp.ethAddress] += amount;
-
         strategyTokenShares.accountShareBalance[msg.sender] += shares;
         strategyTokenShares.totalShareBalance += shares;
         strategyTokenShares.totalTokenBalance += amount;
@@ -280,13 +276,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
-        // uint256 totalTokenBalance = s.strategyTotalBalance[strategyId][token];
-        // uint256 totalShares = s.strategyTotalShares[strategyId][token];
 
         if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
         uint256 shares = (amount * totalShares) / totalTokenBalance;
 
-        // if (s.strategyAccountShares[strategyId][msg.sender][token] < shares) revert ICore.InsufficientBalance();
         if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][address(token)];
 
@@ -314,21 +307,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][address(token)];
 
-        // if (s.strategyAccountShares[strategyId][msg.sender][address(token)] < shares) revert ICore.InsufficientBalance();
         if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
 
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
-        // uint256 totalTokenBalance = s.strategyTotalBalance[strategyId][address(token)];
-        // uint256 totalShares = s.strategyTotalShares[strategyId][address(token)];
 
         if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
         uint256 amount = (shares * totalTokenBalance) / totalShares;
-
-        // s.strategyAccountShares[strategyId][msg.sender][address(token)] -= shares;
-        // s.strategyTotalShares[strategyId][address(token)] -= shares;
-        // s.strategyTotalBalance[strategyId][address(token)] -= amount;
 
         strategyTokenShares.accountShareBalance[msg.sender] -= shares;
         strategyTokenShares.totalShareBalance -= shares;
@@ -349,9 +335,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         StorageData storage s = SSVBasedAppsStorage.load();
 
-        // uint256 totalETHBalance = s.strategyTotalBalance[strategyId][sp.ethAddress];
-        // uint256 totalShares = s.strategyTotalShares[strategyId][sp.ethAddress];
-
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
         uint256 totalETHBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
@@ -360,7 +343,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         uint256 shares = (amount * totalShares) / totalETHBalance;
 
-        // if (s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] < shares) revert ICore.InsufficientBalance();
         if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
 
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
@@ -387,21 +369,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
 
-        // if (s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] < shares) revert ICore.InsufficientBalance();
         if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
 
         uint256 totalEthBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
-        // uint256 totalEthBalance = s.strategyTotalBalance[strategyId][sp.ethAddress];
-        // uint256 totalShares = s.strategyTotalShares[strategyId][sp.ethAddress];
 
         if (totalEthBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
         uint256 amount = (shares * totalEthBalance) / totalShares;
-
-        // s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] -= shares;
-        // s.strategyTotalShares[strategyId][sp.ethAddress] -= shares;
-        // s.strategyTotalBalance[strategyId][sp.ethAddress] -= amount;
 
         strategyTokenShares.accountShareBalance[msg.sender] -= shares;
         strategyTokenShares.totalShareBalance -= shares;
@@ -694,7 +669,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param requestTime The time of the request
     /// @param timelockPeriod The timelock period
     /// @param expireTime The expire time
-    // todo library
     function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) internal view {
         uint256 currentTime = uint32(block.timestamp);
         uint256 unlockTime = requestTime + timelockPeriod;
@@ -703,12 +677,4 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             revert ICore.RequestTimeExpired();
         }
     }
-
-    // /// @notice Function to check if an address uses the correct bApp interface
-    // /// @param bApp The address of the bApp
-    // /// @return isBApp True if the address uses the correct bApp interface
-    // // todo library
-    // function _isBApp(address bApp) public view returns (bool isBApp) {
-    //     return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
-    // }
 }
