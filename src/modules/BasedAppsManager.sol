@@ -57,19 +57,6 @@ contract BasedAppsManager is IBasedAppManager {
         }
     }
 
-    /// @notice Check the timelocks
-    /// @param requestTime The time of the request
-    /// @param timelockPeriod The timelock period
-    /// @param expireTime The expire time
-    function _checkTimelocks(uint256 requestTime, uint256 timelockPeriod, uint256 expireTime) internal view {
-        uint256 currentTime = uint32(block.timestamp);
-        uint256 unlockTime = requestTime + timelockPeriod;
-        if (currentTime < unlockTime) revert ICore.TimelockNotElapsed();
-        if (currentTime > unlockTime + expireTime) {
-            revert ICore.RequestTimeExpired();
-        }
-    }
-
     /// @notice Internal function to set the shared risk level for a token
     /// @param bApp The address of the bApp
     /// @param token The address of the token
@@ -80,15 +67,6 @@ contract BasedAppsManager is IBasedAppManager {
 
         tokenData.value = sharedRiskLevel;
         tokenData.isSet = true;
-    }
-
-    /// @notice Internal function to set the shared risk level for a token
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    function _removeToken(address bApp, address token) internal {
-        StorageData storage s = SSVBasedAppsStorage.load();
-
-        delete s.bAppTokens[bApp][token];
     }
 
     /// @notice Validate the length of two arrays

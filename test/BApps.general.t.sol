@@ -29,6 +29,33 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         sharedRiskLevelInput[1] = 103;
     }
 
+    function createTwoTokenAndRiskInputsWithTheSameToken() private view returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
+        tokensInput = new address[](2);
+        sharedRiskLevelInput = new uint32[](2);
+        tokensInput[0] = address(erc20mock);
+        tokensInput[1] = address(erc20mock);
+        sharedRiskLevelInput[0] = 102;
+        sharedRiskLevelInput[1] = 103;
+    }
+
+    function createTwoTokenAndMoreRiskInputs() private view returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
+        tokensInput = new address[](2);
+        sharedRiskLevelInput = new uint32[](3);
+        tokensInput[0] = address(erc20mock);
+        tokensInput[1] = address(erc20mock2);
+        sharedRiskLevelInput[0] = 102;
+        sharedRiskLevelInput[1] = 103;
+        sharedRiskLevelInput[1] = 104;
+    }
+
+    function createTwoTokenAndLessRiskInputs() private view returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
+        tokensInput = new address[](2);
+        sharedRiskLevelInput = new uint32[](1);
+        tokensInput[0] = address(erc20mock);
+        tokensInput[1] = address(erc20mock2);
+        sharedRiskLevelInput[0] = 102;
+    }
+
     function createFiveTokenAndRiskInputs() private view returns (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) {
         tokensInput = new address[](5);
         sharedRiskLevelInput = new uint32[](5);
@@ -113,6 +140,24 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         }
     }
 
+    function testRevertRegisterBAppWithSameTokens() public {
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndRiskInputsWithTheSameToken();
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER1);
+            vm.expectRevert(abi.encodeWithSelector(ICore.TokenAlreadyAddedToBApp.selector, tokensInput[0]));
+            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
+        }
+    }
+
+    function testRevertRegisterBAppWithTokenZero() public {
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(0), 102);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER1);
+            vm.expectRevert(abi.encodeWithSelector(ICore.ZeroAddressNotAllowed.selector));
+            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[i]);
+        }
+    }
+
     function testRevertRegisterBAppTwice() public {
         vm.startPrank(USER1);
         address[] memory tokensInput = new address[](1);
@@ -142,12 +187,23 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         vm.stopPrank();
     }
 
-    // TODO
-    // function testisBapp() public {
-    //     vm.prank(USER1);
-    //     bool success = CoreLib.isBApp(address(bApp1));
-    //     assertEq(success, true, "isBApp");
-    // }
+    function testRevertRegisterBAppWithMismatchTokenRiskLengthOne() public {
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndMoreRiskInputs();
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER1);
+            vm.expectRevert(abi.encodeWithSelector(ICore.LengthsNotMatching.selector));
+            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[i]);
+        }
+    }
+
+    function testRevertRegisterBAppWithMismatchTokenRiskLengthTwo() public {
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndLessRiskInputs();
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER1);
+            vm.expectRevert(abi.encodeWithSelector(ICore.LengthsNotMatching.selector));
+            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[i]);
+        }
+    }
 
     function testUpdateBAppMetadata() public {
         testRegisterBApp();
