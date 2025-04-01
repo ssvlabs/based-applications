@@ -52,6 +52,12 @@ interface ICore {
         uint32 requestTime;
     }
 
+    struct Shares {
+        uint256 totalTokenBalance;
+        uint256 totalShareBalance;
+        mapping(address => uint256) accountShareBalance;
+    }
+
     error BAppAlreadyOptedIn();
     error BAppAlreadyRegistered();
     error BAppDoesNotSupportInterface();

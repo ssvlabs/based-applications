@@ -36,20 +36,25 @@ struct StorageData {
      */
     mapping(address delegator => uint32 totalPercentage) totalDelegatedPercentage;
     /**
+     * @notice Tracks the total balance for individual strategies.
+     * @dev Tracks that how much token balance a strategy has.
+     */
+    mapping(uint32 strategyId => mapping(address token => ICore.Shares shares)) strategyTokenShares;
+    /**
      * @notice Tracks the token shares for individual strategies.
      * @dev Tracks that how much shares an account owns in a specific strategy.
      */
-    mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) strategyAccountShares;
+    //mapping(uint32 strategyId => mapping(address account => mapping(address token => uint256 balance))) strategyAccountShares;
     /**
      * @notice Tracks the total balance for individual strategies.
      * @dev Tracks that how much token balance a strategy has.
      */
-    mapping(uint32 strategyId => mapping(address token => uint256 balance)) strategyTotalBalance;
+    //mapping(uint32 strategyId => mapping(address token => uint256 balance)) strategyTotalBalance;
     /**
      * @notice Tracks the total shares for individual strategies.
      * @dev Tracks that how much share balance a strategy has.
      */
-    mapping(uint32 strategyId => mapping(address token => uint256 balance)) strategyTotalShares;
+    // mapping(uint32 strategyId => mapping(address token => uint256 balance)) strategyTotalShares;
     /**
      * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
      * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.

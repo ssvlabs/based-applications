@@ -128,7 +128,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    function testBellaCreateStrategyAndSingleDepositA(uint256 amount, uint256 user2Amount, uint256 attackerAmount) public {
+    function testCreateStrategyAndSingleDepositA(uint256 amount, uint256 user2Amount, uint256 attackerAmount) public {
         vm.assume(
             amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20 && user2Amount > 0 && user2Amount < INITIAL_USER2_BALANCE_ERC20 && attackerAmount > 0
                 && attackerAmount < INITIAL_ATTACKER_BALANCE_ERC20
@@ -1271,6 +1271,8 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
     }
+
+    function testDepositETHWithTotalEthBalance0() public {}
 
     // todo
     function testProposeUpdateAndProposeAnotherChangeToUpdate() public {}

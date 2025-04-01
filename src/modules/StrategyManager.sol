@@ -215,9 +215,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (amount == 0) revert ICore.InvalidAmount();
 
         StorageData storage s = SSVBasedAppsStorage.load();
-        address tokenAddress = address(token);
-        uint256 totalTokenBalance = s.strategyTotalBalance[strategyId][tokenAddress];
-        uint256 totalShares = s.strategyTotalShares[strategyId][tokenAddress];
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][address(token)];
+        uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
+        uint256 totalShares = strategyTokenShares.totalShareBalance;
 
         uint256 shares;
         if (totalShares == 0 || totalTokenBalance == 0) shares = amount;
@@ -226,9 +226,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         if (totalShares + shares > sp.maxShares) revert ICore.ExceedingMaxShares();
 
-        s.strategyAccountShares[strategyId][msg.sender][tokenAddress] += shares;
-        s.strategyTotalShares[strategyId][tokenAddress] += shares;
-        s.strategyTotalBalance[strategyId][tokenAddress] += amount;
+        strategyTokenShares.accountShareBalance[msg.sender] += shares;
+        strategyTokenShares.totalShareBalance += shares;
+        strategyTokenShares.totalTokenBalance += amount;
 
         token.safeTransferFrom(msg.sender, address(this), amount);
 
@@ -242,10 +242,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         StorageData storage s = SSVBasedAppsStorage.load();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
 
         uint256 amount = msg.value;
-        uint256 totalEthBalance = s.strategyTotalBalance[strategyId][sp.ethAddress];
-        uint256 totalShares = s.strategyTotalShares[strategyId][sp.ethAddress];
+        uint256 totalEthBalance = strategyTokenShares.totalTokenBalance;
+        uint256 totalShares = strategyTokenShares.totalShareBalance;
 
         uint256 shares;
         if (totalShares == 0 || totalEthBalance == 0) shares = amount;
@@ -253,9 +254,13 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         if (totalShares + shares > sp.maxShares) revert ICore.ExceedingMaxShares();
 
-        s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] += shares;
-        s.strategyTotalShares[strategyId][sp.ethAddress] += shares;
-        s.strategyTotalBalance[strategyId][sp.ethAddress] += amount;
+        // s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] += shares;
+        // s.strategyTotalShares[strategyId][sp.ethAddress] += shares;
+        // s.strategyTotalBalance[strategyId][sp.ethAddress] += amount;
+
+        strategyTokenShares.accountShareBalance[msg.sender] += shares;
+        strategyTokenShares.totalShareBalance += shares;
+        strategyTokenShares.totalTokenBalance += amount;
 
         emit StrategyDeposit(strategyId, msg.sender, sp.ethAddress, msg.value);
     }
@@ -272,13 +277,17 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         StorageData storage s = SSVBasedAppsStorage.load();
 
-        uint256 totalTokenBalance = s.strategyTotalBalance[strategyId][token];
-        uint256 totalShares = s.strategyTotalShares[strategyId][token];
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+        uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
+        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        // uint256 totalTokenBalance = s.strategyTotalBalance[strategyId][token];
+        // uint256 totalShares = s.strategyTotalShares[strategyId][token];
 
         if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
         uint256 shares = (amount * totalShares) / totalTokenBalance;
 
-        if (s.strategyAccountShares[strategyId][msg.sender][token] < shares) revert ICore.InsufficientBalance();
+        // if (s.strategyAccountShares[strategyId][msg.sender][token] < shares) revert ICore.InsufficientBalance();
+        if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][address(token)];
 
         request.shares = shares;
@@ -303,18 +312,27 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         uint256 shares = request.shares;
 
-        if (s.strategyAccountShares[strategyId][msg.sender][address(token)] < shares) revert ICore.InsufficientBalance();
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][address(token)];
 
-        uint256 totalTokenBalance = s.strategyTotalBalance[strategyId][address(token)];
-        uint256 totalShares = s.strategyTotalShares[strategyId][address(token)];
+        // if (s.strategyAccountShares[strategyId][msg.sender][address(token)] < shares) revert ICore.InsufficientBalance();
+        if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
+
+        uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
+        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        // uint256 totalTokenBalance = s.strategyTotalBalance[strategyId][address(token)];
+        // uint256 totalShares = s.strategyTotalShares[strategyId][address(token)];
 
         if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
         uint256 amount = (shares * totalTokenBalance) / totalShares;
 
-        s.strategyAccountShares[strategyId][msg.sender][address(token)] -= shares;
-        s.strategyTotalShares[strategyId][address(token)] -= shares;
-        s.strategyTotalBalance[strategyId][address(token)] -= amount;
+        // s.strategyAccountShares[strategyId][msg.sender][address(token)] -= shares;
+        // s.strategyTotalShares[strategyId][address(token)] -= shares;
+        // s.strategyTotalBalance[strategyId][address(token)] -= amount;
+
+        strategyTokenShares.accountShareBalance[msg.sender] -= shares;
+        strategyTokenShares.totalShareBalance -= shares;
+        strategyTokenShares.totalTokenBalance -= amount;
 
         delete s.withdrawalRequests[strategyId][msg.sender][address(token)];
 
@@ -331,14 +349,19 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         StorageData storage s = SSVBasedAppsStorage.load();
 
-        uint256 totalETHBalance = s.strategyTotalBalance[strategyId][sp.ethAddress];
-        uint256 totalShares = s.strategyTotalShares[strategyId][sp.ethAddress];
+        // uint256 totalETHBalance = s.strategyTotalBalance[strategyId][sp.ethAddress];
+        // uint256 totalShares = s.strategyTotalShares[strategyId][sp.ethAddress];
+
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
+        uint256 totalETHBalance = strategyTokenShares.totalTokenBalance;
+        uint256 totalShares = strategyTokenShares.totalShareBalance;
 
         if (totalETHBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
         uint256 shares = (amount * totalShares) / totalETHBalance;
 
-        if (s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] < shares) revert ICore.InsufficientBalance();
+        // if (s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] < shares) revert ICore.InsufficientBalance();
+        if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
 
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
 
@@ -362,18 +385,27 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         uint256 shares = request.shares;
 
-        if (s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] < shares) revert ICore.InsufficientBalance();
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
 
-        uint256 totalEthBalance = s.strategyTotalBalance[strategyId][sp.ethAddress];
-        uint256 totalShares = s.strategyTotalShares[strategyId][sp.ethAddress];
+        // if (s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] < shares) revert ICore.InsufficientBalance();
+        if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
+
+        uint256 totalEthBalance = strategyTokenShares.totalTokenBalance;
+        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        // uint256 totalEthBalance = s.strategyTotalBalance[strategyId][sp.ethAddress];
+        // uint256 totalShares = s.strategyTotalShares[strategyId][sp.ethAddress];
 
         if (totalEthBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
         uint256 amount = (shares * totalEthBalance) / totalShares;
 
-        s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] -= shares;
-        s.strategyTotalShares[strategyId][sp.ethAddress] -= shares;
-        s.strategyTotalBalance[strategyId][sp.ethAddress] -= amount;
+        // s.strategyAccountShares[strategyId][msg.sender][sp.ethAddress] -= shares;
+        // s.strategyTotalShares[strategyId][sp.ethAddress] -= shares;
+        // s.strategyTotalBalance[strategyId][sp.ethAddress] -= amount;
+
+        strategyTokenShares.accountShareBalance[msg.sender] -= shares;
+        strategyTokenShares.totalShareBalance -= shares;
+        strategyTokenShares.totalTokenBalance -= amount;
 
         delete s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
 
@@ -509,8 +541,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function getSlashableBalance(uint32 strategyId, address bApp, address token) internal view returns (uint256 slashableBalance) {
         StorageData storage s = SSVBasedAppsStorage.load();
 
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 balance = s.strategyTotalBalance[strategyId][token];
+        uint256 balance = strategyTokenShares.totalTokenBalance;
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         return balance * percentage / sp.maxPercentage;
@@ -538,9 +572,13 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             // Only the bApp EOA or non-compliant bapp owner can slash
             if (msg.sender != bApp) revert ICore.InvalidBAppOwner(msg.sender, bApp);
         }
-
-        s.strategyTotalBalance[strategyId][token] -= amount;
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+        strategyTokenShares.totalTokenBalance -= amount;
         s.slashingFund[receiver][token] += amount;
+
+        if (strategyTokenShares.totalTokenBalance == 0) {
+            delete s.strategyTokenShares[strategyId][token];
+        }
 
         emit IStrategyManager.StrategySlashed(strategyId, bApp, token, amount, data);
     }

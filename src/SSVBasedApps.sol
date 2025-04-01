@@ -128,8 +128,10 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
         StorageData storage s = SSVBasedAppsStorage.load();
 
+        ICore.Shares storage strategyTokenShares1 = s.strategyTokenShares[strategyId][token];
+
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 balance = s.strategyTotalBalance[strategyId][token];
+        uint256 balance = strategyTokenShares1.totalTokenBalance;
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         return balance * percentage / sp.maxPercentage;
@@ -257,17 +259,17 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
 
     function strategyAccountShares(uint32 strategyId, address account, address token) external view returns (uint256) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return s.strategyAccountShares[strategyId][account][token];
+        return s.strategyTokenShares[strategyId][token].accountShareBalance[account];
     }
 
     function strategyTotalBalance(uint32 strategyId, address token) external view returns (uint256) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return s.strategyTotalBalance[strategyId][token];
+        return s.strategyTokenShares[strategyId][token].totalTokenBalance;
     }
 
     function strategyTotalShares(uint32 strategyId, address token) external view returns (uint256) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return s.strategyTotalShares[strategyId][token];
+        return s.strategyTokenShares[strategyId][token].totalShareBalance;
     }
 
     function obligations(uint32 strategyId, address bApp, address token) external view returns (uint32 percentage, bool isSet) {
