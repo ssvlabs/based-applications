@@ -187,7 +187,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
-    ///
+    // *************************************
+    // ** Section: External Functions DAO **
+    // *************************************
 
     function updateFeeTimelockPeriod(uint32 value) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
@@ -229,15 +231,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateTokenUpdateTimelockPeriod(uint32 value) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
-    }
-
-    function updateTokenUpdateExpireTime(uint32 value) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
-    }
-
-    ////
+    // *****************************
+    // ** Section: External Views **
+    // *****************************
 
     function delegations(address owner, address receiver) external view returns (uint32) {
         StorageData storage s = SSVBasedAppsStorage.load();
@@ -314,7 +310,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return s.slashingFund[owner][token];
     }
 
-    // Protocol
+    // **************************************
+    // ** Section: External Protocol Views **
+    // **************************************
 
     function maxPercentage() external view returns (uint32) {
         return SSVBasedAppsStorageProtocol.load().maxPercentage;
@@ -356,15 +354,14 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return SSVBasedAppsStorageProtocol.load().obligationExpireTime;
     }
 
-    ////
+    // *********************************
+    // ** Section: External Libraries **
+    // *********************************
 
     function getVersion() external pure returns (string memory version) {
         return CoreLib.getVersion();
     }
 
-    // *********************************
-    // ** Section: Update Modules **
-    // *********************************
     function updateModule(SSVBasedAppsModules moduleId, address moduleAddress) external onlyOwner {
         CoreLib.setModuleContract(moduleId, moduleAddress);
     }

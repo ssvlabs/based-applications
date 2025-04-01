@@ -6,7 +6,7 @@ interface IBasedAppWhitelisted {
     function removeWhitelisted(uint32 strategyId) external;
 
     error AlreadyWhitelisted();
-    error ZeroID();
-    error NotWhitelisted();
     error NonWhitelistedCaller();
+    error NotWhitelisted();
+    error ZeroID();
 }
