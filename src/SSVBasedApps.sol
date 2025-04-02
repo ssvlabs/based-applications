@@ -274,6 +274,11 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return s.strategyTokenShares[strategyId][token].totalShareBalance;
     }
 
+    function strategyGeneration(uint32 strategyId, address token) external view returns (uint256) {
+        StorageData storage s = SSVBasedAppsStorage.load();
+        return s.strategyTokenShares[strategyId][token].currentGeneration;
+    }
+
     function obligations(uint32 strategyId, address bApp, address token) external view returns (uint32 percentage, bool isSet) {
         StorageData storage s = SSVBasedAppsStorage.load();
         return (s.obligations[strategyId][bApp][token].percentage, s.obligations[strategyId][bApp][token].isSet);
@@ -309,9 +314,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return (s.obligationRequests[strategyId][token][bApp].percentage, s.obligationRequests[strategyId][token][bApp].requestTime);
     }
 
-    function slashingFund(address owner, address token) external view returns (uint256) {
+    function slashingFund(address account, address token) external view returns (uint256) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return s.slashingFund[owner][token];
+        return s.slashingFund[account][token];
     }
 
     // **************************************

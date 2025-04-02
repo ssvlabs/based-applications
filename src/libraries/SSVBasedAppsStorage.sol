@@ -75,7 +75,7 @@ struct StorageData {
      * @notice Tracks the slashing fund for a specific token
      * @dev The slashing fund is used to store the tokens that are slashed from the strategies
      */
-    mapping(address owner => mapping(address token => uint256 amount)) slashingFund;
+    mapping(address account => mapping(address token => uint256 amount)) slashingFund;
     /**
      * @notice Tracks the owners of the bApps
      * @dev The bApp is identified with its address

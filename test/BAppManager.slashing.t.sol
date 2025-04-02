@@ -17,6 +17,11 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         assertEq(slashingFund, expectedAmount);
     }
 
+    function checkGeneration(uint32 strategyId, address token, uint256 expectedValue) internal view {
+        proxiedManager.strategyGeneration(strategyId, token);
+        assertEq(proxiedManager.strategyGeneration(strategyId, token), expectedValue);
+    }
+
     function testGetSlashableBalanceBasic() public {
         uint256 depositAmount = 100_000;
         uint32 percentage = 9000;
@@ -117,7 +122,6 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         uint256 depositAmount = 1 ether;
         address token = ETH_ADDRESS;
         vm.assume(slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.maxPercentage());
-        // testStrategyOptInToBApp(percentage);
         vm.prank(USER2);
         proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
         vm.prank(USER1);
@@ -347,7 +351,6 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         checkSlashingFund(USER1, token, slashAmount);
     }
 
-    // todo
     function testSlashTotalBalanceEOA() public {
         uint32 percentage = 10_000;
         uint256 depositAmount = 100_000;
@@ -356,8 +359,10 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         testStrategyOptInToBAppEOA(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        checkGeneration(STRATEGY1, token, 0);
         vm.prank(USER1);
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"), USER1);
+        checkGeneration(STRATEGY1, token, 1);
         uint256 newStrategyBalance = depositAmount - slashAmount;
         assertEq(newStrategyBalance, 0, "The new strategy balance should be 0");
         checkTotalSharesAndTotalBalance(STRATEGY1, token, 0, newStrategyBalance);
@@ -366,8 +371,79 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         checkAccountShares(STRATEGY1, USER2, token, 0);
     }
 
-    // todo
-    function testDepositAfterSlashingTotalBalance() public {}
+    function testDepositAfterSlashingEOATotalBalance() public {
+        testSlashTotalBalanceEOA();
+        uint256 depositAmount = 20_000;
+        address token = address(erc20mock);
+        checkGeneration(STRATEGY1, token, 1);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        checkGeneration(STRATEGY1, token, 1);
+        checkTotalSharesAndTotalBalance(STRATEGY1, address(erc20mock), depositAmount, depositAmount);
+        checkSlashableBalance(STRATEGY1, USER1, token, depositAmount);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+    }
 
-    // todo slashBappwithObligation0andShouldRevertSomewhere // shopuld trigger insufficient balance
+    function testSlashBAppTotalBalance(uint256 depositAmount) public {
+        uint32 percentage = 10_000;
+        vm.assume(depositAmount > 0 && depositAmount <= proxiedManager.maxShares());
+        address token = address(erc20mock);
+        uint256 slashAmount = depositAmount;
+        testStrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        checkGeneration(STRATEGY1, token, 0);
+        proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"), USER1);
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, 0, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER2, token, 0);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, 0);
+        checkSlashingFund(USER1, token, slashAmount);
+        checkGeneration(STRATEGY1, token, 1);
+    }
+
+    function testDepositAfterSlashingBAppTotalBalance() public {
+        uint256 depositAmount = 100_000 * 10 ** 18;
+        testSlashBAppTotalBalance(depositAmount);
+        address token = address(erc20mock);
+        checkGeneration(STRATEGY1, token, 1);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        checkGeneration(STRATEGY1, token, 1);
+        checkTotalSharesAndTotalBalance(STRATEGY1, address(erc20mock), depositAmount, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, depositAmount);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+    }
+
+    function testProposeWithdrawalAfterSlashingBAppTotalBalance() public {
+        uint256 withdrawalAmount = 100_000 * 10 ** 18;
+        testSlashBAppTotalBalance(100_000);
+        address token = address(erc20mock);
+        checkGeneration(STRATEGY1, token, 1);
+        vm.prank(USER2);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
+        proxiedManager.proposeWithdrawal(STRATEGY1, token, withdrawalAmount);
+    }
+
+    function testSlashBAppWhenObligationIsZero() public {
+        uint32 percentage = 0;
+        uint256 depositAmount = 100_000 * 10 ** 18;
+        address token = address(erc20mock);
+        uint256 slashAmount = depositAmount / 2;
+        testStrategyOptInToBAppWithMultipleTokensWithPercentageZero();
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        checkGeneration(STRATEGY1, token, 0);
+        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"), USER1);
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, depositAmount);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, 0);
+        checkSlashingFund(USER1, token, 0);
+        checkGeneration(STRATEGY1, token, 0);
+    }
 }
