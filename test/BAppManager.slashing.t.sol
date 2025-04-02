@@ -9,17 +9,17 @@ import {ICore} from "@ssv/src/interfaces/ICore.sol";
 contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
     function checkSlashableBalance(uint32 strategyId, address bApp, address token, uint256 expectedSlashableBalance) internal view {
         (uint256 slashableBalance) = proxiedManager.getSlashableBalance(strategyId, bApp, token);
-        assertEq(slashableBalance, expectedSlashableBalance);
+        assertEq(slashableBalance, expectedSlashableBalance, "Should match the expected slashable balance");
     }
 
     function checkSlashingFund(address account, address token, uint256 expectedAmount) internal view {
         (uint256 slashingFund) = proxiedManager.slashingFund(account, token);
-        assertEq(slashingFund, expectedAmount);
+        assertEq(slashingFund, expectedAmount, "Should match the expected slashing fund balance");
     }
 
     function checkGeneration(uint32 strategyId, address token, uint256 expectedValue) internal view {
         proxiedManager.strategyGeneration(strategyId, token);
-        assertEq(proxiedManager.strategyGeneration(strategyId, token), expectedValue);
+        assertEq(proxiedManager.strategyGeneration(strategyId, token), expectedValue, "Should match the expected generation number");
     }
 
     function testGetSlashableBalanceBasic() public {
@@ -418,7 +418,7 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
     }
 
-    function testProposeWithdrawalAfterSlashingBAppTotalBalance() public {
+    function testRevertProposeWithdrawalAfterSlashingBAppTotalBalance() public {
         uint256 withdrawalAmount = 100_000 * 10 ** 18;
         testSlashBAppTotalBalance(100_000);
         address token = address(erc20mock);
@@ -429,7 +429,6 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
     }
 
     function testSlashBAppWhenObligationIsZero() public {
-        uint32 percentage = 0;
         uint256 depositAmount = 100_000 * 10 ** 18;
         address token = address(erc20mock);
         uint256 slashAmount = depositAmount / 2;
@@ -444,6 +443,32 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
         checkSlashableBalance(STRATEGY1, address(bApp1), token, 0);
         checkSlashingFund(USER1, token, 0);
+        checkGeneration(STRATEGY1, token, 0);
+    }
+
+    function testFinalizeWithdrawalAfterPartialSlashBAppWithdrawSmallerAmount() public {
+        testStrategyOptInToBApp(proxiedManager.maxPercentage());
+        uint256 depositAmount = 1000;
+        uint256 withdrawalAmount = 800;
+        uint256 slashAmount = 300;
+        address token = address(erc20mock);
+        vm.startPrank(USER1);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        proxiedManager.proposeWithdrawal(STRATEGY1, token, withdrawalAmount);
+        proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"), USER1);
+        uint256 newStrategyBalance = depositAmount - slashAmount; // 700
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER1, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, newStrategyBalance);
+        checkSlashingFund(USER1, token, slashAmount);
+        checkGeneration(STRATEGY1, token, 0);
+        vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
+        proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(token)); // this ends up withdrawing 560 (800 * 70% since 30% was slashed)
+        uint256 effectiveWithdrawalAmount = 560;
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount - withdrawalAmount, newStrategyBalance - effectiveWithdrawalAmount);
+        checkAccountShares(STRATEGY1, USER1, token, depositAmount - withdrawalAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp1), token, newStrategyBalance - effectiveWithdrawalAmount);
+        checkSlashingFund(USER1, token, slashAmount);
         checkGeneration(STRATEGY1, token, 0);
     }
 }
