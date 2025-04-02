@@ -628,12 +628,12 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
         if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
-        // if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
 
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
 
-        if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
+        // TODO: double check that this is not needed
+        // if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
         amount = (shares * totalTokenBalance) / totalShares;
 
