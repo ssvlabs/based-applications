@@ -22,9 +22,9 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable, IBasedAppManager, IStrategyManager, SSVProxy {
-    // *********************************
+    // ***************************
     // ** Section: Initializers **
-    // *********************************
+    // ***************************
     function initialize(address owner_, IBasedAppManager ssvBasedAppManger_, IStrategyManager ssvStrategyManager_, ISSVDAO ssvDAO_, uint32 maxFeeIncrement_)
         external
         override
@@ -128,10 +128,10 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
         StorageData storage s = SSVBasedAppsStorage.load();
 
-        ICore.Shares storage strategyTokenShares1 = s.strategyTokenShares[strategyId][token];
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 balance = strategyTokenShares1.totalTokenBalance;
+        uint256 balance = strategyTokenShares.totalTokenBalance;
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         return balance * percentage / sp.maxPercentage;
