@@ -1249,8 +1249,6 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    // todo test invalid liquidity
-
     function testFinalizeWithdrawalETHAfterSlashingEventSucceeds() public {
         testStrategyOptInToBAppWithETH();
         vm.startPrank(USER1);
@@ -1274,12 +1272,19 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
-    // todo test Invalidliquidity
-
     function testDepositETHWithTotalEthBalance0() public {}
 
-    // todo
-    function testProposeUpdateAndProposeAnotherChangeToUpdate() public {}
-
-    // todo check the expire time
+    function testProposeUpdateAndProposeAnotherChangeToUpdate() public {
+        uint256 withdrawalAmount = 1 ether;
+        testStrategyOptInToBAppWithETH();
+        vm.startPrank(USER1);
+        proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, withdrawalAmount);
+        checkProposedWithdrawal(STRATEGY1, USER1, proxiedManager.ethAddress(), block.timestamp, withdrawalAmount);
+        uint256 newTimestamp = block.timestamp + proxiedManager.withdrawalTimelockPeriod() - 100 seconds;
+        vm.warp(newTimestamp);
+        uint256 newWithdrawalAmount = 0.5 ether;
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, newWithdrawalAmount);
+        checkProposedWithdrawal(STRATEGY1, USER1, proxiedManager.ethAddress(), newTimestamp, newWithdrawalAmount);
+    }
 }
