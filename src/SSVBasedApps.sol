@@ -237,9 +237,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     // ** Section: External Views **
     // *****************************
 
-    function delegations(address owner, address receiver) external view returns (uint32) {
+    function delegations(address account, address receiver) external view returns (uint32) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return s.delegations[owner][receiver];
+        return s.delegations[account][receiver];
     }
 
     function totalDelegatedPercentage(address delegator) external view returns (uint32) {
@@ -252,7 +252,7 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return s.registeredBApps[bApp];
     }
 
-    function strategies(uint32 strategyId) external view returns (address owner, uint32 fee) {
+    function strategies(uint32 strategyId) external view returns (address strategyOwner, uint32 fee) {
         StorageData storage s = SSVBasedAppsStorage.load();
         return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
     }
