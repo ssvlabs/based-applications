@@ -212,10 +212,44 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The ERC20 token address
     /// @param amount The amount to deposit
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
+        _beforeDeposit(strategyId, address(token), amount);
+        // if (amount == 0) revert ICore.InvalidAmount();
+
+        // StorageData storage s = SSVBasedAppsStorage.load();
+        // ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][address(token)];
+
+        // uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
+        // uint256 totalShares = strategyTokenShares.totalShareBalance;
+
+        // uint256 shares;
+        // if (totalShares == 0 || totalTokenBalance == 0) shares = amount;
+        // else shares = (amount * totalShares) / totalTokenBalance;
+
+        // StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        // if (totalShares + shares > sp.maxShares) revert ICore.ExceedingMaxShares();
+
+        // if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) {
+        //     strategyTokenShares.accountGeneration[msg.sender] = strategyTokenShares.currentGeneration;
+        //     /// @dev override the previous share balance
+        //     strategyTokenShares.accountShareBalance[msg.sender] = shares;
+        // } else {
+        //     strategyTokenShares.accountShareBalance[msg.sender] += shares;
+        // }
+
+        // strategyTokenShares.totalShareBalance += shares;
+        // strategyTokenShares.totalTokenBalance += amount;
+
+        token.safeTransferFrom(msg.sender, address(this), amount);
+
+        emit StrategyDeposit(strategyId, msg.sender, address(token), amount);
+    }
+
+    function _beforeDeposit(uint32 strategyId, address token, uint256 amount) internal {
         if (amount == 0) revert ICore.InvalidAmount();
 
         StorageData storage s = SSVBasedAppsStorage.load();
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][address(token)];
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
 
@@ -226,54 +260,61 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         if (totalShares + shares > sp.maxShares) revert ICore.ExceedingMaxShares();
 
-        strategyTokenShares.accountShareBalance[msg.sender] += shares;
+        if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) {
+            strategyTokenShares.accountGeneration[msg.sender] = strategyTokenShares.currentGeneration;
+            /// @dev override the previous share balance
+            strategyTokenShares.accountShareBalance[msg.sender] = shares;
+        } else {
+            strategyTokenShares.accountShareBalance[msg.sender] += shares;
+        }
+
         strategyTokenShares.totalShareBalance += shares;
         strategyTokenShares.totalTokenBalance += amount;
-
-        token.safeTransferFrom(msg.sender, address(this), amount);
-
-        emit StrategyDeposit(strategyId, msg.sender, address(token), amount);
     }
 
     /// @notice Deposit ETH into the strategy
     /// @param strategyId The ID of the strategy
     function depositETH(uint32 strategyId) external payable nonReentrant {
-        if (msg.value == 0) revert ICore.InvalidAmount();
-
-        StorageData storage s = SSVBasedAppsStorage.load();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
+        _beforeDeposit(strategyId, sp.ethAddress, msg.value);
+        // if (msg.value == 0) revert ICore.InvalidAmount();
 
-        uint256 amount = msg.value;
-        uint256 totalEthBalance = strategyTokenShares.totalTokenBalance;
-        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        // StorageData storage s = SSVBasedAppsStorage.load();
+        // StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        // ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
 
-        uint256 shares;
-        if (totalShares == 0 || totalEthBalance == 0) shares = amount;
-        else shares = (amount * totalShares) / totalEthBalance;
+        // uint256 amount = msg.value;
+        // uint256 totalEthBalance = strategyTokenShares.totalTokenBalance;
+        // uint256 totalShares = strategyTokenShares.totalShareBalance;
 
-        if (totalShares + shares > sp.maxShares) revert ICore.ExceedingMaxShares();
+        // uint256 shares;
+        // if (totalShares == 0 || totalEthBalance == 0) shares = amount;
+        // else shares = (amount * totalShares) / totalEthBalance;
 
-        strategyTokenShares.accountShareBalance[msg.sender] += shares;
-        strategyTokenShares.totalShareBalance += shares;
-        strategyTokenShares.totalTokenBalance += amount;
+        // if (totalShares + shares > sp.maxShares) revert ICore.ExceedingMaxShares();
+
+        // if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) {
+        //     strategyTokenShares.accountGeneration[msg.sender] = strategyTokenShares.currentGeneration;
+        //     /// @dev override the previous share balance
+        //     strategyTokenShares.accountShareBalance[msg.sender] = shares;
+        // } else {
+        //     strategyTokenShares.accountShareBalance[msg.sender] += shares;
+        // }
+
+        // strategyTokenShares.totalShareBalance += shares;
+        // strategyTokenShares.totalTokenBalance += amount;
 
         emit StrategyDeposit(strategyId, msg.sender, sp.ethAddress, msg.value);
     }
 
-    /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
-    /// @param strategyId The ID of the strategy.
-    /// @param token The ERC20 token address.
-    /// @param amount The amount to withdraw.
-    function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external {
+    // todo create _proposeWithdrawal to avoid code duplication
+    function _proposeWithdrawal(uint32 strategyId, address token, uint256 amount) internal {
         if (amount == 0) revert ICore.InvalidAmount();
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
-
-        if (token == sp.ethAddress) revert ICore.InvalidToken();
 
         StorageData storage s = SSVBasedAppsStorage.load();
-
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+
+        if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
 
@@ -289,13 +330,41 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         emit StrategyWithdrawalProposed(strategyId, msg.sender, address(token), amount);
     }
 
-    /// @notice Finalize the ERC20 withdrawal after the timelock period has passed.
+    /// @notice Propose a withdrawal of ERC20 tokens from the strategy.
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
-    function finalizeWithdrawal(uint32 strategyId, IERC20 token) external nonReentrant {
+    /// @param amount The amount to withdraw.
+    function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external {
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        if (token == sp.ethAddress) revert ICore.InvalidToken();
+        _proposeWithdrawal(strategyId, token, amount);
+        // if (amount == 0) revert ICore.InvalidAmount();
+        // StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+
+        // if (token == sp.ethAddress) revert ICore.InvalidToken();
+
+        // StorageData storage s = SSVBasedAppsStorage.load();
+        // ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+
+        // if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
+        // uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
+        // uint256 totalShares = strategyTokenShares.totalShareBalance;
+
+        // if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
+        // uint256 shares = (amount * totalShares) / totalTokenBalance;
+
+        // if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
+        // ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][address(token)];
+
+        // request.shares = shares;
+        // request.requestTime = uint32(block.timestamp);
+        //        emit StrategyWithdrawalProposed(strategyId, msg.sender, address(token), amount);
+    }
+
+    function _finalizeWithdrawal(uint32 strategyId, address token) private returns (uint256 amount) {
         StorageData storage s = SSVBasedAppsStorage.load();
 
-        ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][address(token)];
+        ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][token];
         uint256 requestTime = request.requestTime;
 
         if (requestTime == 0) revert ICore.NoPendingWithdrawal();
@@ -305,8 +374,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         uint256 shares = request.shares;
 
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][address(token)];
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
+        if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
         if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
 
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
@@ -320,7 +390,45 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         strategyTokenShares.totalShareBalance -= shares;
         strategyTokenShares.totalTokenBalance -= amount;
 
-        delete s.withdrawalRequests[strategyId][msg.sender][address(token)];
+        delete s.withdrawalRequests[strategyId][msg.sender][token];
+
+        return amount;
+    }
+
+    /// @notice Finalize the ERC20 withdrawal after the timelock period has passed.
+    /// @param strategyId The ID of the strategy.
+    /// @param token The ERC20 token address.
+    function finalizeWithdrawal(uint32 strategyId, IERC20 token) external nonReentrant {
+        uint256 amount = _finalizeWithdrawal(strategyId, address(token));
+        // StorageData storage s = SSVBasedAppsStorage.load();
+
+        // ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][address(token)];
+        // uint256 requestTime = request.requestTime;
+
+        // if (requestTime == 0) revert ICore.NoPendingWithdrawal();
+        // StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+
+        // _checkTimelocks(requestTime, sp.withdrawalTimelockPeriod, sp.withdrawalExpireTime);
+
+        // uint256 shares = request.shares;
+
+        // ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][address(token)];
+
+        // if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
+        // if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
+
+        // uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
+        // uint256 totalShares = strategyTokenShares.totalShareBalance;
+
+        // if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
+
+        // uint256 amount = (shares * totalTokenBalance) / totalShares;
+
+        // strategyTokenShares.accountShareBalance[msg.sender] -= shares;
+        // strategyTokenShares.totalShareBalance -= shares;
+        // strategyTokenShares.totalTokenBalance -= amount;
+
+        // delete s.withdrawalRequests[strategyId][msg.sender][address(token)];
 
         token.safeTransfer(msg.sender, amount);
 
@@ -331,58 +439,66 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy.
     /// @param amount The amount of ETH to withdraw.
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
-        if (amount == 0) revert ICore.InvalidAmount();
+        // if (amount == 0) revert ICore.InvalidAmount();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
-        StorageData storage s = SSVBasedAppsStorage.load();
+        _proposeWithdrawal(strategyId, sp.ethAddress, amount);
 
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
-        uint256 totalETHBalance = strategyTokenShares.totalTokenBalance;
-        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        // StorageData storage s = SSVBasedAppsStorage.load();
 
-        if (totalETHBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
+        // ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
 
-        uint256 shares = (amount * totalShares) / totalETHBalance;
+        // if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
 
-        if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
+        // uint256 totalETHBalance = strategyTokenShares.totalTokenBalance;
+        // uint256 totalShares = strategyTokenShares.totalShareBalance;
 
-        ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
+        // if (totalETHBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
-        request.shares = shares;
-        request.requestTime = uint32(block.timestamp);
+        // uint256 shares = (amount * totalShares) / totalETHBalance;
 
-        emit StrategyWithdrawalProposed(strategyId, msg.sender, sp.ethAddress, amount);
+        // if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
+
+        // ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
+
+        // request.shares = shares;
+        // request.requestTime = uint32(block.timestamp);
+
+        //emit StrategyWithdrawalProposed(strategyId, msg.sender, sp.ethAddress, amount);
     }
 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(uint32 strategyId) external nonReentrant {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
-        StorageData storage s = SSVBasedAppsStorage.load();
 
-        ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
-        uint256 requestTime = request.requestTime;
+        uint256 amount = _finalizeWithdrawal(strategyId, sp.ethAddress);
+        // StorageData storage s = SSVBasedAppsStorage.load();
 
-        if (requestTime == 0) revert ICore.NoPendingWithdrawalETH();
-        _checkTimelocks(requestTime, sp.withdrawalTimelockPeriod, sp.withdrawalExpireTime);
+        // ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
+        // uint256 requestTime = request.requestTime;
 
-        uint256 shares = request.shares;
+        // if (requestTime == 0) revert ICore.NoPendingWithdrawalETH();
+        // _checkTimelocks(requestTime, sp.withdrawalTimelockPeriod, sp.withdrawalExpireTime);
 
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
+        // uint256 shares = request.shares;
 
-        if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
+        // ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][sp.ethAddress];
 
-        uint256 totalEthBalance = strategyTokenShares.totalTokenBalance;
-        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        // if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
+        // if (strategyTokenShares.accountShareBalance[msg.sender] < shares) revert ICore.InsufficientBalance();
 
-        if (totalEthBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
+        // uint256 totalEthBalance = strategyTokenShares.totalTokenBalance;
+        // uint256 totalShares = strategyTokenShares.totalShareBalance;
 
-        uint256 amount = (shares * totalEthBalance) / totalShares;
+        // if (totalEthBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
-        strategyTokenShares.accountShareBalance[msg.sender] -= shares;
-        strategyTokenShares.totalShareBalance -= shares;
-        strategyTokenShares.totalTokenBalance -= amount;
+        // uint256 amount = (shares * totalEthBalance) / totalShares;
 
-        delete s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
+        // strategyTokenShares.accountShareBalance[msg.sender] -= shares;
+        // strategyTokenShares.totalShareBalance -= shares;
+        // strategyTokenShares.totalTokenBalance -= amount;
+
+        // delete s.withdrawalRequests[strategyId][msg.sender][sp.ethAddress];
 
         payable(msg.sender).transfer(amount);
 
@@ -547,12 +663,16 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             // Only the bApp EOA or non-compliant bapp owner can slash
             if (msg.sender != bApp) revert ICore.InvalidBAppOwner(msg.sender, bApp);
         }
+
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
         strategyTokenShares.totalTokenBalance -= amount;
         s.slashingFund[receiver][token] += amount;
 
         if (strategyTokenShares.totalTokenBalance == 0) {
-            delete s.strategyTokenShares[strategyId][token];
+            delete s.strategyTokenShares[strategyId][token].totalTokenBalance;
+            delete s.strategyTokenShares[strategyId][token].totalShareBalance;
+            s.strategyTokenShares[strategyId][token].currentGeneration += 1;
+            // delete strategyTokenShares.accountShareBalance;
         }
 
         emit IStrategyManager.StrategySlashed(strategyId, bApp, token, amount, data);

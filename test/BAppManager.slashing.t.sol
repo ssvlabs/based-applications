@@ -162,7 +162,6 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         uint256 slashAmount = 1;
-        // todo should check if there is an obligation? But the 0 percentage will make the value go to 0
         vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotRegistered.selector));
         proxiedManager.slash(STRATEGY1, USER1, address(erc20mock), slashAmount, abi.encodePacked("0x00"), USER1);
     }
@@ -349,8 +348,26 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
     }
 
     // todo
-    function testSlashTotalBalance() public {}
+    function testSlashTotalBalanceEOA() public {
+        uint32 percentage = 10_000;
+        uint256 depositAmount = 100_000;
+        address token = address(erc20mock);
+        uint256 slashAmount = depositAmount;
+        testStrategyOptInToBAppEOA(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"), USER1);
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        assertEq(newStrategyBalance, 0, "The new strategy balance should be 0");
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, 0, newStrategyBalance);
+        checkSlashableBalance(STRATEGY1, USER1, token, 0); // 99,000 * 90% = 89,100 ERC20
+        checkSlashingFund(USER1, token, slashAmount);
+        checkAccountShares(STRATEGY1, USER2, token, 0);
+    }
 
     // todo
     function testDepositAfterSlashingTotalBalance() public {}
+
+    // todo slashBappwithObligation0andShouldRevertSomewhere // shopuld trigger insufficient balance
 }

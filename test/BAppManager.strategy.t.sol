@@ -942,7 +942,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
     function testRevertAsyncWithdrawETHFromStrategyOnlyFinalize() public {
         testCreateStrategyETHAndDepositETH();
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.NoPendingWithdrawalETH.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.NoPendingWithdrawal.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
     }
 
@@ -1244,10 +1244,12 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
         proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"), USER1);
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientLiquidity.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
     }
+
+    // todo test invalid liquidity
 
     function testFinalizeWithdrawalETHAfterSlashingEventSucceeds() public {
         testStrategyOptInToBAppWithETH();
@@ -1267,10 +1269,12 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
         proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"), USER1);
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientLiquidity.selector));
+        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
     }
+
+    // todo test Invalidliquidity
 
     function testDepositETHWithTotalEthBalance0() public {}
 

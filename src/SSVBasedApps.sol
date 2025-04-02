@@ -259,7 +259,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
 
     function strategyAccountShares(uint32 strategyId, address account, address token) external view returns (uint256) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return s.strategyTokenShares[strategyId][token].accountShareBalance[account];
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+        if (strategyTokenShares.accountGeneration[account] != strategyTokenShares.currentGeneration) return 0;
+        else return s.strategyTokenShares[strategyId][token].accountShareBalance[account];
     }
 
     function strategyTotalBalance(uint32 strategyId, address token) external view returns (uint256) {

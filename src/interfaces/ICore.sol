@@ -52,10 +52,19 @@ interface ICore {
         uint32 requestTime;
     }
 
+    /// @notice Represents the shares system of a strategy
     struct Shares {
+        /// @dev The total token balance
         uint256 totalTokenBalance;
+        /// @dev The total share balance
         uint256 totalShareBalance;
+        /// @dev The current generation is used to track full slashing events, since we cannot reset mapping in solidity
+        /// It is incremented when a full slashing event occurs
+        uint256 currentGeneration;
+        /// @dev The account share balance
         mapping(address => uint256) accountShareBalance;
+        /// @dev The account generation
+        mapping(address => uint256) accountGeneration;
     }
 
     error BAppAlreadyOptedIn();
@@ -75,6 +84,7 @@ interface ICore {
     error FeeAlreadySet();
     error InsufficientBalance();
     error InsufficientLiquidity();
+    error InvalidAccountGeneration();
     error InvalidAmount();
     error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidMaxFeeIncrement();
@@ -90,7 +100,6 @@ interface ICore {
     error NoPendingTokenRemoval();
     error NoPendingTokenUpdate();
     error NoPendingWithdrawal();
-    error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
     error ObligationHasNotBeenCreated();
     error PercentageAlreadySet();
