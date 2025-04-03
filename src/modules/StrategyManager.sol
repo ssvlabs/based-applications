@@ -462,7 +462,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
         uint256 totalShares = strategyTokenShares.totalShareBalance;
 
-        // TODO: double check that this is not needed
+        // TODO: To Check: double check that this is not needed
         // if (totalTokenBalance == 0 || totalShares == 0) revert ICore.InsufficientLiquidity();
 
         amount = (shares * totalTokenBalance) / totalShares;
