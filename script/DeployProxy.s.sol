@@ -11,6 +11,10 @@ import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
 import {SSVBasedApps} from "src/SSVBasedApps.sol";
+import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
+import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
+import {SlashingManager} from "@ssv/src/modules/SlashingManager.sol";
+import {DelegationManager} from "@ssv/src/modules/DelegationManager.sol";
 
 // solhint-disable no-console
 contract DeployProxy is Script {
@@ -20,6 +24,8 @@ contract DeployProxy is Script {
         SSVBasedApps implementation = new SSVBasedApps();
         StrategyManager strategyManagerMod = new StrategyManager();
         BasedAppsManager basedAppsManagerMod = new BasedAppsManager();
+        SlashingManager slashingManagerMod = new SlashingManager();
+        DelegationManager delegationManagerMod = new DelegationManager();
         SSVDAO ssvDAOMod = new SSVDAO();
 
         uint32 maxFeeIncrement = 500;
@@ -30,6 +36,8 @@ contract DeployProxy is Script {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             ISSVDAO(ssvDAOMod),
+            ISlashingManager(slashingManagerMod),
+            IDelegationManager(delegationManagerMod),
             maxFeeIncrement
         );
 

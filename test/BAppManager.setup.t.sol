@@ -19,6 +19,10 @@ import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.so
 import {SSVDAO} from "@ssv/src/modules/SSVDAO.sol";
 import {StrategyManager} from "@ssv/src/modules/StrategyManager.sol";
 import {BasedAppsManager} from "@ssv/src/modules/BasedAppsManager.sol";
+import {SlashingManager} from "@ssv/src/modules/SlashingManager.sol";
+import {DelegationManager} from "@ssv/src/modules/DelegationManager.sol";
+import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
+import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
 
 contract BasedAppManagerSetupTest is Test {
     // Main Contract
@@ -27,6 +31,9 @@ contract BasedAppManagerSetupTest is Test {
     StrategyManager public strategyManagerMod;
     BasedAppsManager public basedAppsManagerMod;
     SSVDAO public ssvDAOMod;
+    SlashingManager public slashingManagerMod;
+    DelegationManager public delegationManagerMod;
+
     // Proxies
     ERC1967Proxy public proxy; // UUPS Proxy contract
     SSVBasedApps public proxiedManager; // Proxy interface for interaction
@@ -91,6 +98,8 @@ contract BasedAppManagerSetupTest is Test {
         basedAppsManagerMod = new BasedAppsManager();
         strategyManagerMod = new StrategyManager();
         ssvDAOMod = new SSVDAO();
+        slashingManagerMod = new SlashingManager();
+        delegationManagerMod = new DelegationManager();
         implementation = new SSVBasedApps();
         bytes memory data = abi.encodeWithSelector(
             implementation.initialize.selector,
@@ -98,6 +107,8 @@ contract BasedAppManagerSetupTest is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             ISSVDAO(ssvDAOMod),
+            ISlashingManager(slashingManagerMod),
+            IDelegationManager(delegationManagerMod),
             MAX_FEE_INCREMENT
         );
         proxy = new ERC1967Proxy(address(implementation), data);

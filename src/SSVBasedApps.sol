@@ -6,6 +6,8 @@ import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
+import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
+import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
 import {SSVBasedAppsStorage, StorageData} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
@@ -25,15 +27,18 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     // ***************************
     // ** Section: Initializers **
     // ***************************
-    function initialize(address owner_, IBasedAppManager ssvBasedAppManger_, IStrategyManager ssvStrategyManager_, ISSVDAO ssvDAO_, uint32 maxFeeIncrement_)
-        external
-        override
-        initializer
-        onlyProxy
-    {
+    function initialize(
+        address owner_,
+        IBasedAppManager ssvBasedAppManger_,
+        IStrategyManager ssvStrategyManager_,
+        ISSVDAO ssvDAO_,
+        ISlashingManager ssvSlashingManager_,
+        IDelegationManager ssvDelegationManager_,
+        uint32 maxFeeIncrement_
+    ) external override initializer onlyProxy {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
-        __SSVBasedApplications_init_unchained(ssvBasedAppManger_, ssvStrategyManager_, ssvDAO_, maxFeeIncrement_);
+        __SSVBasedApplications_init_unchained(ssvBasedAppManger_, ssvStrategyManager_, ssvDAO_, ssvSlashingManager_, ssvDelegationManager_, maxFeeIncrement_);
     }
 
     // solhint-disable-next-line func-name-mixedcase
@@ -41,6 +46,8 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         ISSVDAO ssvDAO_,
+        ISlashingManager ssvSlashingManager_,
+        IDelegationManager ssvDelegationManager_,
         uint32 maxFeeIncrement_
     ) internal onlyInitializing {
         StorageData storage s = SSVBasedAppsStorage.load();
@@ -48,6 +55,8 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         s.ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER] = address(ssvStrategyManager_);
         s.ssvContracts[SSVBasedAppsModules.SSV_BASED_APPS_MANAGER] = address(ssvBasedAppManger_);
         s.ssvContracts[SSVBasedAppsModules.SSV_DAO] = address(ssvDAO_);
+        s.ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER] = address(ssvSlashingManager_);
+        s.ssvContracts[SSVBasedAppsModules.SSV_DELEGATION_MANAGER] = address(ssvDelegationManager_);
 
         if (maxFeeIncrement_ == 0 || maxFeeIncrement_ > 10_000) revert ICore.InvalidMaxFeeIncrement();
 
@@ -98,7 +107,7 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     }
 
     function delegateBalance(address receiver, uint32 percentage) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DELEGATION_MANAGER]);
     }
 
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external {
@@ -158,11 +167,11 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     }
 
     function removeDelegatedBalance(address receiver) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DELEGATION_MANAGER]);
     }
 
     function updateDelegatedBalance(address receiver, uint32 percentage) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DELEGATION_MANAGER]);
     }
 
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external {
@@ -170,19 +179,19 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     }
 
     function updateAccountMetadataURI(string calldata metadataURI) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DELEGATION_MANAGER]);
     }
 
     function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER]);
     }
 
     function withdrawSlashingFund(address token, uint256 amount) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER]);
     }
 
     function withdrawETHSlashingFund(uint256 amount) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER]);
     }
 
     function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data) external {

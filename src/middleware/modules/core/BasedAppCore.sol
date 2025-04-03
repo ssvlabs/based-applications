@@ -3,7 +3,8 @@ pragma solidity 0.8.29;
 
 import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
+
+import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 // =====================================================================================
@@ -55,11 +56,11 @@ abstract contract BasedAppCore is IBasedApp {
     }
 
     function withdrawSlashingFund(address token, uint256 amount) external virtual {
-        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(token, amount);
+        ISlashingManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(token, amount);
     }
 
     function withdrawETHSlashingFund(uint256 amount) external virtual {
-        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(amount);
+        ISlashingManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(amount);
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager

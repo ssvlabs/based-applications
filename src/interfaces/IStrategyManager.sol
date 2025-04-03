@@ -4,11 +4,7 @@ pragma solidity 0.8.29;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IStrategyManager {
-    event AccountMetadataURIUpdated(address indexed account, string metadataURI);
     event BAppOptedInByStrategy(uint32 indexed strategyId, address indexed bApp, bytes data, address[] tokens, uint32[] obligationPercentages);
-    event DelegationCreated(address indexed delegator, address indexed receiver, uint32 percentage);
-    event DelegationRemoved(address indexed delegator, address indexed receiver);
-    event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);
     event MaxFeeIncrementSet(uint32 newMaxFeeIncrement);
     event ObligationCreated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
     event ObligationUpdated(uint32 indexed strategyId, address indexed bApp, address token, uint32 percentage);
@@ -25,7 +21,6 @@ interface IStrategyManager {
 
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId);
-    function delegateBalance(address receiver, uint32 percentage) external;
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external;
     function depositETH(uint32 strategyId) external payable;
     function finalizeFeeUpdate(uint32 strategyId) external;
@@ -38,11 +33,5 @@ interface IStrategyManager {
     function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external;
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
-    function removeDelegatedBalance(address receiver) external;
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
-    function updateAccountMetadataURI(string calldata metadataURI) external;
-    function updateDelegatedBalance(address receiver, uint32 percentage) external;
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
-    function withdrawETHSlashingFund(uint256 amount) external;
-    function withdrawSlashingFund(address token, uint256 amount) external;
 }

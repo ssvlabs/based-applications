@@ -2,7 +2,16 @@
 pragma solidity 0.8.29;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {BasedAppManagerSetupTest, IStrategyManager, IBasedAppManager, ISSVDAO, SSVBasedApps, ERC1967Proxy} from "@ssv/test/BAppManager.setup.t.sol";
+import {
+    BasedAppManagerSetupTest,
+    IStrategyManager,
+    IBasedAppManager,
+    ISlashingManager,
+    IDelegationManager,
+    ISSVDAO,
+    SSVBasedApps,
+    ERC1967Proxy
+} from "@ssv/test/BAppManager.setup.t.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
@@ -37,23 +46,41 @@ contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgrad
     function testRevertTryToCallInitializeAgainFromAttacker() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(ATTACKER);
-        proxiedManager.initialize(address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10);
+        proxiedManager.initialize(
+            address(OWNER),
+            IBasedAppManager(basedAppsManagerMod),
+            IStrategyManager(strategyManagerMod),
+            ISSVDAO(ssvDAOMod),
+            ISlashingManager(slashingManagerMod),
+            IDelegationManager(delegationManagerMod),
+            10
+        );
     }
 
     function testRevertTryToCallInitializeAgainFromOwner() public {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(OWNER);
-        proxiedManager.initialize(address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), ISSVDAO(ssvDAOMod), 10);
+        proxiedManager.initialize(
+            address(OWNER),
+            IBasedAppManager(basedAppsManagerMod),
+            IStrategyManager(strategyManagerMod),
+            ISSVDAO(ssvDAOMod),
+            ISlashingManager(slashingManagerMod),
+            IDelegationManager(delegationManagerMod),
+            10
+        );
     }
 
     function testRevertInitializeWithZeroFee() public {
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
         bytes memory initData = abi.encodeWithSignature(
-            "initialize(address,address,address,address,uint32)",
+            "initialize(address,address,address,address,address,address,uint32)",
             address(OWNER),
             address(basedAppsManagerMod),
             address(strategyManagerMod),
             address(ssvDAOMod),
+            address(slashingManagerMod),
+            address(delegationManagerMod),
             0
         );
         proxy = new ERC1967Proxy(address(implementation), initData);
@@ -62,11 +89,13 @@ contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgrad
     function testRevertInitializeWithExcessiveFee() public {
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
         bytes memory initData = abi.encodeWithSignature(
-            "initialize(address,address,address,address,uint32)",
+            "initialize(address,address,address,address,address,address,uint32)",
             address(OWNER),
             address(basedAppsManagerMod),
             address(strategyManagerMod),
             address(ssvDAOMod),
+            address(slashingManagerMod),
+            address(delegationManagerMod),
             10_001
         );
         proxy = new ERC1967Proxy(address(implementation), initData);

@@ -6,7 +6,9 @@ import {ICore} from "@ssv/src/interfaces/ICore.sol";
 enum SSVBasedAppsModules {
     SSV_BASED_APPS_MANAGER,
     SSV_STRATEGY_MANAGER,
-    SSV_DAO
+    SSV_DAO,
+    SSV_SLASHING_MANAGER,
+    SSV_DELEGATION_MANAGER
 }
 
 /// @title SSV Based Applications Storage Data
