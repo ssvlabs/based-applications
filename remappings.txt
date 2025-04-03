@@ -6,3 +6,6 @@
 @ssv/script/=script/
 @ssv/forge-std/=lib/forge-std/src/
 @ssv/src/interfaces=src/interfaces
+@ssv/src/libraries=src/libraries
+@ssv/src/modules=src/modules
+

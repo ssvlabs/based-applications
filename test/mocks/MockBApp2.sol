@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
@@ -17,9 +17,9 @@ contract BasedAppMock2 is BasedAppCore {
         view
         override
         onlySSVBasedAppManager
-        returns (bool)
+        returns (bool, address)
     {
         ///@dev return false on purpose to revert
-        return false;
+        return (false, address(0));
     }
 }

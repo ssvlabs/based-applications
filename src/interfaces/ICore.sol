@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-interface IStorage {
+interface ICore {
     /// @notice Represents a SharedRiskLevel
     struct SharedRiskLevel {
         /// @dev The shared risk level
-        /// Encoding: The value is stored as a uint32. However, it represents a real (float) value. To get the actual real value (decode), divide by 10^6.
+        /// Encoding: The value is stored as a uint32. However, it represents a real (float) value.
+        /// To get the actual real value (decode), divide by 10^6.
         uint32 value;
         /// @dev if the shared risk level is set
         bool isSet;
@@ -27,6 +28,7 @@ interface IStorage {
         uint32 fee;
     }
 
+    /// @notice Represents a FeeUpdateRequest
     struct FeeUpdateRequest {
         /// @dev The new fee percentage
         uint32 percentage;
@@ -50,41 +52,39 @@ interface IStorage {
         uint32 requestTime;
     }
 
-    /// @notice Represents a request to update the tokens of a bApp
-    struct TokenUpdateRequest {
-        /// @dev The new tokens
-        address[] tokens;
-        /// @dev The new shared risk levels
-        uint32[] sharedRiskLevels;
-        /// @dev The block time when the update token request was sent
-        uint32 requestTime;
-    }
-
-    /// @notice Represents a request to update the tokens of a bApp
-    struct TokenRemovalRequest {
-        /// @dev The tokens to remove
-        address[] tokens;
-        /// @dev The block time when the removal token request was sent
-        uint32 requestTime;
+    /// @notice Represents the shares system of a strategy
+    struct Shares {
+        /// @dev The total token balance
+        uint256 totalTokenBalance;
+        /// @dev The total share balance
+        uint256 totalShareBalance;
+        /// @dev The current generation is used to track full slashing events, since we cannot reset mapping in solidity
+        /// It is incremented when a full slashing event occurs
+        uint256 currentGeneration;
+        /// @dev The account share balance
+        mapping(address => uint256) accountShareBalance;
+        /// @dev The account generation
+        mapping(address => uint256) accountGeneration;
     }
 
     error BAppAlreadyOptedIn();
     error BAppAlreadyRegistered();
-    error BAppNotRegistered();
+    error BAppDoesNotSupportInterface();
     error BAppNotOptedIn();
+    error BAppNotRegistered();
     error BAppOptInFailed();
     error BAppSlashingFailed();
-    error BAppDoesNotSupportInterface();
+    error DelegateCallFailed(bytes returnData);
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();
-    error DelegateCallFailed(bytes returnData);
     error EmptyTokenList();
-    error ExceedingPercentageUpdate();
     error ExceedingMaxShares();
+    error ExceedingPercentageUpdate();
     error FeeAlreadySet();
     error InsufficientBalance();
     error InsufficientLiquidity();
+    error InvalidAccountGeneration();
     error InvalidAmount();
     error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidMaxFeeIncrement();
@@ -97,15 +97,15 @@ interface IStorage {
     error LengthsNotMatching();
     error NoPendingFeeUpdate();
     error NoPendingObligationUpdate();
-    error NoPendingTokenUpdate();
     error NoPendingTokenRemoval();
+    error NoPendingTokenUpdate();
     error NoPendingWithdrawal();
-    error NoPendingWithdrawalETH();
     error ObligationAlreadySet();
     error ObligationHasNotBeenCreated();
     error PercentageAlreadySet();
     error RequestTimeExpired();
     error SharedRiskLevelAlreadySet();
+    error TargetModuleDoesNotExistWithData(uint8 moduleId); // 0x208bb85d
     error TimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);
     error TokenIsUsedByTheBApp();

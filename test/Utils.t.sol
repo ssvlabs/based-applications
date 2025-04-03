@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
-
+import {Test} from "forge-std/Test.sol";
 import {SSVBasedApps} from "src/SSVBasedApps.sol";
 
 contract TestUtils is Test {
@@ -29,12 +27,7 @@ contract TestUtils is Test {
         obligationPercentageInput[0] = obligationPercentage;
     }
 
-    function checkBAppInfo(
-        address[] memory tokensInput,
-        uint32[] memory riskLevelInput,
-        address bApp,
-        SSVBasedApps proxiedManager
-    ) internal view {
+    function checkBAppInfo(address[] memory tokensInput, uint32[] memory riskLevelInput, address bApp, SSVBasedApps proxiedManager) internal view {
         assertEq(tokensInput.length, riskLevelInput.length, "BApp tokens and sharedRiskLevel length");
         bool isRegistered = proxiedManager.registeredBApps(bApp);
         assertEq(isRegistered, true, "BApp registered");

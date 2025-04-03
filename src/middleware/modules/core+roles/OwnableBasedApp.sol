@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
+import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
@@ -23,48 +23,14 @@ abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     ///        "logo": "https://link-to-your-logo.png",
     ///        "social": "https://x.com/ssv_network"
     ///    }
-    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI)
-        external
-        override
-        onlyOwner
-    {
-        IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
-    }
-
-    /// @notice Adds tokens to a BApp
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
-    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).addTokensToBApp(tokens, sharedRiskLevels);
-    }
-
-    /// @notice Updates the tokens of a BApp
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
-    function proposeBAppTokensUpdate(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensUpdate(tokens, sharedRiskLevels);
-    }
-
-    /// @notice Finalizes the update of the tokens of a BApp
-    function finalizeBAppTokensUpdate() external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensUpdate();
-    }
-
-    /// @notice Proposes the removal of tokens from a BApp
-    /// @param tokens array of token addresses
-    function proposeBAppTokensRemoval(address[] calldata tokens) external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensRemoval(tokens);
-    }
-
-    /// @notice Finalizes the removal of the tokens of a BApp
-    function finalizeBAppTokensRemoval() external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensRemoval();
+    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external override onlyOwner {
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Updates the metadata URI of a BApp
     /// @param metadataURI new metadata URI
     function updateBAppMetadataURI(string calldata metadataURI) external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).updateBAppMetadataURI(metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(metadataURI);
     }
 
     /// @notice Checks if the contract supports the interface

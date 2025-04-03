@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.28;
+pragma solidity 0.8.29;
 
-import {IBasedApp} from "@ssv/src/interfaces/IBasedApp.sol";
+import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
+
+import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 // =====================================================================================
@@ -14,20 +16,21 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 // =====================================================================================
 abstract contract BasedAppCore is IBasedApp {
     /// @notice Address of the SSV Based App Manager contract
-    address public immutable BASED_APP_MANAGER;
+    address public immutable SSV_BASED_APPS_NETWORK;
 
     /// @dev Allows only the SSV Based App Manager to call the function
     modifier onlySSVBasedAppManager() {
-        if (msg.sender != address(BASED_APP_MANAGER)) {
+        if (msg.sender != address(SSV_BASED_APPS_NETWORK)) {
             revert UnauthorizedCaller();
         }
         _;
     }
 
-    /// @notice constructor for the BasedAppCore contract, initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
-    /// @param _basedAppManager address of the SSVBasedApps contract
-    constructor(address _basedAppManager) {
-        BASED_APP_MANAGER = _basedAppManager;
+    /// @notice constructor for the BasedAppCore contract,
+    /// initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
+    /// @param _ssvBasedAppsNetwork address of the SSVBasedApps contract
+    constructor(address _ssvBasedAppsNetwork) {
+        SSV_BASED_APPS_NETWORK = _ssvBasedAppsNetwork;
     }
 
     /// @notice Registers a BApp calling the SSV SSVBasedApps
@@ -42,56 +45,31 @@ abstract contract BasedAppCore is IBasedApp {
     ///        "logo": "https://link-to-your-logo.png",
     ///        "social": "https://x.com/ssv_network"
     ///    }
-    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI)
-        external
-        virtual
-    {
-        IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
-    }
-
-    /// @notice Adds tokens to a BApp
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
-    function addTokensToBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).addTokensToBApp(tokens, sharedRiskLevels);
-    }
-
-    /// @notice Updates the tokens of a BApp
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
-    function proposeBAppTokensUpdate(address[] calldata tokens, uint32[] calldata sharedRiskLevels) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensUpdate(tokens, sharedRiskLevels);
-    }
-
-    /// @notice Finalizes the update of the tokens of a BApp
-    function finalizeBAppTokensUpdate() external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensUpdate();
-    }
-
-    /// @notice Removes tokens from a BApp
-    /// @param tokens array of token addresses
-    function proposeBAppTokensRemoval(address[] calldata tokens) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).proposeBAppTokensRemoval(tokens);
-    }
-
-    /// @notice Finalizes the removal of the tokens of a BApp
-    function finalizeBAppTokensRemoval() external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).finalizeBAppTokensRemoval();
+    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external virtual {
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Updates the metadata URI of a BApp
     /// @param metadataURI new metadata URI
     function updateBAppMetadataURI(string calldata metadataURI) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).updateBAppMetadataURI(metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(metadataURI);
+    }
+
+    function withdrawSlashingFund(address token, uint256 amount) external virtual {
+        ISlashingManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(token, amount);
+    }
+
+    function withdrawETHSlashingFund(uint256 amount) external virtual {
+        ISlashingManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(amount);
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
-    function optInToBApp(
-        uint32, /*strategyId*/
-        address[] calldata, /*tokens*/
-        uint32[] calldata, /*obligationPercentages*/
-        bytes calldata /*data*/
-    ) external virtual onlySSVBasedAppManager returns (bool success) {
+    function optInToBApp(uint32, /*strategyId*/ address[] calldata, /*tokens*/ uint32[] calldata, /*obligationPercentages*/ bytes calldata /*data*/ )
+        external
+        virtual
+        onlySSVBasedAppManager
+        returns (bool success)
+    {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         return true;
@@ -101,11 +79,12 @@ abstract contract BasedAppCore is IBasedApp {
         external
         virtual
         onlySSVBasedAppManager
-        returns (bool)
+        returns (bool, address)
     {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
-        return true;
+        ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
+        return (true, address(this));
     }
 
     /// @notice Checks if the contract supports the interface
@@ -114,4 +93,7 @@ abstract contract BasedAppCore is IBasedApp {
     function supportsInterface(bytes4 interfaceId) public pure virtual returns (bool) {
         return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
+
+    // Receive function to accept plain Ether transfers
+    receive() external payable {}
 }
