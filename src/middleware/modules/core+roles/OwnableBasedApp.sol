@@ -24,13 +24,13 @@ abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     ///        "social": "https://x.com/ssv_network"
     ///    }
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Updates the metadata URI of a BApp
     /// @param metadataURI new metadata URI
     function updateBAppMetadataURI(string calldata metadataURI) external override onlyOwner {
-        IBasedAppManager(BASED_APP_MANAGER).updateBAppMetadataURI(metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(metadataURI);
     }
 
     /// @notice Checks if the contract supports the interface

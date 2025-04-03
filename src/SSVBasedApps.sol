@@ -173,7 +173,7 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver) external {
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
     }
 

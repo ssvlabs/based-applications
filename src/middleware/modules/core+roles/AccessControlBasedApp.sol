@@ -14,7 +14,7 @@ abstract contract AccessControlBasedApp is BasedAppCore, AccessControl {
 
     constructor(address _basedAppManager, address owner) AccessControl() BasedAppCore(_basedAppManager) {
         _grantRole(DEFAULT_ADMIN_ROLE, owner);
-        BASED_APP_MANAGER = _basedAppManager;
+        SSV_BASED_APPS_NETWORK = _basedAppManager;
     }
 
     function grantManagerRole(address manager) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -42,13 +42,13 @@ abstract contract AccessControlBasedApp is BasedAppCore, AccessControl {
         override
         onlyRole(MANAGER_ROLE)
     {
-        IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Updates the metadata URI of a BApp
     /// @param metadataURI new metadata URI
     function updateBAppMetadataURI(string calldata metadataURI) external override onlyRole(MANAGER_ROLE) {
-        IBasedAppManager(BASED_APP_MANAGER).updateBAppMetadataURI(metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(metadataURI);
     }
 
     /// @notice Checks if the contract supports the interface

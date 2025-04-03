@@ -12,8 +12,14 @@ contract BasedAppMock2 is BasedAppCore {
         counter = 0;
     }
 
-    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata) external view override onlySSVBasedAppManager returns (bool) {
+    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata)
+        external
+        view
+        override
+        onlySSVBasedAppManager
+        returns (bool, address)
+    {
         ///@dev return false on purpose to revert
-        return false;
+        return (false, address(0));
     }
 }

@@ -89,6 +89,13 @@ contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
         checkBAppInfo(tokensInput, sharedRiskLevelInput, USER1, proxiedManager);
     }
 
+    function testRegisterBAppWithEOAWithEth() public {
+        (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 102);
+        vm.prank(USER1);
+        proxiedManager.registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[0]);
+        checkBAppInfo(tokensInput, sharedRiskLevelInput, USER1, proxiedManager);
+    }
+
     function testRegisterBAppWith2Tokens() public {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndRiskInputs();
         for (uint256 i = 0; i < bApps.length; i++) {

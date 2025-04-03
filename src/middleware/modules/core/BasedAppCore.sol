@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
+import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 // =====================================================================================
@@ -14,11 +15,11 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 // =====================================================================================
 abstract contract BasedAppCore is IBasedApp {
     /// @notice Address of the SSV Based App Manager contract
-    address public immutable BASED_APP_MANAGER;
+    address public immutable SSV_BASED_APPS_NETWORK;
 
     /// @dev Allows only the SSV Based App Manager to call the function
     modifier onlySSVBasedAppManager() {
-        if (msg.sender != address(BASED_APP_MANAGER)) {
+        if (msg.sender != address(SSV_BASED_APPS_NETWORK)) {
             revert UnauthorizedCaller();
         }
         _;
@@ -26,9 +27,9 @@ abstract contract BasedAppCore is IBasedApp {
 
     /// @notice constructor for the BasedAppCore contract,
     /// initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
-    /// @param _basedAppManager address of the SSVBasedApps contract
-    constructor(address _basedAppManager) {
-        BASED_APP_MANAGER = _basedAppManager;
+    /// @param _ssvBasedAppsNetwork address of the SSVBasedApps contract
+    constructor(address _ssvBasedAppsNetwork) {
+        SSV_BASED_APPS_NETWORK = _ssvBasedAppsNetwork;
     }
 
     /// @notice Registers a BApp calling the SSV SSVBasedApps
@@ -44,13 +45,21 @@ abstract contract BasedAppCore is IBasedApp {
     ///        "social": "https://x.com/ssv_network"
     ///    }
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).registerBApp(tokens, sharedRiskLevels, metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(tokens, sharedRiskLevels, metadataURI);
     }
 
     /// @notice Updates the metadata URI of a BApp
     /// @param metadataURI new metadata URI
     function updateBAppMetadataURI(string calldata metadataURI) external virtual {
-        IBasedAppManager(BASED_APP_MANAGER).updateBAppMetadataURI(metadataURI);
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(metadataURI);
+    }
+
+    function withdrawSlashingFund(address token, uint256 amount) external virtual {
+        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(token, amount);
+    }
+
+    function withdrawETHSlashingFund(uint256 amount) external virtual {
+        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(amount);
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
@@ -65,10 +74,16 @@ abstract contract BasedAppCore is IBasedApp {
         return true;
     }
 
-    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata) external virtual onlySSVBasedAppManager returns (bool) {
+    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata)
+        external
+        virtual
+        onlySSVBasedAppManager
+        returns (bool, address)
+    {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
-        return true;
+        ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
+        return (true, address(this));
     }
 
     /// @notice Checks if the contract supports the interface
@@ -77,4 +92,7 @@ abstract contract BasedAppCore is IBasedApp {
     function supportsInterface(bytes4 interfaceId) public pure virtual returns (bool) {
         return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
     }
+
+    // Receive function to accept plain Ether transfers
+    receive() external payable {}
 }

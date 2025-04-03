@@ -315,6 +315,24 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.stopPrank();
     }
 
+    function testStrategyOptInToBAppEOAWithETH(uint32 percentage) public {
+        vm.assume(percentage > 0 && percentage <= proxiedManager.maxPercentage());
+        testCreateStrategies();
+        testRegisterBAppWithEOAWithEth();
+        vm.startPrank(USER1);
+        (address owner,) = proxiedManager.strategies(STRATEGY1);
+        assertEq(owner, USER1, "Should have set the correct strategy owner");
+        address[] memory tokensInput = new address[](1);
+        tokensInput[0] = ETH_ADDRESS;
+        uint32[] memory obligationPercentagesInput = new uint32[](1);
+        obligationPercentagesInput[0] = percentage;
+        vm.expectEmit(true, true, true, true);
+        emit IStrategyManager.BAppOptedInByStrategy(STRATEGY1, USER1, abi.encodePacked("0x00"), tokensInput, obligationPercentagesInput);
+        proxiedManager.optInToBApp(STRATEGY1, USER1, tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
+        checkStrategyInfo(USER1, STRATEGY1, USER1, ETH_ADDRESS, percentage, proxiedManager, 1, true);
+        vm.stopPrank();
+    }
+
     function testStrategyOptInToBAppNonCompliant(uint32 percentage) public {
         vm.assume(percentage > 0 && percentage <= proxiedManager.maxPercentage());
         testCreateStrategies();
@@ -1231,7 +1249,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
-        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 5000, abi.encode("0x00"), USER1);
+        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 5000, abi.encode("0x00"));
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
@@ -1242,7 +1260,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 10_000);
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
-        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"), USER1);
+        proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"));
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
@@ -1254,7 +1272,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
-        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 0.5 ether, abi.encode("0x00"), USER1);
+        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 0.5 ether, abi.encode("0x00"));
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
@@ -1265,7 +1283,7 @@ contract BasedAppManagerStrategyTest is BasedAppManagerSetupTest, BasedAppsTest 
         vm.startPrank(USER1);
         proxiedManager.depositETH{value: 1 ether}(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
-        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"), USER1);
+        proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"));
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);

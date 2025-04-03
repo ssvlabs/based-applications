@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 interface ICustomBasedAppManager {
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver) external;
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
 }
 
 contract NonCompliantBApp {
@@ -22,7 +22,7 @@ contract NonCompliantBApp {
     }
 
     function slash(uint32 strategyId, address token, uint256 amount) external {
-        ICustomBasedAppManager(BASED_APP_MANAGER).slash(strategyId, address(this), token, amount, "", address(this));
+        ICustomBasedAppManager(BASED_APP_MANAGER).slash(strategyId, address(this), token, amount, "");
     }
 
     function optInToBApp(uint32 strategyId, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data)
@@ -33,5 +33,9 @@ contract NonCompliantBApp {
         emit OptInToBApp(strategyId, tokens, obligationPercentages, data);
         if (counter % 2 == 0) return false;
         else return true;
+    }
+
+    receive() external payable {
+        // Accept plain Ether transfers
     }
 }

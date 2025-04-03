@@ -411,7 +411,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param amount The amount to slash
     /// @param data Optional parameter that could be required by the service
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver) external nonReentrant {
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external nonReentrant {
         if (amount == 0) revert ICore.InvalidAmount();
         StorageData storage s = SSVBasedAppsStorage.load();
 
@@ -420,12 +420,15 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 slashableBalance = getSlashableBalance(strategyId, bApp, token);
         if (slashableBalance < amount) revert ICore.InsufficientBalance();
 
+        address receiver;
         if (CoreLib.isBApp(bApp)) {
-            (bool success) = IBasedApp(bApp).slash(strategyId, token, amount, data);
+            bool success;
+            (success, receiver) = IBasedApp(bApp).slash(strategyId, token, amount, data);
             if (!success) revert ICore.BAppSlashingFailed();
         } else {
             // Only the bApp EOA or non-compliant bapp owner can slash
             if (msg.sender != bApp) revert ICore.InvalidBAppOwner(msg.sender, bApp);
+            receiver = bApp;
         }
 
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
@@ -446,15 +449,18 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param amount The amount to withdraw
     function withdrawSlashingFund(address token, uint256 amount) external nonReentrant {
-        if (amount == 0) revert ICore.InvalidAmount();
+        // if (amount == 0) revert ICore.InvalidAmount();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         if (token == sp.ethAddress) revert ICore.InvalidToken();
-        StorageData storage s = SSVBasedAppsStorage.load();
 
-        if (s.slashingFund[msg.sender][token] < amount) revert ICore.InsufficientBalance();
+        _withdrawSlashingFund(token, amount);
+        // StorageData storage s = SSVBasedAppsStorage.load();
 
-        s.slashingFund[msg.sender][token] -= amount;
+        // if (s.slashingFund[msg.sender][token] < amount) revert ICore.InsufficientBalance();
+
+        // s.slashingFund[msg.sender][token] -= amount;
+
         IERC20(token).safeTransfer(msg.sender, amount);
 
         emit IStrategyManager.SlashingFundWithdrawn(token, amount);
@@ -463,16 +469,28 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Withdraw the slashing fund for ETH
     /// @param amount The amount to withdraw
     function withdrawETHSlashingFund(uint256 amount) external nonReentrant {
-        if (amount == 0) revert ICore.InvalidAmount();
+        //if (amount == 0) revert ICore.InvalidAmount();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
-        StorageData storage s = SSVBasedAppsStorage.load();
+        // StorageData storage s = SSVBasedAppsStorage.load();
 
-        if (s.slashingFund[msg.sender][sp.ethAddress] < amount) revert ICore.InsufficientBalance();
+        // if (s.slashingFund[msg.sender][sp.ethAddress] < amount) revert ICore.InsufficientBalance();
 
-        s.slashingFund[msg.sender][sp.ethAddress] -= amount;
+        //s.slashingFund[msg.sender][sp.ethAddress] -= amount;
+
+        _withdrawSlashingFund(sp.ethAddress, amount);
+        //
         payable(msg.sender).transfer(amount);
 
         emit IStrategyManager.SlashingFundWithdrawn(sp.ethAddress, amount);
+    }
+
+    function _withdrawSlashingFund(address token, uint256 amount) internal {
+        if (amount == 0) revert ICore.InvalidAmount();
+        StorageData storage s = SSVBasedAppsStorage.load();
+
+        if (s.slashingFund[msg.sender][token] < amount) revert ICore.InsufficientBalance();
+
+        s.slashingFund[msg.sender][token] -= amount;
     }
 
     // **********************

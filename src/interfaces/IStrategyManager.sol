@@ -39,7 +39,7 @@ interface IStrategyManager {
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
     function removeDelegatedBalance(address receiver) external;
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data, address receiver) external;
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
     function updateAccountMetadataURI(string calldata metadataURI) external;
     function updateDelegatedBalance(address receiver, uint32 percentage) external;
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
