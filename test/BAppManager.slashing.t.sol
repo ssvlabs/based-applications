@@ -276,8 +276,8 @@ contract BasedAppManagerSlashingTest is BasedAppManagerStrategyTest {
         testSlashBApp(slashAmount);
         vm.expectEmit(true, true, true, true);
         emit IStrategyManager.SlashingFundWithdrawn(address(erc20mock), slashAmount);
-        vm.prank(address(bApp1));
-        proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount);
+        vm.prank(USER1);
+        bApp1.withdrawSlashingFund(address(erc20mock), slashAmount);
     }
 
     function testWithdrawSlashingFundEth() public {
