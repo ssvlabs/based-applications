@@ -449,17 +449,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param amount The amount to withdraw
     function withdrawSlashingFund(address token, uint256 amount) external nonReentrant {
-        // if (amount == 0) revert ICore.InvalidAmount();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         if (token == sp.ethAddress) revert ICore.InvalidToken();
 
         _withdrawSlashingFund(token, amount);
-        // StorageData storage s = SSVBasedAppsStorage.load();
-
-        // if (s.slashingFund[msg.sender][token] < amount) revert ICore.InsufficientBalance();
-
-        // s.slashingFund[msg.sender][token] -= amount;
 
         IERC20(token).safeTransfer(msg.sender, amount);
 
@@ -469,21 +463,17 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Withdraw the slashing fund for ETH
     /// @param amount The amount to withdraw
     function withdrawETHSlashingFund(uint256 amount) external nonReentrant {
-        //if (amount == 0) revert ICore.InvalidAmount();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
-        // StorageData storage s = SSVBasedAppsStorage.load();
-
-        // if (s.slashingFund[msg.sender][sp.ethAddress] < amount) revert ICore.InsufficientBalance();
-
-        //s.slashingFund[msg.sender][sp.ethAddress] -= amount;
-
         _withdrawSlashingFund(sp.ethAddress, amount);
-        //
+
         payable(msg.sender).transfer(amount);
 
         emit IStrategyManager.SlashingFundWithdrawn(sp.ethAddress, amount);
     }
 
+    /// @notice General withdraw code the slashing fund
+    /// @param token The address of the token
+    /// @param amount The amount to withdraw
     function _withdrawSlashingFund(address token, uint256 amount) internal {
         if (amount == 0) revert ICore.InvalidAmount();
         StorageData storage s = SSVBasedAppsStorage.load();
