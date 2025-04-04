@@ -87,6 +87,12 @@ abstract contract BasedAppCore is IBasedApp {
         return (true, address(this));
     }
 
+    function authorizeFreeze(uint32, bytes calldata) external virtual onlySSVBasedAppManager returns (bool) {
+        ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
+        ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
+        return true;
+    }
+
     /// @notice Checks if the contract supports the interface
     /// @param interfaceId interface id
     /// @return true if the contract supports the interface

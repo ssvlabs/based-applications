@@ -3,20 +3,37 @@ pragma solidity 0.8.29;
 
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {
-    BasedAppManagerSetupTest,
-    IStrategyManager,
-    IBasedAppManager,
-    ISlashingManager,
-    IDelegationManager,
-    ISSVDAO,
-    SSVBasedApps,
-    ERC1967Proxy
-} from "@ssv/test/BAppManager.setup.t.sol";
+    Setup, IStrategyManager, IBasedAppManager, ISlashingManager, IDelegationManager, ISSVDAO, SSVBasedApps, ERC1967Proxy
+} from "@ssv/test/helpers/Setup.t.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
 
-contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgradeable {
+contract SSVBasedAppsTest is Setup, OwnableUpgradeable {
+    function testInitialBalanceIsZero() public view {
+        assertEq(address(proxiedManager).balance, 0);
+    }
+
+    function testRevertSendETHDirectly() public payable {
+        vm.prank(USER1);
+        vm.expectRevert();
+        payable(address(proxiedManager)).transfer(1 ether);
+        assertEq(address(proxiedManager).balance, 0);
+    }
+
+    function testRevertSendETHViaFallback() public {
+        vm.prank(USER1);
+        (bool success,) = payable(address(proxiedManager)).call{value: 1 ether}("");
+        assertEq(success, false);
+        assertEq(address(proxiedManager).balance, 0);
+    }
+
+    function testRevertViaFallbackInvalidFunctionCall() public {
+        vm.prank(USER1);
+        (bool success,) = payable(address(proxiedManager)).call{value: 0 ether}("");
+        assertEq(success, false);
+        assertEq(address(proxiedManager).balance, 0);
+    }
+
     function testOwnerOfBasedAppManager() public view {
         assertEq(proxiedManager.owner(), OWNER, "Owner should be the deployer");
     }

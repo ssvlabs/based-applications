@@ -22,11 +22,12 @@ contract DeployProxy is Script {
         vm.startBroadcast();
 
         SSVBasedApps implementation = new SSVBasedApps();
+
         StrategyManager strategyManagerMod = new StrategyManager();
         BasedAppsManager basedAppsManagerMod = new BasedAppsManager();
+        SSVDAO ssvDAOMod = new SSVDAO();
         SlashingManager slashingManagerMod = new SlashingManager();
         DelegationManager delegationManagerMod = new DelegationManager();
-        SSVDAO ssvDAOMod = new SSVDAO();
 
         uint32 maxFeeIncrement = 500;
 
@@ -47,6 +48,8 @@ contract DeployProxy is Script {
         console.log("Module StrategyManager deployed at:", address(strategyManagerMod));
         console.log("Module BasedAppsManager deployed at:", address(basedAppsManagerMod));
         console.log("Module SSVDAO deployed at:", address(ssvDAOMod));
+        console.log("Module SlashingManager deployed at:", address(slashingManagerMod));
+        console.log("Module DelegationManager deployed at:", address(delegationManagerMod));
         console.log("Proxy deployed at:", address(proxy));
 
         vm.stopBroadcast();

@@ -24,7 +24,7 @@ import {DelegationManager} from "@ssv/src/modules/DelegationManager.sol";
 import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
 import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
 
-contract BasedAppManagerSetupTest is Test {
+contract Setup is Test {
     // Main Contract
     SSVBasedApps public implementation;
     // Modules

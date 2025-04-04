@@ -2,10 +2,10 @@
 pragma solidity 0.8.29;
 
 import {IBasedAppWhitelisted} from "@ssv/src/interfaces/middleware/IBasedAppWhitelisted.sol";
-import {BasedAppManagerSetupTest, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
-import {TestUtils} from "@ssv/test/Utils.t.sol";
+import {IBasedApp} from "@ssv/test/helpers/Setup.t.sol";
+import {UtilsTest} from "@ssv/test/helpers/Utils.t.sol";
 
-contract WhitelistExampleTest is BasedAppManagerSetupTest, TestUtils {
+contract WhitelistExampleTest is UtilsTest {
     function testCreateStrategies() public {
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);

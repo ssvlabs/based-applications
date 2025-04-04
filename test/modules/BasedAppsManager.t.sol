@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {BasedAppManagerSetupTest, IBasedAppManager, IBasedApp} from "@ssv/test/BAppManager.setup.t.sol";
+import {IBasedAppManager, IBasedApp} from "@ssv/test/helpers/Setup.t.sol";
 
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
-import {TestUtils} from "@ssv/test/Utils.t.sol";
+import {UtilsTest} from "@ssv/test/helpers/Utils.t.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract BasedAppsTest is BasedAppManagerSetupTest, TestUtils {
+contract BasedAppsManagerTest is UtilsTest {
     string public metadataURI = "http://metadata.com";
     string public metadataURI2 = "http://metadata2.com";
     string public metadataURI3 = "http://metadata3.com";

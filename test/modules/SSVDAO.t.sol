@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {BasedAppManagerSetupTest} from "@ssv/test/BAppManager.setup.t.sol";
+import {Setup} from "@ssv/test/helpers/Setup.t.sol";
 
-contract BasedAppManagerSettersTest is BasedAppManagerSetupTest {
+contract SSVDAOTest is Setup {
     function testUpdateFeeTimelockPeriod() public {
         vm.prank(OWNER);
         proxiedManager.updateFeeTimelockPeriod(3 days);

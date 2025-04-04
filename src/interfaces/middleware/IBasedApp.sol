@@ -9,6 +9,7 @@ interface IBasedApp is IERC165 {
     function slash(uint32 strategyId, address token, uint256 amount, bytes calldata data) external returns (bool success, address receiver);
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
     function updateBAppMetadataURI(string calldata metadataURI) external;
+    function authorizeFreeze(uint32 strategyId, bytes calldata data) external returns (bool success);
 
     error UnauthorizedCaller();
 }

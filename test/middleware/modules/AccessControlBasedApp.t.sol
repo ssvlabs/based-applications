@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {BasedAppManagerSetupTest} from "@ssv/test/BAppManager.setup.t.sol";
+import {Setup} from "@ssv/test/helpers/Setup.t.sol";
 
-contract AccessControlBasedApp is BasedAppManagerSetupTest {
+contract AccessControlBasedApp is Setup {
     function testRevokeManagerRole() public {
         assertEq(bApp3.hasRole(bApp3.MANAGER_ROLE(), USER1), true, "User is manager");
         vm.prank(USER1);

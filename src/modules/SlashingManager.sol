@@ -18,6 +18,29 @@ contract SlashingManager is ISlashingManager, ReentrancyGuardTransient {
     // ** Section: Slashing **
     // ***********************
 
+    /// @notice Freeze the balance of a strategy
+    /// @param strategyId The ID of the strategy
+    /// @param bApp The address of the bApp
+    /// @param data Optional parameter that could be required by the service
+    function freeze(uint32 strategyId, address bApp, bytes calldata data) external {
+        StorageData storage s = SSVBasedAppsStorage.load();
+
+        if (!s.registeredBApps[bApp]) revert ICore.BAppNotRegistered();
+
+        // todo freeze should stop withdrawing and depositing
+
+        if (CoreLib.isBApp(bApp)) {
+            bool success;
+            success = IBasedApp(bApp).authorizeFreeze(strategyId, data);
+            if (!success) revert ICore.BAppFreezeNotAuthorized();
+        } else {
+            // Only the bApp EOA or non-compliant bApp owner can freeze
+            if (msg.sender != bApp) revert ICore.InvalidBAppOwner(msg.sender, bApp);
+        }
+
+        emit ISlashingManager.StrategyFrozen(strategyId, bApp, data);
+    }
+
     /// @notice Get the slashable balance for a strategy
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
@@ -69,7 +92,6 @@ contract SlashingManager is ISlashingManager, ReentrancyGuardTransient {
             delete s.strategyTokenShares[strategyId][token].totalTokenBalance;
             delete s.strategyTokenShares[strategyId][token].totalShareBalance;
             s.strategyTokenShares[strategyId][token].currentGeneration += 1;
-            // delete strategyTokenShares.accountShareBalance;
         }
 
         emit ISlashingManager.StrategySlashed(strategyId, bApp, token, amount, data);

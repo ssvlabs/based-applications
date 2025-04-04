@@ -26,6 +26,8 @@ interface ICore {
         address owner;
         /// @dev The fee in percentage
         uint32 fee;
+        /// @dev A boolean indicating if the strategy is frozen
+        bool isFrozen;
     }
 
     /// @notice Represents a FeeUpdateRequest
@@ -74,6 +76,7 @@ interface ICore {
     error BAppNotRegistered();
     error BAppOptInFailed();
     error BAppSlashingFailed();
+    error BAppFreezeNotAuthorized();
     error DelegateCallFailed(bytes returnData);
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
@@ -105,6 +108,7 @@ interface ICore {
     error PercentageAlreadySet();
     error RequestTimeExpired();
     error SharedRiskLevelAlreadySet();
+    error StrategyIsFrozen();
     error TargetModuleDoesNotExistWithData(uint8 moduleId); // 0x208bb85d
     error TimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);

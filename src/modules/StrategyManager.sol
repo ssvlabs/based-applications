@@ -68,6 +68,19 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         _;
     }
 
+    /// @notice Allow the function to be called only if the strategy is not frozen
+    /// @param strategyId The ID of the strategy
+    /// @dev This modifier is used to prevent withdrawals when the strategy is frozen
+    /// @dev The strategy can be frozen by the bApp owner when malicious behavior is detected
+    modifier onlyNotFrozen(uint32 strategyId) {
+        StorageData storage s = SSVBasedAppsStorage.load();
+
+        if (s.strategies[strategyId].isFrozen) {
+            revert ICore.StrategyIsFrozen();
+        }
+        _;
+    }
+
     // ***********************
     // ** Section: Strategy **
     // ***********************
