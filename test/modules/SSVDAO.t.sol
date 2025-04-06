@@ -2,8 +2,9 @@
 pragma solidity 0.8.29;
 
 import {Setup} from "@ssv/test/helpers/Setup.t.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract SSVDAOTest is Setup {
+contract SSVDAOTest is Setup, OwnableUpgradeable {
     function testUpdateFeeTimelockPeriod() public {
         vm.prank(OWNER);
         proxiedManager.updateFeeTimelockPeriod(3 days);
@@ -64,5 +65,67 @@ contract SSVDAOTest is Setup {
         vm.prank(OWNER);
         proxiedManager.updateMaxFeeIncrement(501);
         assertEq(proxiedManager.maxFeeIncrement(), 501, "Max fee increment update failed");
+    }
+
+    function testRevertUpdateFeeTimelockPeriodWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateFeeTimelockPeriod(3 days);
+    }
+
+    function testRevertUpdateFeeExpireTimeWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateFeeExpireTime(1 days);
+    }
+
+    function testRevertUpdateWithdrawalTimelockPeriodWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateWithdrawalTimelockPeriod(5 days);
+    }
+
+    function testRevertUpdateWithdrawalExpireTimeWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateWithdrawalExpireTime(1 days);
+    }
+
+    function testRevertUpdateObligationTimelockPeriodWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateObligationTimelockPeriod(7 days);
+    }
+
+    function testRevertUpdateObligationExpireTimeWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateObligationExpireTime(1 days);
+    }
+
+    function testRevertUpdateMaxPercentageWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateMaxPercentage(1234);
+    }
+
+    function testRevertUpdateEthAddressWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        address newAddress = address(0x1234567890123456789012345678901234567890);
+        proxiedManager.updateEthAddress(newAddress);
+    }
+
+    function testRevertUpdateMaxSharesWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        uint256 newValue = 1e18;
+        proxiedManager.updateMaxShares(newValue);
+    }
+
+    function testRevertUpdateMaxFeeIncrementWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.updateMaxFeeIncrement(501);
     }
 }

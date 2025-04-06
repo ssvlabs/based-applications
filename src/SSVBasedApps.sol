@@ -202,27 +202,27 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     // ** Section: External Functions DAO **
     // *************************************
 
-    function updateFeeTimelockPeriod(uint32 value) external {
+    function updateFeeTimelockPeriod(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateFeeExpireTime(uint32 value) external {
+    function updateFeeExpireTime(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateWithdrawalTimelockPeriod(uint32 value) external {
+    function updateWithdrawalTimelockPeriod(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateWithdrawalExpireTime(uint32 value) external {
+    function updateWithdrawalExpireTime(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateObligationTimelockPeriod(uint32 value) external {
+    function updateObligationTimelockPeriod(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateObligationExpireTime(uint32 value) external {
+    function updateObligationExpireTime(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
@@ -230,15 +230,15 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateEthAddress(address value) external {
+    function updateEthAddress(address value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateMaxShares(uint256 value) external {
+    function updateMaxShares(uint256 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
-    function updateMaxFeeIncrement(uint32 value) external {
+    function updateMaxFeeIncrement(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
