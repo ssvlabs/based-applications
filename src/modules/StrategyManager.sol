@@ -74,8 +74,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @dev The strategy can be frozen by the bApp owner when malicious behavior is detected
     modifier onlyNotFrozen(uint32 strategyId) {
         StorageData storage s = SSVBasedAppsStorage.load();
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
-        if (s.strategies[strategyId].isFrozen) {
+        if (s.strategies[strategyId].freezingTime != 0 && s.strategies[strategyId].freezingTime + sp.freezeTimelockPeriod > block.timestamp) {
             revert ICore.StrategyIsFrozen();
         }
         _;
@@ -145,7 +146,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy
     /// @param token The ERC20 token address
     /// @param amount The amount to deposit
-    function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external nonReentrant {
+    function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external onlyNotFrozen(strategyId) nonReentrant {
         _beforeDeposit(strategyId, address(token), amount);
 
         token.safeTransferFrom(msg.sender, address(this), amount);
@@ -155,7 +156,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
     /// @notice Deposit ETH into the strategy
     /// @param strategyId The ID of the strategy
-    function depositETH(uint32 strategyId) external payable nonReentrant {
+    function depositETH(uint32 strategyId) external payable onlyNotFrozen(strategyId) nonReentrant {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         _beforeDeposit(strategyId, sp.ethAddress, msg.value);
 
@@ -166,7 +167,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
     /// @param amount The amount to withdraw.
-    function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external {
+    function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external onlyNotFrozen(strategyId) {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         if (token == sp.ethAddress) revert ICore.InvalidToken();
         _proposeWithdrawal(strategyId, token, amount);
@@ -175,7 +176,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Finalize the ERC20 withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     /// @param token The ERC20 token address.
-    function finalizeWithdrawal(uint32 strategyId, IERC20 token) external nonReentrant {
+    function finalizeWithdrawal(uint32 strategyId, IERC20 token) external onlyNotFrozen(strategyId) nonReentrant {
         uint256 amount = _finalizeWithdrawal(strategyId, address(token));
 
         token.safeTransfer(msg.sender, amount);
@@ -186,14 +187,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Propose an ETH withdrawal from the strategy.
     /// @param strategyId The ID of the strategy.
     /// @param amount The amount of ETH to withdraw.
-    function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
+    function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external onlyNotFrozen(strategyId) {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         _proposeWithdrawal(strategyId, sp.ethAddress, amount);
     }
 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
-    function finalizeWithdrawalETH(uint32 strategyId) external nonReentrant {
+    function finalizeWithdrawalETH(uint32 strategyId) external onlyNotFrozen(strategyId) nonReentrant {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         uint256 amount = _finalizeWithdrawal(strategyId, sp.ethAddress);

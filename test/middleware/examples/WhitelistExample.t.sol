@@ -11,10 +11,11 @@ contract WhitelistExampleTest is UtilsTest {
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
         erc20mock2.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
         uint32 strategyId1 = proxiedManager.createStrategy(STRATEGY1_INITIAL_FEE, "");
-        assertEq(strategyId1, STRATEGY1, "Strategy id 1 was saved correctly");
-        (address owner, uint32 delegationFeeOnRewards) = proxiedManager.strategies(strategyId1);
-        assertEq(owner, USER1, "Strategy owner");
-        assertEq(delegationFeeOnRewards, STRATEGY1_INITIAL_FEE, "Strategy fee");
+        assertEq(strategyId1, STRATEGY1, "Should set the correct strategy ID");
+        (address owner, uint32 delegationFeeOnRewards, uint32 freezingTime) = proxiedManager.strategies(strategyId1);
+        assertEq(owner, USER1, "Should set the correct strategy owner");
+        assertEq(delegationFeeOnRewards, STRATEGY1_INITIAL_FEE, "Should set the correct strategy fee");
+        assertEq(freezingTime, 0, "Should set the correct freezing time");
         vm.stopPrank();
     }
 

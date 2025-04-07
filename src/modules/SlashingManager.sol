@@ -27,16 +27,17 @@ contract SlashingManager is ISlashingManager, ReentrancyGuardTransient {
 
         if (!s.registeredBApps[bApp]) revert ICore.BAppNotRegistered();
 
-        // todo freeze should stop withdrawing and depositing
-
+        bool success;
         if (CoreLib.isBApp(bApp)) {
-            bool success;
+            // everyone can freeze the strategy based on the compliant bApp logic
             success = IBasedApp(bApp).authorizeFreeze(strategyId, data);
             if (!success) revert ICore.BAppFreezeNotAuthorized();
         } else {
-            // Only the bApp EOA or non-compliant bApp owner can freeze
+            // Only the EOA or contract non-compliant owner can freeze
             if (msg.sender != bApp) revert ICore.InvalidBAppOwner(msg.sender, bApp);
         }
+
+        s.strategies[strategyId].freezingTime = uint32(block.timestamp);
 
         emit ISlashingManager.StrategyFrozen(strategyId, bApp, data);
     }

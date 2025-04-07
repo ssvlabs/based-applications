@@ -26,8 +26,8 @@ interface ICore {
         address owner;
         /// @dev The fee in percentage
         uint32 fee;
-        /// @dev A boolean indicating if the strategy is frozen
-        bool isFrozen;
+        /// @dev The block time when the latest freezing request was requested
+        uint32 freezingTime;
     }
 
     /// @notice Represents a FeeUpdateRequest

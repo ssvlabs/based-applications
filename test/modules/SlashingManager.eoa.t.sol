@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {IERC20, IStrategyManager} from "@ssv/test/helpers/Setup.t.sol";
+import {IERC20, ISlashingManager} from "@ssv/test/helpers/Setup.t.sol";
 import {StrategyManagerTest} from "@ssv/test/modules/StrategyManager.t.sol";
 
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
@@ -120,7 +120,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 slashAmount = 100;
         testSlashEOA(slashAmount);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.SlashingFundWithdrawn(address(erc20mock), slashAmount);
+        emit ISlashingManager.SlashingFundWithdrawn(address(erc20mock), slashAmount);
         vm.prank(USER1);
         proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount);
     }
@@ -129,7 +129,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 slashAmount = 0.2 ether;
         testSlashEOAWithEth(slashAmount);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.SlashingFundWithdrawn(ETH_ADDRESS, slashAmount);
+        emit ISlashingManager.SlashingFundWithdrawn(ETH_ADDRESS, slashAmount);
         vm.prank(USER1);
         proxiedManager.withdrawETHSlashingFund(slashAmount);
     }
@@ -146,7 +146,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(nonCompliantBApp), token, slashAmount, "");
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(nonCompliantBApp), token, slashAmount, "");
         nonCompliantBApp.slash(STRATEGY1, token, slashAmount);
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -236,7 +236,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
+        emit ISlashingManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
@@ -274,7 +274,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
+        emit ISlashingManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
@@ -385,5 +385,15 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
         proxiedManager.withdrawSlashingFund(ETH_ADDRESS, slashAmount);
+    }
+
+    function testFreezeStrategy() public {
+        testStrategyOptInToBAppEOA(1000);
+        vm.prank(USER1);
+        address bApp = USER1;
+        proxiedManager.freeze(STRATEGY1, bApp, abi.encodePacked("0x00"));
+        (,, uint32 freezingTime) = proxiedManager.strategies(STRATEGY1);
+        assertEq(freezingTime, uint32(block.timestamp), "The freezing time should be set to the current block timestamp");
+        assertTrue(isFrozen(STRATEGY1), "The strategy should be frozen");
     }
 }

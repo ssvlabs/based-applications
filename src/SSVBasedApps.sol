@@ -23,7 +23,16 @@ import {SSVBasedAppsModules} from "./libraries/SSVBasedAppsStorage.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable, IBasedAppManager, IStrategyManager, SSVProxy {
+contract SSVBasedApps is
+    ISSVBasedApps,
+    UUPSUpgradeable,
+    Ownable2StepUpgradeable,
+    IBasedAppManager,
+    IStrategyManager,
+    ISlashingManager,
+    IDelegationManager,
+    SSVProxy
+{
     // ***************************
     // ** Section: Initializers **
     // ***************************
@@ -61,8 +70,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         if (maxFeeIncrement_ == 0 || maxFeeIncrement_ > 10_000) revert ICore.InvalidMaxFeeIncrement();
 
         sp.maxFeeIncrement = maxFeeIncrement_;
-        sp.feeTimelockPeriod = 7 days;
         sp.feeExpireTime = 1 days;
+        sp.feeTimelockPeriod = 7 days;
+        sp.freezeTimelockPeriod = 7 days;
         sp.withdrawalTimelockPeriod = 5 days;
         sp.withdrawalExpireTime = 1 days;
         sp.obligationTimelockPeriod = 7 days;
@@ -132,6 +142,10 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
 
     function finalizeWithdrawalETH(uint32 strategyId) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
+    }
+
+    function freeze(uint32 strategyId, address bApp, bytes calldata data) external {
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER]);
     }
 
     function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
@@ -261,9 +275,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return s.registeredBApps[bApp];
     }
 
-    function strategies(uint32 strategyId) external view returns (address strategyOwner, uint32 fee) {
+    function strategies(uint32 strategyId) external view returns (address strategyOwner, uint32 fee, uint32 freezingTime) {
         StorageData storage s = SSVBasedAppsStorage.load();
-        return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
+        return (s.strategies[strategyId].owner, s.strategies[strategyId].fee, s.strategies[strategyId].freezingTime);
     }
 
     function strategyAccountShares(uint32 strategyId, address account, address token) external view returns (uint256) {
@@ -350,6 +364,10 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
 
     function feeTimelockPeriod() external view returns (uint32) {
         return SSVBasedAppsStorageProtocol.load().feeTimelockPeriod;
+    }
+
+    function freezeTimelockPeriod() external view returns (uint32) {
+        return SSVBasedAppsStorageProtocol.load().freezeTimelockPeriod;
     }
 
     function feeExpireTime() external view returns (uint32) {

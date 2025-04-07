@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {IERC20, IStrategyManager, IBasedApp} from "@ssv/test/helpers/Setup.t.sol";
+import {IERC20, ISlashingManager, IBasedApp, ISlashingManager} from "@ssv/test/helpers/Setup.t.sol";
 import {StrategyManagerTest} from "@ssv/test/modules/StrategyManager.t.sol";
 
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
@@ -37,7 +37,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -56,7 +56,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -111,7 +111,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.SlashingFundWithdrawn(address(erc20mock), slashAmount);
+        emit ISlashingManager.SlashingFundWithdrawn(address(erc20mock), slashAmount);
         vm.prank(USER1);
         bApp1.withdrawSlashingFund(address(erc20mock), slashAmount);
     }
@@ -120,7 +120,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 slashAmount = 0.2 ether;
         testSlashBAppWithEth(slashAmount);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.SlashingFundWithdrawn(ETH_ADDRESS, slashAmount);
+        emit ISlashingManager.SlashingFundWithdrawn(ETH_ADDRESS, slashAmount);
         vm.prank(USER1);
         bApp1.withdrawETHSlashingFund(slashAmount);
     }
@@ -183,7 +183,7 @@ contract SlashingManagerTest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
@@ -221,7 +221,7 @@ contract SlashingManagerTest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
@@ -251,7 +251,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         checkGeneration(STRATEGY1, token, 0);
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;

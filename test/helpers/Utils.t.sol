@@ -55,7 +55,7 @@ contract UtilsTest is Setup {
         assertEq(obligationPercentage, percentage, "Obligation percentage");
         uint256 usedTokens = proxiedManager.usedTokens(strategyId, token);
         assertEq(usedTokens, expectedTokens, "Used tokens");
-        (address strategyOwner,) = proxiedManager.strategies(strategyId);
+        (address strategyOwner,,) = proxiedManager.strategies(strategyId);
         if (strategyOwner != address(0)) {
             assertEq(owner, strategyOwner, "Strategy owner");
         }
@@ -108,7 +108,7 @@ contract UtilsTest is Setup {
         internal
         view
     {
-        (address owner, uint32 fee) = proxiedManager.strategies(strategyId);
+        (address owner, uint32 fee,) = proxiedManager.strategies(strategyId);
         (uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager.feeUpdateRequests(strategyId);
         assertEq(owner, expectedOwner, "Should match the expected strategy owner");
         assertEq(fee, expectedInitialFee, "Should match the expected current strategy fee");
@@ -117,7 +117,7 @@ contract UtilsTest is Setup {
     }
 
     function checkFee(uint32 strategyId, address expectedOwner, uint32 expectedFee) internal view {
-        (address owner, uint32 fee) = proxiedManager.strategies(strategyId);
+        (address owner, uint32 fee,) = proxiedManager.strategies(strategyId);
         assertEq(owner, expectedOwner, "Should match the expected strategy owner");
         assertEq(fee, expectedFee, "Should match the expected fee percentage");
     }
@@ -148,5 +148,10 @@ contract UtilsTest is Setup {
     function checkUsedTokens(uint32 strategyId, address token, uint32 expectedUsedTokens) internal view {
         uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
         assertEq(usedTokens, expectedUsedTokens, "Should have set the correct used tokens");
+    }
+
+    function isFrozen(uint32 strategyId) internal view returns (bool) {
+        (,, uint32 freezingTime) = proxiedManager.strategies(strategyId);
+        return freezingTime + proxiedManager.freezeTimelockPeriod() > uint32(block.timestamp);
     }
 }
