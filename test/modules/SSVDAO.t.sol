@@ -2,9 +2,9 @@
 pragma solidity 0.8.29;
 
 import {Setup} from "@ssv/test/helpers/Setup.t.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-contract SSVDAOTest is Setup, OwnableUpgradeable {
+contract SSVDAOTest is Setup, Ownable2StepUpgradeable {
     function testUpdateFeeTimelockPeriod() public {
         vm.prank(OWNER);
         proxiedManager.updateFeeTimelockPeriod(3 days);

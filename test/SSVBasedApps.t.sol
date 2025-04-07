@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {
     Setup, IStrategyManager, IBasedAppManager, ISlashingManager, IDelegationManager, ISSVDAO, SSVBasedApps, ERC1967Proxy
 } from "@ssv/test/helpers/Setup.t.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 
-contract SSVBasedAppsTest is Setup, OwnableUpgradeable {
+contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     function testInitialBalanceIsZero() public view {
         assertEq(address(proxiedManager).balance, 0);
     }
@@ -34,7 +34,7 @@ contract SSVBasedAppsTest is Setup, OwnableUpgradeable {
         assertEq(address(proxiedManager).balance, 0);
     }
 
-    function testOwnerOfBasedAppManager() public view {
+    function testOwner() public view {
         assertEq(proxiedManager.owner(), OWNER, "Owner should be the deployer");
     }
 
@@ -58,6 +58,21 @@ contract SSVBasedAppsTest is Setup, OwnableUpgradeable {
 
         address currentImplementation = address(uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)))));
         assertEq(currentImplementation, address(newImplementation), "Implementation should be upgraded");
+    }
+
+    function testUpdateOwner() public {
+        vm.prank(OWNER);
+        proxiedManager.transferOwnership(USER1);
+        assertEq(proxiedManager.owner(), OWNER, "Owner should not be updated yet");
+        vm.prank(USER1);
+        proxiedManager.acceptOwnership();
+        assertEq(proxiedManager.owner(), USER1, "Owner should be updated to USER1");
+    }
+
+    function testRevertUpdateOwnerUnauthorized() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        proxiedManager.transferOwnership(USER1);
     }
 
     function testRevertTryToCallInitializeAgainFromAttacker() public {
