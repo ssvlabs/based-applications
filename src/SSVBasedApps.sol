@@ -72,9 +72,9 @@ contract SSVBasedApps is
         sp.maxFeeIncrement = maxFeeIncrement_;
         sp.feeExpireTime = 1 days;
         sp.feeTimelockPeriod = 7 days;
-        sp.withdrawalTimelockPeriod = 5 days;
+        sp.withdrawalTimelockPeriod = 14 days;
         sp.withdrawalExpireTime = 1 days;
-        sp.obligationTimelockPeriod = 7 days;
+        sp.obligationTimelockPeriod = 14 days;
         sp.obligationExpireTime = 1 days;
         sp.maxPercentage = 1e4;
         sp.ethAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
