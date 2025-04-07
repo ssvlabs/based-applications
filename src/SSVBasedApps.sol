@@ -256,6 +256,10 @@ contract SSVBasedApps is
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
+    function updateFreezeTimelockPeriod(uint32 value) external onlyOwner {
+        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
+    }
+
     // *****************************
     // ** Section: External Views **
     // *****************************
