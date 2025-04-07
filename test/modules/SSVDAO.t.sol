@@ -67,12 +67,6 @@ contract SSVDAOTest is Setup, Ownable2StepUpgradeable {
         assertEq(proxiedManager.maxFeeIncrement(), 501, "Max fee increment update failed");
     }
 
-    function testUpdateFreezeTimelockPeriod() public {
-        vm.prank(OWNER);
-        proxiedManager.updateFreezeTimelockPeriod(5 days);
-        assertEq(proxiedManager.freezeTimelockPeriod(), 5 days, "Should set the freeze timelock period");
-    }
-
     function testRevertUpdateFeeTimelockPeriodWithNonOwner() public {
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
@@ -133,11 +127,5 @@ contract SSVDAOTest is Setup, Ownable2StepUpgradeable {
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         proxiedManager.updateMaxFeeIncrement(501);
-    }
-
-    function testRevertUpdateFreezeTimelockPeriodWithNonOwner() public {
-        vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
-        proxiedManager.updateFreezeTimelockPeriod(5 days);
     }
 }

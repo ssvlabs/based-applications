@@ -76,7 +76,6 @@ interface ICore {
     error BAppNotRegistered();
     error BAppOptInFailed();
     error BAppSlashingFailed();
-    error BAppFreezeNotAuthorized();
     error DelegateCallFailed(bytes returnData);
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();

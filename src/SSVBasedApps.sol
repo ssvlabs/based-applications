@@ -72,7 +72,6 @@ contract SSVBasedApps is
         sp.maxFeeIncrement = maxFeeIncrement_;
         sp.feeExpireTime = 1 days;
         sp.feeTimelockPeriod = 7 days;
-        sp.freezeTimelockPeriod = 7 days;
         sp.withdrawalTimelockPeriod = 5 days;
         sp.withdrawalExpireTime = 1 days;
         sp.obligationTimelockPeriod = 7 days;
@@ -142,10 +141,6 @@ contract SSVBasedApps is
 
     function finalizeWithdrawalETH(uint32 strategyId) external {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER]);
-    }
-
-    function freeze(uint32 strategyId, address bApp, bytes calldata data) external {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER]);
     }
 
     function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
@@ -253,10 +248,6 @@ contract SSVBasedApps is
     }
 
     function updateMaxFeeIncrement(uint32 value) external onlyOwner {
-        _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
-    }
-
-    function updateFreezeTimelockPeriod(uint32 value) external onlyOwner {
         _delegate(SSVBasedAppsStorage.load().ssvContracts[SSVBasedAppsModules.SSV_DAO]);
     }
 
@@ -368,10 +359,6 @@ contract SSVBasedApps is
 
     function feeTimelockPeriod() external view returns (uint32) {
         return SSVBasedAppsStorageProtocol.load().feeTimelockPeriod;
-    }
-
-    function freezeTimelockPeriod() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().freezeTimelockPeriod;
     }
 
     function feeExpireTime() external view returns (uint32) {

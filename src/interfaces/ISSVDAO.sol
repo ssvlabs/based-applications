@@ -5,7 +5,6 @@ interface ISSVDAO {
     event EthAddressUpdated(address ethAddress);
     event FeeExpireTimeUpdated(uint32 feeExpireTime);
     event FeeTimelockPeriodUpdated(uint32 feeTimelockPeriod);
-    event FreezeTimelockPeriodUpdated(uint32 freezeTimelockPeriod);
     event MaxPercentageUpdated(uint32 maxPercentage);
     event ObligationExpireTimeUpdated(uint32 obligationExpireTime);
     event ObligationTimelockPeriodUpdated(uint32 obligationTimelockPeriod);
@@ -17,7 +16,6 @@ interface ISSVDAO {
     function updateEthAddress(address value) external;
     function updateFeeExpireTime(uint32 value) external;
     function updateFeeTimelockPeriod(uint32 value) external;
-    function updateFreezeTimelockPeriod(uint32 value) external;
     function updateMaxFeeIncrement(uint32 value) external;
     function updateMaxPercentage(uint32 value) external;
     function updateMaxShares(uint256 value) external;

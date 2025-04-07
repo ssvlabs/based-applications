@@ -6,7 +6,6 @@ interface ISlashingManager {
     event StrategyFrozen(uint32 indexed strategyId, address indexed bApp, bytes data);
     event StrategySlashed(uint32 indexed strategyId, address indexed bApp, address token, uint256 amount, bytes data);
 
-    function freeze(uint32 strategyId, address bApp, bytes calldata data) external;
     function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
     function withdrawETHSlashingFund(uint256 amount) external;
     function withdrawSlashingFund(address token, uint256 amount) external;

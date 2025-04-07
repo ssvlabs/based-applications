@@ -9,7 +9,7 @@ import {SSVBasedApps} from "src/SSVBasedApps.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
-import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
+import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
 import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
 import {BasedAppMock2} from "@ssv/test/mocks/MockBApp2.sol";

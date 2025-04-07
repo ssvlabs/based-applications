@@ -54,9 +54,4 @@ contract SSVDAO is ISSVDAO {
         SSVBasedAppsStorageProtocol.load().maxFeeIncrement = maxFeeIncrement;
         emit StrategyMaxFeeIncrementUpdated(maxFeeIncrement);
     }
-
-    function updateFreezeTimelockPeriod(uint32 freezeTimelockPeriod) external {
-        SSVBasedAppsStorageProtocol.load().freezeTimelockPeriod = freezeTimelockPeriod;
-        emit FreezeTimelockPeriodUpdated(freezeTimelockPeriod);
-    }
 }

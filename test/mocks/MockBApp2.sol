@@ -17,9 +17,9 @@ contract BasedAppMock2 is BasedAppCore {
         view
         override
         onlySSVBasedAppManager
-        returns (bool, address)
+        returns (bool, address, bool)
     {
         ///@dev return false on purpose to revert
-        return (false, address(0));
+        return (false, address(0), true);
     }
 }

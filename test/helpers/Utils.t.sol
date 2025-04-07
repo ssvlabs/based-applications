@@ -149,9 +149,4 @@ contract UtilsTest is Setup {
         uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
         assertEq(usedTokens, expectedUsedTokens, "Should have set the correct used tokens");
     }
-
-    function isFrozen(uint32 strategyId) internal view returns (bool) {
-        (,, uint32 freezingTime) = proxiedManager.strategies(strategyId);
-        return freezingTime + proxiedManager.freezeTimelockPeriod() > uint32(block.timestamp);
-    }
 }

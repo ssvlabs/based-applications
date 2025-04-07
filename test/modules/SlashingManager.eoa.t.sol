@@ -40,7 +40,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 newStrategyBalance = depositAmount - slashAmount; // 100,000 - 1,000 = 99,000 ERC20
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
-        checkSlashableBalance(STRATEGY1, USER1, token, 89_100); // 99,000 * 90% = 89,100 ERC20
+        checkSlashableBalance(STRATEGY1, USER1, token, 0); // 99,000 * 90% = 89,100 ERC20
         checkSlashingFund(USER1, token, slashAmount);
     }
 
@@ -59,7 +59,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
     }
 
@@ -81,7 +81,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
     }
 
@@ -151,7 +151,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(nonCompliantBApp), token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
+        checkSlashableBalance(STRATEGY1, address(nonCompliantBApp), token, 0);
         checkSlashingFund(address(nonCompliantBApp), token, slashAmount);
     }
 
@@ -242,7 +242,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
 
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
@@ -252,7 +252,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         checkTotalSharesAndTotalBalance(STRATEGY1, token, 50_000, 49_950);
         checkAccountShares(STRATEGY1, USER2, token, 50_000);
-        checkSlashableBalance(STRATEGY1, USER1, token, 44_955);
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
     }
 
@@ -280,7 +280,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance * percentage / proxiedManager.maxPercentage());
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
 
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
@@ -290,7 +290,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         checkTotalSharesAndTotalBalance(STRATEGY1, token, 50_000, 49_950);
         checkAccountShares(STRATEGY1, USER2, token, 50_000);
-        checkSlashableBalance(STRATEGY1, USER1, token, 49_950);
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
     }
 
@@ -324,7 +324,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         checkGeneration(STRATEGY1, token, 1);
         checkTotalSharesAndTotalBalance(STRATEGY1, address(erc20mock), depositAmount, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
     }
 
@@ -338,7 +338,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         checkGeneration(STRATEGY1, token, 1);
         checkTotalSharesAndTotalBalance(STRATEGY1, address(erc20mock), depositAmount, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
     }
 
@@ -366,7 +366,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 newStrategyBalance = depositAmount - slashAmount; // 700
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
         checkAccountShares(STRATEGY1, USER1, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance);
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
         checkGeneration(STRATEGY1, token, 0);
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
@@ -374,7 +374,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 effectiveWithdrawalAmount = 560;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount - withdrawalAmount, newStrategyBalance - effectiveWithdrawalAmount);
         checkAccountShares(STRATEGY1, USER1, token, depositAmount - withdrawalAmount);
-        checkSlashableBalance(STRATEGY1, USER1, token, newStrategyBalance - effectiveWithdrawalAmount);
+        checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
         checkGeneration(STRATEGY1, token, 0);
     }
@@ -385,15 +385,5 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         vm.prank(USER1);
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
         proxiedManager.withdrawSlashingFund(ETH_ADDRESS, slashAmount);
-    }
-
-    function testFreezeStrategy() public {
-        testStrategyOptInToBAppEOA(1000);
-        vm.prank(USER1);
-        address bApp = USER1;
-        proxiedManager.freeze(STRATEGY1, bApp, abi.encodePacked("0x00"));
-        (,, uint32 freezingTime) = proxiedManager.strategies(STRATEGY1);
-        assertEq(freezingTime, uint32(block.timestamp), "The freezing time should be set to the current block timestamp");
-        assertTrue(isFrozen(STRATEGY1), "The strategy should be frozen");
     }
 }

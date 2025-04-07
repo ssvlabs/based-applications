@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 import {SSVBasedAppsStorage, SSVBasedAppsModules} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
-import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
+import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 library CoreLib {

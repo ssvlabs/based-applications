@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
+import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 
 import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
@@ -79,18 +79,12 @@ abstract contract BasedAppCore is IBasedApp {
         external
         virtual
         onlySSVBasedAppManager
-        returns (bool, address)
+        returns (bool, address, bool)
     {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
-        return (true, address(this));
-    }
-
-    function authorizeFreeze(uint32, bytes calldata) external virtual onlySSVBasedAppManager returns (bool) {
-        ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
-        ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
-        return true;
+        return (true, address(this), true);
     }
 
     /// @notice Checks if the contract supports the interface

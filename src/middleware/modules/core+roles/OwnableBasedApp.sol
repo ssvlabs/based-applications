@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
+import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
