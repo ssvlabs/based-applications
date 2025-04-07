@@ -205,7 +205,6 @@ contract SlashingManagerTest is StrategyManagerTest {
 
     function testFinalizeWithdrawalETHAfterSlashingRedeemsLowerAmount() public {
         uint256 slashAmount = 100;
-        uint32 percentage = 10_000;
         uint256 depositAmount = 100_000;
         uint256 withdrawalAmount = depositAmount * 50 / 100;
         address token = ETH_ADDRESS;
