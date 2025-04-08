@@ -327,4 +327,88 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkSlashingFund(address(bApp1), token, slashAmount);
         checkGeneration(STRATEGY1, token, 0);
     }
+
+    function testSlashBAppAdjustBasic() public {
+        uint32 percentage = 10_000;
+        uint256 depositAmount = 100_000;
+        address token = address(erc20mock);
+        uint256 slashAmount = 10_000;
+        testStrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        (uint32 adjustedPercentage,) = proxiedManager.obligations(STRATEGY1, address(bApp3), token);
+        assertEq(adjustedPercentage, 9000, "Obligation percentage");
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp3), token, 81_000);
+        checkSlashingFund(address(0), token, slashAmount);
+    }
+
+    function testSlashBAppAdjust(uint256 slashAmount, uint256 depositAmount) public {
+        uint32 percentage = 10_000;
+        address token = address(erc20mock);
+        vm.assume(
+            depositAmount > 0 && depositAmount <= proxiedManager.maxShares() && percentage > 0 && percentage <= proxiedManager.maxPercentage()
+                && slashAmount > 0 && slashAmount <= depositAmount * percentage / proxiedManager.maxPercentage()
+        );
+        testStrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        uint32 adjustedPercentage = checkAdjustedPercentage(token, depositAmount, slashAmount, percentage);
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp3), token, newStrategyBalance * adjustedPercentage / proxiedManager.maxPercentage());
+        checkSlashingFund(address(0), token, slashAmount);
+    }
+
+    function testSlashTotalBAppAdjust(uint32 percentage, uint256 depositAmount) public {
+        uint32 percentage = 10_000;
+        address token = address(erc20mock);
+        vm.assume(depositAmount > 0 && depositAmount <= proxiedManager.maxShares() && percentage > 0 && percentage <= proxiedManager.maxPercentage());
+        uint256 slashAmount = depositAmount;
+        testStrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        (uint32 adjustedPercentage,) = proxiedManager.obligations(STRATEGY1, address(bApp3), token);
+        assertEq(adjustedPercentage, 0, "Should match the calculated percentage with the one saved in storage");
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, 0, 0);
+        checkAccountShares(STRATEGY1, USER2, token, 0);
+        checkSlashableBalance(STRATEGY1, address(bApp3), token, 0);
+        checkSlashingFund(address(0), token, slashAmount);
+    }
+
+    function testSlashBAppAdjustBasicETH() public {
+        uint32 percentage = 10_000;
+        uint256 depositAmount = 100_000;
+        address token = ETH_ADDRESS;
+        uint256 slashAmount = 10_000;
+        testStrategyOptInToBAppWithETH();
+        vm.prank(USER2);
+        proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit ISlashingManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        (uint32 adjustedPercentage,) = proxiedManager.obligations(STRATEGY1, address(bApp3), token);
+        assertEq(adjustedPercentage, 9000, "Obligation percentage");
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp3), token, 81_000);
+        checkSlashingFund(address(0), token, slashAmount);
+    }
 }

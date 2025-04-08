@@ -29,6 +29,7 @@ contract SSVBasedApps is
     Ownable2StepUpgradeable,
     IBasedAppManager,
     IStrategyManager,
+    ISSVDAO,
     ISlashingManager,
     IDelegationManager,
     SSVProxy

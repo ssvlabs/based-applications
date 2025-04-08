@@ -149,4 +149,13 @@ contract UtilsTest is Setup {
         uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
         assertEq(usedTokens, expectedUsedTokens, "Should have set the correct used tokens");
     }
+
+    function checkAdjustedPercentage(address token, uint256 previousBalance, uint256 slashAmount, uint32 previousPercentage) internal view returns (uint32) {
+        uint256 previousObligatedBalance = previousPercentage * previousBalance / proxiedManager.maxPercentage();
+        uint256 newObligatedBalance = previousObligatedBalance - slashAmount;
+        uint32 expectedAdjustedPercentage = uint32(newObligatedBalance * proxiedManager.maxPercentage() / previousBalance);
+        (uint32 adjustedPercentage,) = proxiedManager.obligations(STRATEGY1, address(bApp3), token);
+        assertEq(adjustedPercentage, expectedAdjustedPercentage, "Should match the calculated percentage with the one saved in storage");
+        return adjustedPercentage;
+    }
 }
