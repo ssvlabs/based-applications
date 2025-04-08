@@ -73,9 +73,9 @@ contract SSVBasedApps is
         sp.feeExpireTime = 1 days;
         sp.feeTimelockPeriod = 7 days;
         sp.withdrawalTimelockPeriod = 14 days;
-        sp.withdrawalExpireTime = 1 days;
+        sp.withdrawalExpireTime = 3 days;
         sp.obligationTimelockPeriod = 14 days;
-        sp.obligationExpireTime = 1 days;
+        sp.obligationExpireTime = 3 days;
         sp.maxPercentage = 1e4;
         sp.ethAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
         sp.maxShares = 1e50;
