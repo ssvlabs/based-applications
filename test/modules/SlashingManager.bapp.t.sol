@@ -374,7 +374,7 @@ contract SlashingManagerTest is StrategyManagerTest {
     function testSlashTotalBAppAdjust(uint32 percentage, uint256 depositAmount) public {
         uint32 percentage = 10_000;
         address token = address(erc20mock);
-        vm.assume(depositAmount > 0 && depositAmount <= proxiedManager.maxShares() && percentage > 0 && percentage <= proxiedManager.maxPercentage());
+        vm.assume(depositAmount > 0 && depositAmount <= proxiedManager.maxShares());
         uint256 slashAmount = depositAmount;
         testStrategyOptInToBApp(percentage);
         vm.prank(USER2);
@@ -392,7 +392,6 @@ contract SlashingManagerTest is StrategyManagerTest {
     }
 
     function testSlashBAppAdjustBasicETH() public {
-        uint32 percentage = 10_000;
         uint256 depositAmount = 100_000;
         address token = ETH_ADDRESS;
         uint256 slashAmount = 10_000;

@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {Setup} from "@ssv/test/helpers/Setup.t.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+
+import {Setup} from "@ssv/test/helpers/Setup.t.sol";
 
 contract SSVDAOTest is Setup, Ownable2StepUpgradeable {
     function testUpdateFeeTimelockPeriod() public {
