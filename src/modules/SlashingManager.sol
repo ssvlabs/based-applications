@@ -109,17 +109,21 @@ contract SlashingManager is ISlashingManager, ReentrancyGuardTransient {
         s.obligations[strategyId][bApp][token].percentage = 0;
     }
 
-    function _adjustObligation(uint32 strategyId, address bApp, address token, uint256 amount) private {
+    function _adjustObligation(uint32 strategyId, address bApp, address token, uint256 amount) internal {
         StorageData storage s = SSVBasedAppsStorage.load();
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         ICore.Obligation storage obligation = s.obligations[strategyId][bApp][token];
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
-
         uint256 currentStrategyBalance = strategyTokenShares.totalTokenBalance;
-        uint256 currentObligatedBalance = obligation.percentage * currentStrategyBalance;
+        uint256 currentObligatedBalance = obligation.percentage * currentStrategyBalance / sp.maxPercentage;
         uint256 postSlashStrategyBalance = currentStrategyBalance - amount;
         uint256 postSlashObligatedBalance = currentObligatedBalance - amount;
-        if (postSlashStrategyBalance == 0) s.obligations[strategyId][bApp][token].percentage = 0;
-        else s.obligations[strategyId][bApp][token].percentage = uint32(postSlashObligatedBalance / postSlashStrategyBalance);
+        if (postSlashStrategyBalance == 0) {
+            s.obligations[strategyId][bApp][token].percentage = 0;
+        } else {
+            uint32 postSlashPercentage = uint32(postSlashObligatedBalance * sp.maxPercentage / currentStrategyBalance);
+            s.obligations[strategyId][bApp][token].percentage = postSlashPercentage;
+        }
     }
 
     /// @notice Withdraw the slashing fund for a token
