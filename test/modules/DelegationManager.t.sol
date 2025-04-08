@@ -2,9 +2,8 @@
 pragma solidity 0.8.29;
 
 import {Setup} from "@ssv/test/helpers/Setup.t.sol";
-
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
-import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 
 contract BasedAppManagerDelegateTest is Setup {
     function checkDelegation(address owner, address receiver, uint32 expectedDelegatedAmount, uint32 expectedTotalDelegatedPercentage) internal view {

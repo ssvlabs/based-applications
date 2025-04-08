@@ -8,7 +8,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {UtilsTest} from "@ssv/test/helpers/Utils.t.sol";
 import {IBasedAppManager, IBasedApp} from "@ssv/test/helpers/Setup.t.sol";
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 
 contract BasedAppsManagerTest is UtilsTest {
     string public metadataURI = "http://metadata.com";

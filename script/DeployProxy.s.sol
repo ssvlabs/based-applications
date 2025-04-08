@@ -4,17 +4,17 @@ pragma solidity 0.8.29;
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import {Script, console} from "@ssv/forge-std/Script.sol";
-import {StrategyManager} from "@ssv/src/modules/StrategyManager.sol";
-import {BasedAppsManager} from "@ssv/src/modules/BasedAppsManager.sol";
-import {SSVDAO} from "@ssv/src/modules/SSVDAO.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
-import {SSVBasedApps} from "src/SSVBasedApps.sol";
-import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
-import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
-import {SlashingManager} from "@ssv/src/modules/SlashingManager.sol";
-import {DelegationManager} from "@ssv/src/modules/DelegationManager.sol";
+import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
+import {BasedAppsManager} from "@ssv/src/core/modules/BasedAppsManager.sol";
+import {SSVDAO} from "@ssv/src/core/modules/SSVDAO.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {SSVBasedApps} from "src/core/SSVBasedApps.sol";
+import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
+import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
+import {SlashingManager} from "@ssv/src/core/modules/SlashingManager.sol";
+import {DelegationManager} from "@ssv/src/core/modules/DelegationManager.sol";
 
 // solhint-disable no-console
 contract DeployProxy is Script {

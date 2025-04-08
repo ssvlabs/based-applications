@@ -5,24 +5,25 @@ import {Test} from "forge-std/Test.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {SSVBasedApps} from "src/SSVBasedApps.sol";
-import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
-import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
-import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
 import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
 import {BasedAppMock2} from "@ssv/test/mocks/MockBApp2.sol";
 import {BasedAppMock3} from "@ssv/test/mocks/MockBAppAccessControl.sol";
+import {BasedAppsManager} from "@ssv/src/core/modules/BasedAppsManager.sol";
+import {DelegationManager} from "@ssv/src/core/modules/DelegationManager.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
+import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
+import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
+import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
+import {SlashingManager} from "@ssv/src/core/modules/SlashingManager.sol";
+import {SSVBasedApps} from "@ssv/src/core/SSVBasedApps.sol";
+import {SSVDAO} from "@ssv/src/core/modules/SSVDAO.sol";
+import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
+
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
-import {SSVDAO} from "@ssv/src/modules/SSVDAO.sol";
-import {StrategyManager} from "@ssv/src/modules/StrategyManager.sol";
-import {BasedAppsManager} from "@ssv/src/modules/BasedAppsManager.sol";
-import {SlashingManager} from "@ssv/src/modules/SlashingManager.sol";
-import {DelegationManager} from "@ssv/src/modules/DelegationManager.sol";
-import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
-import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
+import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 contract Setup is Test {
     // Main Contract

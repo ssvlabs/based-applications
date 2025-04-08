@@ -3,8 +3,7 @@ pragma solidity 0.8.29;
 
 import {IERC20, ISlashingManager, IBasedApp, ISlashingManager} from "@ssv/test/helpers/Setup.t.sol";
 import {StrategyManagerTest} from "@ssv/test/modules/StrategyManager.t.sol";
-
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 
 contract SlashingManagerTest is StrategyManagerTest {
     function testGetSlashableBalanceBasic() public {

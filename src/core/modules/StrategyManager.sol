@@ -5,12 +5,13 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
+import {CoreLib} from "@ssv/src/core/libraries/CoreLib.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {StorageData, SSVBasedAppsStorage} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
-import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {StorageData, SSVBasedAppsStorage} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
-import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
-import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
 
 /**
  * @title SSVBasedApps

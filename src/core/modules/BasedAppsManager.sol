@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-import {SSVBasedAppsStorage, StorageData} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {SSVBasedAppsStorage, StorageData} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
 
 contract BasedAppsManager is IBasedAppManager {
     /// @notice Allow the function to be called only by a registered bApp

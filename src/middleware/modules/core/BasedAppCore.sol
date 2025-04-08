@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-
-import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
+import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
+
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+
+import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 
 // =====================================================================================
 // ⚠️ WARNING: IMPLEMENT OWNER OR ACCESS ROLES ⚠️

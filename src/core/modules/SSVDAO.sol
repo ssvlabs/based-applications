@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
-import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
-import {SSVBasedAppsStorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {SSVBasedAppsStorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 contract SSVDAO is ISSVDAO {
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {

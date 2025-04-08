@@ -1,27 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {ISSVBasedApps} from "@ssv/src/interfaces/ISSVBasedApps.sol";
-
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
-import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
-import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
-
-import {SSVBasedAppsStorage, StorageData} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
-import {SSVBasedAppsStorageProtocol, StorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
-import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import {SSVProxy} from "./SSVProxy.sol";
-
-import {SSVBasedAppsModules} from "./libraries/SSVBasedAppsStorage.sol";
-
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+import {CoreLib} from "@ssv/src/core/libraries/CoreLib.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
+import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
+import {ISSVBasedApps} from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
+import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {SSVBasedAppsStorage, StorageData} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {SSVBasedAppsStorageProtocol, StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {SSVProxy} from "@ssv/src/core/SSVProxy.sol";
 
 contract SSVBasedApps is
     ISSVBasedApps,

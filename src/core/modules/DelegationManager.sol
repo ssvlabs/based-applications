@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {StorageData, SSVBasedAppsStorage} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
-import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
-import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
+import {StorageData, SSVBasedAppsStorage} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 
 contract DelegationManager is IDelegationManager {
     // *****************************************

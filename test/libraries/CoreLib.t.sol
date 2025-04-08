@@ -2,10 +2,10 @@ pragma solidity 0.8.29;
 
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
+import {CoreLib} from "@ssv/src/core/libraries/CoreLib.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {Setup} from "@ssv/test/helpers/Setup.t.sol";
-import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
-import {SSVBasedAppsModules} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
+import {SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
 
 contract CoreLibTest is Setup, Ownable2StepUpgradeable {
     function testUpdateStrategyModule() public {

@@ -5,8 +5,9 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
+
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
 abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     constructor(address _basedAppManager, address _initOwner) BasedAppCore(_basedAppManager) Ownable(_initOwner) {}

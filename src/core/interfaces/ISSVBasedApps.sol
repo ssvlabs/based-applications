@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
-import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
-import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
-import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
-
-import {SSVBasedAppsModules} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
+import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
+import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
 
 interface ISSVBasedApps {
     function getVersion() external pure returns (string memory version);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 
 enum SSVBasedAppsModules {
     SSV_BASED_APPS_MANAGER,

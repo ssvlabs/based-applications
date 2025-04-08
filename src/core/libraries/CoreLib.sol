@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
-import {SSVBasedAppsStorage, SSVBasedAppsModules} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
-import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+
+import {SSVBasedAppsStorage, SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+
+import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 library CoreLib {
     event ModuleUpgraded(SSVBasedAppsModules indexed moduleId, address moduleAddress);

@@ -4,11 +4,13 @@ pragma solidity 0.8.29;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
-import {StorageData, SSVBasedAppsStorage} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
-import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
-import {ICore} from "@ssv/src/interfaces/ICore.sol";
-import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
+
+import {CoreLib} from "@ssv/src/core/libraries/CoreLib.sol";
+import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
+import {StorageData, SSVBasedAppsStorage} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 contract SlashingManager is ISlashingManager, ReentrancyGuardTransient {
