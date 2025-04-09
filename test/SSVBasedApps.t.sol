@@ -8,6 +8,7 @@ import {
 } from "@ssv/test/helpers/Setup.t.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     function testInitialBalanceIsZero() public view {
@@ -86,7 +87,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             ISSVDAO(ssvDAOMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
-            10
+            config
         );
     }
 
@@ -100,36 +101,61 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             ISSVDAO(ssvDAOMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
-            10
+            config
         );
     }
 
     function testRevertInitializeWithZeroFee() public {
+        StorageProtocol memory configZeroFee = StorageProtocol({
+            maxFeeIncrement: 0,
+            feeTimelockPeriod: 5 days,
+            feeExpireTime: 1 days,
+            withdrawalTimelockPeriod: 14 days,
+            withdrawalExpireTime: 3 days,
+            obligationTimelockPeriod: 14 days,
+            obligationExpireTime: 3 days,
+            maxShares: 1e50,
+            maxPercentage: 10_000, // 100%
+            ethAddress: ETH_ADDRESS
+        });
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
-        bytes memory initData = abi.encodeWithSignature(
-            "initialize(address,address,address,address,address,address,uint32)",
+
+        bytes memory initData = abi.encodeWithSelector(
+            implementation.initialize.selector,
             address(OWNER),
             address(basedAppsManagerMod),
             address(strategyManagerMod),
             address(ssvDAOMod),
             address(slashingManagerMod),
             address(delegationManagerMod),
-            0
+            configZeroFee
         );
         proxy = new ERC1967Proxy(address(implementation), initData);
     }
 
     function testRevertInitializeWithExcessiveFee() public {
+        StorageProtocol memory configExcessiveFee = StorageProtocol({
+            feeTimelockPeriod: 5 days,
+            feeExpireTime: 1 days,
+            withdrawalTimelockPeriod: 14 days,
+            ethAddress: ETH_ADDRESS,
+            maxShares: 1e50,
+            withdrawalExpireTime: 3 days,
+            obligationTimelockPeriod: 14 days,
+            obligationExpireTime: 3 days,
+            maxPercentage: 10_000, // 100%
+            maxFeeIncrement: 10_001
+        });
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
-        bytes memory initData = abi.encodeWithSignature(
-            "initialize(address,address,address,address,address,address,uint32)",
+        bytes memory initData = abi.encodeWithSelector(
+            implementation.initialize.selector,
             address(OWNER),
             address(basedAppsManagerMod),
             address(strategyManagerMod),
             address(ssvDAOMod),
             address(slashingManagerMod),
             address(delegationManagerMod),
-            10_001
+            configExcessiveFee
         );
         proxy = new ERC1967Proxy(address(implementation), initData);
     }

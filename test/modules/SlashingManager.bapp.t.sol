@@ -370,7 +370,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkSlashingFund(address(0), token, slashAmount);
     }
 
-    function testSlashTotalBAppAdjust(uint32 percentage, uint256 depositAmount) public {
+    function testSlashTotalBAppAdjust(uint256 depositAmount) public {
         uint32 percentage = 10_000;
         address token = address(erc20mock);
         vm.assume(depositAmount > 0 && depositAmount <= proxiedManager.maxShares());

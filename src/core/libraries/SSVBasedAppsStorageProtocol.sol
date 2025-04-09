@@ -6,14 +6,13 @@ pragma solidity 0.8.29;
 struct StorageProtocol {
     uint32 feeTimelockPeriod;
     uint32 feeExpireTime;
-    uint32 slashingExecutionTime;
     uint32 withdrawalTimelockPeriod;
+    address ethAddress;
+    uint256 maxShares;
     uint32 withdrawalExpireTime;
     uint32 obligationTimelockPeriod;
     uint32 obligationExpireTime;
     uint32 maxPercentage;
-    address ethAddress;
-    uint256 maxShares;
     uint32 maxFeeIncrement;
 }
 

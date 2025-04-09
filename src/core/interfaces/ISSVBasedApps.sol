@@ -7,6 +7,7 @@ import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
 import {SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 interface ISSVBasedApps {
     function getVersion() external pure returns (string memory version);
@@ -17,7 +18,7 @@ interface ISSVBasedApps {
         ISSVDAO ssvDAO_,
         ISlashingManager ssvSlashingManager_,
         IDelegationManager ssvDelegationManager_,
-        uint32 maxFeeIncrement_
+        StorageProtocol memory config
     ) external;
     function updateModule(SSVBasedAppsModules moduleId, address moduleAddress) external;
 }

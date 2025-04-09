@@ -39,11 +39,11 @@ contract SSVBasedApps is
         ISSVDAO ssvDAO_,
         ISlashingManager ssvSlashingManager_,
         IDelegationManager ssvDelegationManager_,
-        uint32 maxFeeIncrement_
+        StorageProtocol memory config
     ) external override initializer onlyProxy {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
-        __SSVBasedApplications_init_unchained(ssvBasedAppManger_, ssvStrategyManager_, ssvDAO_, ssvSlashingManager_, ssvDelegationManager_, maxFeeIncrement_);
+        __SSVBasedApplications_init_unchained(ssvBasedAppManger_, ssvStrategyManager_, ssvDAO_, ssvSlashingManager_, ssvDelegationManager_, config);
     }
 
     // solhint-disable-next-line func-name-mixedcase
@@ -53,7 +53,7 @@ contract SSVBasedApps is
         ISSVDAO ssvDAO_,
         ISlashingManager ssvSlashingManager_,
         IDelegationManager ssvDelegationManager_,
-        uint32 maxFeeIncrement_
+        StorageProtocol memory config
     ) internal onlyInitializing {
         StorageData storage s = SSVBasedAppsStorage.load();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
@@ -63,18 +63,28 @@ contract SSVBasedApps is
         s.ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER] = address(ssvSlashingManager_);
         s.ssvContracts[SSVBasedAppsModules.SSV_DELEGATION_MANAGER] = address(ssvDelegationManager_);
 
-        if (maxFeeIncrement_ == 0 || maxFeeIncrement_ > 10_000) revert ICore.InvalidMaxFeeIncrement();
+        if (config.maxFeeIncrement == 0 || config.maxFeeIncrement > 10_000) revert ICore.InvalidMaxFeeIncrement();
 
-        sp.maxFeeIncrement = maxFeeIncrement_;
-        sp.feeExpireTime = 1 days;
-        sp.feeTimelockPeriod = 7 days;
-        sp.withdrawalTimelockPeriod = 14 days;
-        sp.withdrawalExpireTime = 3 days;
-        sp.obligationTimelockPeriod = 14 days;
-        sp.obligationExpireTime = 3 days;
-        sp.maxPercentage = 1e4;
-        sp.ethAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-        sp.maxShares = 1e50;
+        sp.maxFeeIncrement = config.maxFeeIncrement;
+        sp.feeTimelockPeriod = config.feeTimelockPeriod;
+        sp.feeExpireTime = config.feeExpireTime;
+        sp.withdrawalTimelockPeriod = config.withdrawalTimelockPeriod;
+        sp.withdrawalExpireTime = config.withdrawalExpireTime;
+        sp.obligationTimelockPeriod = config.obligationTimelockPeriod;
+        sp.obligationExpireTime = config.obligationExpireTime;
+        sp.maxPercentage = config.maxPercentage;
+        sp.ethAddress = config.ethAddress;
+        sp.maxShares = config.maxShares;
+
+        // sp.feeExpireTime = 1 days;
+        // sp.feeTimelockPeriod = 7 days;
+        // sp.withdrawalTimelockPeriod = 14 days;
+        // sp.withdrawalExpireTime = 3 days;
+        // sp.obligationTimelockPeriod = 14 days;
+        // sp.obligationExpireTime = 3 days;
+        // sp.maxPercentage = 1e4;
+        // sp.ethAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+        // sp.maxShares = 1e50;
 
         emit MaxFeeIncrementSet(sp.maxFeeIncrement);
     }

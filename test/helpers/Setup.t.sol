@@ -21,6 +21,7 @@ import {SlashingManager} from "@ssv/src/core/modules/SlashingManager.sol";
 import {SSVBasedApps} from "@ssv/src/core/SSVBasedApps.sol";
 import {SSVDAO} from "@ssv/src/core/modules/SSVDAO.sol";
 import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
+import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
@@ -86,6 +87,7 @@ contract Setup is Test {
     uint32 public constant MAX_FEE_INCREMENT = 500;
     // Array containing all the BApps created
     IBasedApp[] public bApps;
+    StorageProtocol public config;
 
     function setUp() public virtual {
         vm.label(OWNER, "Owner");
@@ -102,6 +104,31 @@ contract Setup is Test {
         slashingManagerMod = new SlashingManager();
         delegationManagerMod = new DelegationManager();
         implementation = new SSVBasedApps();
+
+        config = StorageProtocol({
+            maxFeeIncrement: MAX_FEE_INCREMENT,
+            feeTimelockPeriod: 5 days,
+            feeExpireTime: 1 days,
+            withdrawalTimelockPeriod: 14 days,
+            withdrawalExpireTime: 3 days,
+            obligationTimelockPeriod: 14 days,
+            obligationExpireTime: 3 days,
+            maxShares: 1e50,
+            maxPercentage: 10_000, // 100%
+            ethAddress: ETH_ADDRESS
+        });
+
+        // config.maxFeeIncrement = 500;
+        // config.feeTimelockPeriod = 5 days;
+        // config.feeExpireTime = 1 days;
+        // config.withdrawalTimelockPeriod = 14 days;
+        // config.withdrawalExpireTime = 3 days;
+        // config.obligationTimelockPeriod = 14 days;
+        // config.obligationExpireTime = 3 days;
+        // config.maxShares = 1e50;
+        // config.maxPercentage = 10_000; // 100%
+        // config.ethAddress = ETH_ADDRESS;
+
         bytes memory data = abi.encodeWithSelector(
             implementation.initialize.selector,
             address(OWNER),
@@ -110,7 +137,7 @@ contract Setup is Test {
             ISSVDAO(ssvDAOMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
-            MAX_FEE_INCREMENT
+            config
         );
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
