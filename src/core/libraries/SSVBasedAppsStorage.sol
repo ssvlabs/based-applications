@@ -4,11 +4,8 @@ pragma solidity 0.8.29;
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
 enum SSVBasedAppsModules {
-    SSV_BASED_APPS_MANAGER,
-    SSV_STRATEGY_MANAGER,
-    SSV_DAO,
-    SSV_SLASHING_MANAGER,
-    SSV_DELEGATION_MANAGER
+    SSV_PLATFORM_MANAGER,
+    SSV_STRATEGY_MANAGER
 }
 
 /// @title SSV Based Applications Storage Data

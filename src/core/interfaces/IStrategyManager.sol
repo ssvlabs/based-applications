@@ -34,4 +34,28 @@ interface IStrategyManager {
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
+
+    error InvalidStrategyOwner(address caller, address expectedOwner);
+    error InvalidStrategyFee();
+    error BAppAlreadyOptedIn();
+    error BAppOptInFailed();
+    error BAppNotOptedIn();
+    error InvalidToken();
+    error NoPendingFeeUpdate();
+    error NoPendingObligationUpdate();
+    error InvalidPercentageIncrement();
+    error TokenNotSupportedByBApp(address token);
+    error ObligationAlreadySet();
+    error ObligationHasNotBeenCreated();
+    error TimelockNotElapsed();
+    error RequestTimeExpired();
+    error InvalidAmount();
+    error ExceedingMaxShares();
+    error InsufficientLiquidity();
+    error NoPendingWithdrawal();
+    error InsufficientBalance();
+    error FeeAlreadySet();
+    error InvalidAccountGeneration();
+
+
 }

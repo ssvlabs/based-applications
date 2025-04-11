@@ -5,7 +5,7 @@
 @ssv/test/=test/
 @ssv/script/=script/
 @ssv/forge-std/=lib/forge-std/src/
-@ssv/src/interfaces=src/interfaces
-@ssv/src/libraries=src/libraries
-@ssv/src/modules=src/modules
+@ssv/src/interfaces=src/core/interfaces
+@ssv/src/libraries=src/core/libraries
+@ssv/src/modules=src/core/modules
 

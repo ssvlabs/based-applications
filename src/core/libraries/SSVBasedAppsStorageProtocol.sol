@@ -10,10 +10,10 @@ struct StorageProtocol {
     uint32 withdrawalExpireTime;
     uint32 obligationTimelockPeriod;
     uint32 obligationExpireTime;
-    uint32 maxPercentage;
-    address ethAddress;
-    uint256 maxShares;
+    // uint32 maxPercentage; FYI removed, used as a constant
     uint32 maxFeeIncrement;
+    // address ethAddress; FYI removed, used as a constant
+    uint256 maxShares;   
 }
 
 library SSVBasedAppsStorageProtocol {
