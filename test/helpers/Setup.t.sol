@@ -14,12 +14,12 @@ import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
 import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
-import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import {SlashingManager} from "@ssv/src/core/modules/SlashingManager.sol";
 import {SSVBasedApps} from "@ssv/src/core/SSVBasedApps.sol";
-import {SSVDAO} from "@ssv/src/core/modules/SSVDAO.sol";
+import {ProtocolManager} from "@ssv/src/core/modules/ProtocolManager.sol";
 import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
 import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
@@ -32,7 +32,7 @@ contract Setup is Test {
     // Modules
     StrategyManager public strategyManagerMod;
     BasedAppsManager public basedAppsManagerMod;
-    SSVDAO public ssvDAOMod;
+    ProtocolManager public protocolManagerMod;
     SlashingManager public slashingManagerMod;
     DelegationManager public delegationManagerMod;
 
@@ -100,7 +100,7 @@ contract Setup is Test {
         vm.startPrank(OWNER);
         basedAppsManagerMod = new BasedAppsManager();
         strategyManagerMod = new StrategyManager();
-        ssvDAOMod = new SSVDAO();
+        protocolManagerMod = new ProtocolManager();
         slashingManagerMod = new SlashingManager();
         delegationManagerMod = new DelegationManager();
         implementation = new SSVBasedApps();
@@ -134,7 +134,7 @@ contract Setup is Test {
             address(OWNER),
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
-            ISSVDAO(ssvDAOMod),
+            IProtocolManager(protocolManagerMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
             config

@@ -5,7 +5,7 @@ import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
-import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
 import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
@@ -15,7 +15,7 @@ interface ISSVBasedApps {
         address owner_,
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
-        ISSVDAO ssvDAO_,
+        IProtocolManager protocolManager_,
         ISlashingManager ssvSlashingManager_,
         IDelegationManager ssvDelegationManager_,
         StorageProtocol memory config

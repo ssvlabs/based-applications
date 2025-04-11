@@ -6,10 +6,10 @@ import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.s
 import {Script, console} from "@ssv/forge-std/Script.sol";
 import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
 import {BasedAppsManager} from "@ssv/src/core/modules/BasedAppsManager.sol";
-import {SSVDAO} from "@ssv/src/core/modules/SSVDAO.sol";
+import {ProtocolManager} from "@ssv/src/core/modules/ProtocolManager.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {SSVBasedApps} from "src/core/SSVBasedApps.sol";
 import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
@@ -28,7 +28,7 @@ contract DeployProxy is Script {
 
         StrategyManager strategyManagerMod = new StrategyManager();
         BasedAppsManager basedAppsManagerMod = new BasedAppsManager();
-        SSVDAO ssvDAOMod = new SSVDAO();
+        ProtocolManager protocolManagerMod = new ProtocolManager();
         SlashingManager slashingManagerMod = new SlashingManager();
         DelegationManager delegationManagerMod = new DelegationManager();
 
@@ -50,7 +50,7 @@ contract DeployProxy is Script {
             msg.sender,
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
-            ISSVDAO(ssvDAOMod),
+            IProtocolManager(protocolManagerMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
             config
@@ -61,7 +61,7 @@ contract DeployProxy is Script {
         console.log("Implementation deployed at:", address(implementation));
         console.log("Module StrategyManager deployed at:", address(strategyManagerMod));
         console.log("Module BasedAppsManager deployed at:", address(basedAppsManagerMod));
-        console.log("Module SSVDAO deployed at:", address(ssvDAOMod));
+        console.log("Module ProtocolManager deployed at:", address(protocolManagerMod));
         console.log("Module SlashingManager deployed at:", address(slashingManagerMod));
         console.log("Module DelegationManager deployed at:", address(delegationManagerMod));
         console.log("Proxy deployed at:", address(proxy));

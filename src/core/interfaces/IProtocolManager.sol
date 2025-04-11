@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-interface ISSVDAO {
+interface IProtocolManager {
     event EthAddressUpdated(address ethAddress);
     event FeeExpireTimeUpdated(uint32 feeExpireTime);
     event FeeTimelockPeriodUpdated(uint32 feeTimelockPeriod);

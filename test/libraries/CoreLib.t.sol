@@ -24,9 +24,9 @@ contract CoreLibTest is Setup, Ownable2StepUpgradeable {
 
     function testUpdateDAOModule() public {
         vm.expectEmit(true, true, true, true);
-        emit CoreLib.ModuleUpgraded(SSVBasedAppsModules.SSV_DAO, address(ssvDAOMod));
+        emit CoreLib.ModuleUpgraded(SSVBasedAppsModules.SSV_DAO, address(protocolManagerMod));
         vm.prank(OWNER);
-        proxiedManager.updateModule(SSVBasedAppsModules.SSV_DAO, address(ssvDAOMod));
+        proxiedManager.updateModule(SSVBasedAppsModules.SSV_DAO, address(protocolManagerMod));
     }
 
     function testRevertUpdateModuleWithNonOwner() public {

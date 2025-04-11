@@ -11,7 +11,7 @@ import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 import {ISSVBasedApps} from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
-import {ISSVDAO} from "@ssv/src/core/interfaces/ISSVDAO.sol";
+import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
 import {SSVBasedAppsStorage, StorageData} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
@@ -24,7 +24,7 @@ contract SSVBasedApps is
     Ownable2StepUpgradeable,
     IBasedAppManager,
     IStrategyManager,
-    ISSVDAO,
+    IProtocolManager,
     ISlashingManager,
     IDelegationManager,
     SSVProxy
@@ -36,21 +36,21 @@ contract SSVBasedApps is
         address owner_,
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
-        ISSVDAO ssvDAO_,
+        IProtocolManager protocolManager_,
         ISlashingManager ssvSlashingManager_,
         IDelegationManager ssvDelegationManager_,
         StorageProtocol memory config
     ) external override initializer onlyProxy {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
-        __SSVBasedApplications_init_unchained(ssvBasedAppManger_, ssvStrategyManager_, ssvDAO_, ssvSlashingManager_, ssvDelegationManager_, config);
+        __SSVBasedApplications_init_unchained(ssvBasedAppManger_, ssvStrategyManager_, protocolManager_, ssvSlashingManager_, ssvDelegationManager_, config);
     }
 
     // solhint-disable-next-line func-name-mixedcase
     function __SSVBasedApplications_init_unchained(
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
-        ISSVDAO ssvDAO_,
+        IProtocolManager protocolManager_,
         ISlashingManager ssvSlashingManager_,
         IDelegationManager ssvDelegationManager_,
         StorageProtocol memory config
@@ -59,7 +59,7 @@ contract SSVBasedApps is
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
         s.ssvContracts[SSVBasedAppsModules.SSV_STRATEGY_MANAGER] = address(ssvStrategyManager_);
         s.ssvContracts[SSVBasedAppsModules.SSV_BASED_APPS_MANAGER] = address(ssvBasedAppManger_);
-        s.ssvContracts[SSVBasedAppsModules.SSV_DAO] = address(ssvDAO_);
+        s.ssvContracts[SSVBasedAppsModules.SSV_DAO] = address(protocolManager_);
         s.ssvContracts[SSVBasedAppsModules.SSV_SLASHING_MANAGER] = address(ssvSlashingManager_);
         s.ssvContracts[SSVBasedAppsModules.SSV_DELEGATION_MANAGER] = address(ssvDelegationManager_);
 

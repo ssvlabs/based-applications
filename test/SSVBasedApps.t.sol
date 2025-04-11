@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {
-    Setup, IStrategyManager, IBasedAppManager, ISlashingManager, IDelegationManager, ISSVDAO, SSVBasedApps, ERC1967Proxy
+    Setup, IStrategyManager, IBasedAppManager, ISlashingManager, IDelegationManager, IProtocolManager, SSVBasedApps, ERC1967Proxy
 } from "@ssv/test/helpers/Setup.t.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
@@ -84,7 +84,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             address(OWNER),
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
-            ISSVDAO(ssvDAOMod),
+            IProtocolManager(protocolManagerMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
             config
@@ -98,7 +98,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             address(OWNER),
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
-            ISSVDAO(ssvDAOMod),
+            IProtocolManager(protocolManagerMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
             config
@@ -125,7 +125,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             address(OWNER),
             address(basedAppsManagerMod),
             address(strategyManagerMod),
-            address(ssvDAOMod),
+            address(protocolManagerMod),
             address(slashingManagerMod),
             address(delegationManagerMod),
             configZeroFee
@@ -152,7 +152,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             address(OWNER),
             address(basedAppsManagerMod),
             address(strategyManagerMod),
-            address(ssvDAOMod),
+            address(protocolManagerMod),
             address(slashingManagerMod),
             address(delegationManagerMod),
             configExcessiveFee

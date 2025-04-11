@@ -5,7 +5,7 @@ import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/acces
 
 import {Setup} from "@ssv/test/helpers/Setup.t.sol";
 
-contract SSVDAOTest is Setup, Ownable2StepUpgradeable {
+contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     function testUpdateFeeTimelockPeriod() public {
         vm.prank(OWNER);
         proxiedManager.updateFeeTimelockPeriod(3 days);
