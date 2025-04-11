@@ -3,7 +3,8 @@ pragma solidity 0.8.29;
 
 import {ISSVCore} from "@ssv/src/interfaces/ISSVCore.sol";
 
-import {IPlatformManager} from "@ssv/src/interfaces/IPlatformManager.sol";
+import {IBAppsManager} from "@ssv/src/interfaces/IBAppsManager.sol";
+import {IProtocolManager} from "@ssv/src/interfaces/IProtocolManager.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
@@ -17,11 +18,11 @@ import {MAX_PERCENTAGE} from "@ssv/src/libraries/ValidationsLib.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatformManager, IStrategyManager {
+contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IBAppsManager, IStrategyManager, IProtocolManager {
     // ***************************
     // ** Section: Initializers **
     // ***************************
-    function initialize(address owner_, IPlatformManager ssvPlatformManager_, IStrategyManager ssvStrategyManager_, uint32 maxFeeIncrement_)
+    function initialize(address owner_, IBAppsManager ssvBAppsManager_, IStrategyManager ssvStrategyManager_, IProtocolManager ssvProtocolManager_, uint32 maxFeeIncrement_)
         external
         override
         initializer
@@ -29,18 +30,19 @@ contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatf
     {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
-        __SSVBasedApplications_init_unchained(ssvPlatformManager_, ssvStrategyManager_, maxFeeIncrement_);
+        __SSVBasedApplications_init_unchained(ssvBAppsManager_, ssvStrategyManager_, ssvProtocolManager_, maxFeeIncrement_);
     }
 
     // solhint-disable-next-line func-name-mixedcase
-    function __SSVBasedApplications_init_unchained(IPlatformManager ssvPlatformManager_, IStrategyManager ssvStrategyManager_, uint32 maxFeeIncrement_)
+    function __SSVBasedApplications_init_unchained(IBAppsManager ssvBAppsManager_, IStrategyManager ssvStrategyManager_, IProtocolManager ssvProtocolManager_, uint32 maxFeeIncrement_)
         internal
         onlyInitializing
     {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
         s.ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER] = address(ssvStrategyManager_);
-        s.ssvContracts[SSVCoreModules.SSV_PLATFORM_MANAGER] = address(ssvPlatformManager_);
+        s.ssvContracts[SSVCoreModules.SSV_BAPPS_MANAGER] = address(ssvBAppsManager_);
+        s.ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER] = address(ssvProtocolManager_);
 
         if (maxFeeIncrement_ == 0 || maxFeeIncrement_ > 10_000) revert InvalidMaxFeeIncrement();
 
@@ -74,11 +76,11 @@ contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatf
 
     // solhint-disable no-unused-vars
     function updateBAppMetadataURI(string calldata metadataURI) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
     }
 
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
     }
 
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external {
@@ -90,7 +92,7 @@ contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatf
     }
 
     function delegateBalance(address receiver, uint32 percentage) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external {
@@ -149,11 +151,11 @@ contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatf
     }
 
     function removeDelegatedBalance(address receiver) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function updateDelegatedBalance(address receiver, uint32 percentage) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external {
@@ -161,11 +163,11 @@ contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatf
     }
 
     function updateAccountMetadataURI(string calldata metadataURI) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
     }
 
     // *************************************
@@ -173,43 +175,39 @@ contract BAppsCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatf
     // *************************************
 
     function updateFeeTimelockPeriod(uint32 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateFeeExpireTime(uint32 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateWithdrawalTimelockPeriod(uint32 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateWithdrawalExpireTime(uint32 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateObligationTimelockPeriod(uint32 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateObligationExpireTime(uint32 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateMaxPercentage(uint32 percentage) external onlyOwner {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
-    }
-
-    function updateEthAddress(address value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateMaxShares(uint256 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateMaxFeeIncrement(uint32 value) external {
-        _delegateTo(SSVCoreModules.SSV_PLATFORM_MANAGER);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     // *****************************

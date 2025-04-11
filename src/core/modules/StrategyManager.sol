@@ -480,4 +480,81 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             revert InvalidStrategyOwner(msg.sender, s.strategies[strategyId].owner);
         }
     }
+
+    // *****************************************
+    // *********** Section: Account ************
+    // *****************************************
+
+    /// @notice Function to update the metadata URI of the Account
+    /// @param metadataURI The new metadata URI
+    function updateAccountMetadataURI(string calldata metadataURI) external {
+        emit AccountMetadataURIUpdated(msg.sender, metadataURI);
+    }
+
+     // *****************************************
+    // ** Section: Delegate Validator Balance **
+    // *****************************************
+
+    /// @notice Function to delegate a percentage of the account's balance to another account
+    /// @param account The address of the account to delegate to
+    /// @param percentage The percentage of the account's balance to delegate
+    /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
+    function delegateBalance(address account, uint32 percentage) external {
+        ValidationsLib.validatePercentage(percentage);
+
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        if (s.delegations[msg.sender][account] != 0) revert DelegationAlreadyExists();
+
+        unchecked {
+            uint32 newTotal = s.totalDelegatedPercentage[msg.sender] + percentage;
+            if (newTotal > MAX_PERCENTAGE) {
+                revert ExceedingPercentageUpdate();
+            }
+            s.totalDelegatedPercentage[msg.sender] = newTotal;
+        }
+        s.delegations[msg.sender][account] = percentage;
+
+        emit DelegationCreated(msg.sender, account, percentage);
+    }
+
+    /// @notice Function to update the delegated validator balance percentage to another account
+    /// @param account The address of the account to delegate to
+    /// @param percentage The updated percentage of the account's balance to delegate
+    /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
+    function updateDelegatedBalance(address account, uint32 percentage) external {
+        ValidationsLib.validatePercentage(percentage);
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        uint32 existingPercentage = s.delegations[msg.sender][account];
+        if (existingPercentage == 0) revert DelegationDoesNotExist();
+        if (existingPercentage == percentage) revert DelegationExistsWithSameValue();
+
+        unchecked {
+            uint32 newTotalPercentage = s.totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
+            if (newTotalPercentage > MAX_PERCENTAGE) revert ExceedingPercentageUpdate();
+            s.totalDelegatedPercentage[msg.sender] = newTotalPercentage;
+        }
+
+        s.delegations[msg.sender][account] = percentage;
+
+        emit DelegationUpdated(msg.sender, account, percentage);
+    }
+
+    /// @notice Removes delegation from an account.
+    /// @param account The address of the account whose delegation is being removed.
+    function removeDelegatedBalance(address account) external {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        uint32 percentage = s.delegations[msg.sender][account];
+        if (percentage == 0) revert DelegationDoesNotExist();
+
+        unchecked {
+            s.totalDelegatedPercentage[msg.sender] -= percentage;
+        }
+
+        delete s.delegations[msg.sender][account];
+
+        emit DelegationRemoved(msg.sender, account);
+    }
 }

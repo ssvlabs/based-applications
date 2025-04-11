@@ -19,6 +19,11 @@ interface IStrategyManager {
     event StrategyWithdrawal(uint32 indexed strategyId, address indexed account, address token, uint256 amount, bool isFast);
     event StrategyWithdrawalProposed(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
 
+    event AccountMetadataURIUpdated(address indexed account, string metadataURI);
+    event DelegationCreated(address indexed delegator, address indexed receiver, uint32 percentage);
+    event DelegationRemoved(address indexed delegator, address indexed receiver);
+    event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);
+
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId);
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external;
@@ -34,6 +39,11 @@ interface IStrategyManager {
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
+
+    function delegateBalance(address receiver, uint32 percentage) external;
+    function removeDelegatedBalance(address receiver) external;
+    function updateAccountMetadataURI(string calldata metadataURI) external;
+    function updateDelegatedBalance(address receiver, uint32 percentage) external;
 
     error InvalidStrategyOwner(address caller, address expectedOwner);
     error InvalidStrategyFee();
@@ -57,5 +67,9 @@ interface IStrategyManager {
     error FeeAlreadySet();
     error InvalidAccountGeneration();
 
+    error DelegationAlreadyExists();
+    error ExceedingPercentageUpdate();
+    error DelegationDoesNotExist();
+    error DelegationExistsWithSameValue();
 
 }

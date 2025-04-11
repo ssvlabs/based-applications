@@ -4,7 +4,8 @@ pragma solidity 0.8.29;
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
 enum SSVCoreModules {
-    SSV_PLATFORM_MANAGER,
+    SSV_PROTOCOL_MANAGER,
+    SSV_BAPPS_MANAGER,
     SSV_STRATEGY_MANAGER
 }
 
