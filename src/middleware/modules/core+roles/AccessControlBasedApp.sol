@@ -25,7 +25,7 @@ abstract contract AccessControlBasedApp is BasedAppCore, AccessControl {
         revokeRole(MANAGER_ROLE, manager);
     }
 
-    /// @notice Registers a BApp calling the SSV SSVBasedApps
+    /// @notice Registers a BApp calling the SSV SSVCore
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
     /// @param metadataURI URI of the metadata

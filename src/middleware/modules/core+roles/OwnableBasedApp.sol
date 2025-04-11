@@ -11,7 +11,7 @@ import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     constructor(address _basedAppManager, address _initOwner) BasedAppCore(_basedAppManager) Ownable(_initOwner) {}
 
-    /// @notice Registers a BApp calling the SSV SSVBasedApps
+    /// @notice Registers a BApp calling the SSV SSVCore
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
     /// @param metadataURI URI of the metadata

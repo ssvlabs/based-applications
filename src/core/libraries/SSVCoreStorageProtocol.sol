@@ -13,10 +13,10 @@ struct StorageProtocol {
     // uint32 maxPercentage; FYI removed, used as a constant
     uint32 maxFeeIncrement;
     // address ethAddress; FYI removed, used as a constant
-    uint256 maxShares;   
+    uint256 maxShares;
 }
 
-library SSVBasedAppsStorageProtocol {
+library SSVCoreStorageProtocol {
     uint256 private constant SSV_STORAGE_POSITION = uint256(keccak256("ssv.based-apps.storage.protocol")) - 1;
 
     function load() internal pure returns (StorageProtocol storage sd) {

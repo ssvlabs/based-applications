@@ -27,13 +27,13 @@ abstract contract BasedAppCore is IBasedApp {
     }
 
     /// @notice constructor for the BasedAppCore contract,
-    /// initializes the contract with the SSVBasedApps address and the owner and disables the initializers.
-    /// @param _ssvBasedAppsNetwork address of the SSVBasedApps contract
+    /// initializes the contract with the SSVCore address and the owner and disables the initializers.
+    /// @param _ssvBasedAppsNetwork address of the SSVCore contract
     constructor(address _ssvBasedAppsNetwork) {
         SSV_BASED_APPS_NETWORK = _ssvBasedAppsNetwork;
     }
 
-    /// @notice Registers a BApp calling the SSV SSVBasedApps
+    /// @notice Registers a BApp calling the SSV SSVCore
     /// @param tokens array of token addresses
     /// @param sharedRiskLevels array of shared risk levels
     /// @param metadataURI URI of the metadata

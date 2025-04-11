@@ -9,12 +9,12 @@ import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165C
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IBasedApp} from "@ssv/src/interfaces/middleware/IBasedApp.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
-import {StorageData, SSVBasedAppsStorage} from "@ssv/src/libraries/SSVBasedAppsStorage.sol";
-import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/libraries/SSVBasedAppsStorageProtocol.sol";
+import {StorageData, SSVCoreStorage} from "@ssv/src/libraries/SSVCoreStorage.sol";
+import {StorageProtocol, SSVCoreStorageProtocol} from "@ssv/src/libraries/SSVCoreStorageProtocol.sol";
 import {ValidationsLib, MAX_PERCENTAGE} from "@ssv/src/libraries/ValidationsLib.sol";
 
 /**
- * @title SSVBasedApps
+ * @title SSVCore
  * @notice The Core Contract to manage Based Applications, s.Delegations & Strategies for SSV Based Applications Platform.
  *
  * **************
@@ -69,7 +69,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @return strategyId The ID of the new Strategy
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
         if (fee > MAX_PERCENTAGE) revert InvalidStrategyFee();
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
 
         unchecked {
             strategyId = ++s._strategyCounter;
@@ -86,7 +86,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The id of the strategy
     /// @param metadataURI The new metadata URI
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external {
-        _onlyStrategyOwner(strategyId, SSVBasedAppsStorage.load());
+        _onlyStrategyOwner(strategyId, SSVCoreStorage.load());
         emit StrategyMetadataURIUpdated(strategyId, metadataURI);
     }
 
@@ -97,11 +97,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param tokens The list of tokens to opt-in with
     /// @param obligationPercentages The list of obligation percentages for each token
     /// @param data Optional parameter that could be required by the service
-    function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data)
-        external
-    {
+    function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data) external {
         ValidationsLib.validateArrayLengths(tokens, obligationPercentages);
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         _onlyStrategyOwner(strategyId, s);
 
         // Check if a strategy exists for the given bApp.
@@ -183,7 +181,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         _onlyStrategyOwner(strategyId, s);
 
         if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) revert BAppNotOptedIn();
@@ -198,10 +196,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The ERC20 token address.
     /// @param obligationPercentage The new percentage of the obligation
     function proposeUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         _onlyStrategyOwner(strategyId, s);
 
-        _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage, s);       
+        _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage, s);
 
         ICore.ObligationRequest storage request = s.obligationRequests[strategyId][bApp][token];
 
@@ -216,7 +214,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp.
     /// @param token The ERC20 token address.
     function finalizeUpdateObligation(uint32 strategyId, address bApp, address token) external {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         _onlyStrategyOwner(strategyId, s);
 
         ICore.ObligationRequest storage request = s.obligationRequests[strategyId][bApp][address(token)];
@@ -224,7 +222,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32 percentage = request.percentage;
 
         if (requestTime == 0) revert NoPendingObligationUpdate();
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        StorageProtocol storage sp = SSVCoreStorageProtocol.load();
 
         _checkTimelocks(requestTime, sp.obligationTimelockPeriod, sp.obligationExpireTime);
 
@@ -243,7 +241,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
     function reduceFee(uint32 strategyId, uint32 proposedFee) external {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         _onlyStrategyOwner(strategyId, s);
 
         if (proposedFee >= s.strategies[strategyId].fee) revert InvalidPercentageIncrement();
@@ -257,13 +255,13 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
     function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         _onlyStrategyOwner(strategyId, s);
 
         ValidationsLib.validatePercentage(proposedFee);
 
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
-        
+        StorageProtocol storage sp = SSVCoreStorageProtocol.load();
+
         ICore.Strategy storage strategy = s.strategies[strategyId];
         uint32 fee = strategy.fee;
 
@@ -281,7 +279,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Finalize the fee update for a strategy
     /// @param strategyId The ID of the strategy
     function finalizeFeeUpdate(uint32 strategyId) external {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         _onlyStrategyOwner(strategyId, s);
 
         ICore.Strategy storage strategy = s.strategies[strategyId];
@@ -290,7 +288,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 feeRequestTime = request.requestTime;
 
         if (feeRequestTime == 0) revert NoPendingFeeUpdate();
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        StorageProtocol storage sp = SSVCoreStorageProtocol.load();
         _checkTimelocks(feeRequestTime, sp.feeTimelockPeriod, sp.feeExpireTime);
 
         strategy.fee = request.percentage;
@@ -325,7 +323,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function _createSingleObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
 
         if (!s.bAppTokens[bApp][token].isSet) revert TokenNotSupportedByBApp(token);
 
@@ -362,7 +360,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     function _updateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
 
         if (s.obligations[strategyId][bApp][token].percentage == 0 && obligationPercentage > 0) {
             s.usedTokens[strategyId][token] += 1;
@@ -386,7 +384,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function _beforeDeposit(uint32 strategyId, address token, uint256 amount) internal {
         if (amount == 0) revert InvalidAmount();
 
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
@@ -396,7 +394,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (totalShares == 0 || totalTokenBalance == 0) shares = amount;
         else shares = (amount * totalShares) / totalTokenBalance;
 
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        StorageProtocol storage sp = SSVCoreStorageProtocol.load();
         if (totalShares + shares > sp.maxShares) revert ExceedingMaxShares();
 
         if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) {
@@ -414,7 +412,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function _proposeWithdrawal(uint32 strategyId, address token, uint256 amount) internal {
         if (amount == 0) revert InvalidAmount();
 
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
         if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert InvalidAccountGeneration();
@@ -434,13 +432,13 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     }
 
     function _finalizeWithdrawal(uint32 strategyId, address token) private returns (uint256 amount) {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        StorageData storage s = SSVCoreStorage.load();
 
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][token];
         uint256 requestTime = request.requestTime;
 
         if (requestTime == 0) revert NoPendingWithdrawal();
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        StorageProtocol storage sp = SSVCoreStorageProtocol.load();
 
         _checkTimelocks(requestTime, sp.withdrawalTimelockPeriod, sp.withdrawalExpireTime);
 

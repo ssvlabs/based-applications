@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {SSVBasedApps} from "src/SSVBasedApps.sol";
+import {SSVCore} from "src/SSVCore.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
@@ -26,7 +26,7 @@ import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
 
 contract BasedAppManagerSetupTest is Test {
     // Main Contract
-    SSVBasedApps public implementation;
+    SSVCore public implementation;
     // Modules
     StrategyManager public strategyManagerMod;
     BasedAppsManager public basedAppsManagerMod;
@@ -36,7 +36,7 @@ contract BasedAppManagerSetupTest is Test {
 
     // Proxies
     ERC1967Proxy public proxy; // UUPS Proxy contract
-    SSVBasedApps public proxiedManager; // Proxy interface for interaction
+    SSVCore public proxiedManager; // Proxy interface for interaction
     // BApps
     BasedAppMock public bApp1;
     BasedAppMock2 public bApp2;
@@ -100,7 +100,7 @@ contract BasedAppManagerSetupTest is Test {
         ssvDAOMod = new SSVDAO();
         slashingManagerMod = new SlashingManager();
         delegationManagerMod = new DelegationManager();
-        implementation = new SSVBasedApps();
+        implementation = new SSVCore();
         bytes memory data = abi.encodeWithSelector(
             implementation.initialize.selector,
             address(OWNER),
@@ -112,7 +112,7 @@ contract BasedAppManagerSetupTest is Test {
             MAX_FEE_INCREMENT
         );
         proxy = new ERC1967Proxy(address(implementation), data);
-        proxiedManager = SSVBasedApps(payable(address(proxy)));
+        proxiedManager = SSVCore(payable(address(proxy)));
         assertEq(proxiedManager.getVersion(), "v0.0.0", "Version mismatch");
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();

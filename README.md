@@ -13,7 +13,7 @@ This repository contains the core Based Applications Contracts, including UUPS u
 
 ### **Main Contracts**
 
-- **`SSVBasedApps.sol`** – Core contract managing bApps, delegations, and strategies.
+- **`SSVCore.sol`** – Core contract managing bApps, delegations, and strategies.
   
 - **`IBasedAppManager.sol`** – Interface for the Based Application Manager.
   

@@ -9,7 +9,7 @@ import {
     ISlashingManager,
     IDelegationManager,
     ISSVDAO,
-    SSVBasedApps,
+    SSVCore,
     ERC1967Proxy
 } from "@ssv/test/BAppManager.setup.t.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
@@ -23,18 +23,18 @@ contract BasedAppManagerOwnershipTest is BasedAppManagerSetupTest, OwnableUpgrad
 
     function testImplementation() public view {
         address currentImplementation = address(uint160(uint256(vm.load(address(proxy), bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1)))));
-        assertEq(currentImplementation, address(implementation), "Implementation should be the SSVBasedApps contract");
+        assertEq(currentImplementation, address(implementation), "Implementation should be the SSVCore contract");
     }
 
     function testRevertUpgradeUnauthorizedFromNonOwner() public {
-        SSVBasedApps newImplementation = new SSVBasedApps();
+        SSVCore newImplementation = new SSVCore();
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
         proxiedManager.upgradeToAndCall(address(newImplementation), bytes(""));
     }
 
     function testUpgradeAuthorized() public {
-        SSVBasedApps newImplementation = new SSVBasedApps();
+        SSVCore newImplementation = new SSVCore();
 
         vm.prank(OWNER);
         proxiedManager.upgradeToAndCall(address(newImplementation), bytes(""));

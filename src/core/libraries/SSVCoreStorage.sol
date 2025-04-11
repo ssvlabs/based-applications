@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
-enum SSVBasedAppsModules {
+enum SSVCoreModules {
     SSV_PLATFORM_MANAGER,
     SSV_STRATEGY_MANAGER
 }
@@ -12,8 +12,8 @@ enum SSVBasedAppsModules {
 /// @notice Represents all operational state required by the SSV Based Application platform.
 struct StorageData {
     uint32 _strategyCounter;
-    /// @notice Maps each SSVBasedAppsModules' module to its corresponding contract address
-    mapping(SSVBasedAppsModules => address) ssvContracts;
+    /// @notice Maps each SSVCoreModules' module to its corresponding contract address
+    mapping(SSVCoreModules => address) ssvContracts;
     /**
      * @notice Tracks the strategies created
      * @dev The strategy ID is incremental and unique
@@ -87,7 +87,7 @@ struct StorageData {
     mapping(address bApp => mapping(address token => ICore.SharedRiskLevel)) bAppTokens;
 }
 
-library SSVBasedAppsStorage {
+library SSVCoreStorage {
     uint256 private constant SSV_BASED_APPS_STORAGE_POSITION = uint256(keccak256("ssv.based-apps.storage.main")) - 1;
 
     function load() internal pure returns (StorageData storage sd) {
