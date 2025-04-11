@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {IPlatformManager} from "@ssv/src/interfaces/IPlatformManager.sol";
 
-import {SSVCoreModules} from "@ssv/src/libraries/SSVCoreStorage.sol";
+import {SSVCoreModules} from "@ssv/src/libraries/CoreStorageLib.sol";
 
 interface ISSVCore {
     function initialize(address owner_, IPlatformManager ssvBasedAppManger_, IStrategyManager ssvStrategyManager_, uint32 maxFeeIncrement_) external;

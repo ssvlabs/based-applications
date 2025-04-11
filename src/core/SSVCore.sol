@@ -7,12 +7,11 @@ import {IPlatformManager} from "@ssv/src/interfaces/IPlatformManager.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
-import {SSVCoreStorage, StorageData} from "@ssv/src/libraries/SSVCoreStorage.sol";
-import {SSVCoreStorageProtocol, StorageProtocol} from "@ssv/src/libraries/SSVCoreStorageProtocol.sol";
+import {CoreStorageLib, SSVCoreModules} from "@ssv/src/libraries/CoreStorageLib.sol";
+import {ProtocolStorageLib} from "@ssv/src/libraries/ProtocolStorageLib.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {SSVCoreModules} from "./libraries/SSVCoreStorage.sol";
 import {MAX_PERCENTAGE} from "@ssv/src/libraries/ValidationsLib.sol";
 
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -38,8 +37,8 @@ contract SSVCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatfor
         internal
         onlyInitializing
     {
-        StorageData storage s = SSVCoreStorage.load();
-        StorageProtocol storage sp = SSVCoreStorageProtocol.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
         s.ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER] = address(ssvStrategyManager_);
         s.ssvContracts[SSVCoreModules.SSV_PLATFORM_MANAGER] = address(ssvPlatformManager_);
 
@@ -119,7 +118,7 @@ contract SSVCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatfor
     }
 
     function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
@@ -218,84 +217,84 @@ contract SSVCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatfor
     // *****************************
 
     function delegations(address account, address receiver) external view returns (uint32) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.delegations[account][receiver];
     }
 
     function totalDelegatedPercentage(address delegator) external view returns (uint32) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.totalDelegatedPercentage[delegator];
     }
 
     function registeredBApps(address bApp) external view returns (bool isRegistered) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.registeredBApps[bApp];
     }
 
     function strategies(uint32 strategyId) external view returns (address strategyOwner, uint32 fee) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
     }
 
     function strategyAccountShares(uint32 strategyId, address account, address token) external view returns (uint256) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
         if (strategyTokenShares.accountGeneration[account] != strategyTokenShares.currentGeneration) return 0;
         else return s.strategyTokenShares[strategyId][token].accountShareBalance[account];
     }
 
     function strategyTotalBalance(uint32 strategyId, address token) external view returns (uint256) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.strategyTokenShares[strategyId][token].totalTokenBalance;
     }
 
     function strategyTotalShares(uint32 strategyId, address token) external view returns (uint256) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.strategyTokenShares[strategyId][token].totalShareBalance;
     }
 
     function strategyGeneration(uint32 strategyId, address token) external view returns (uint256) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.strategyTokenShares[strategyId][token].currentGeneration;
     }
 
     function obligations(uint32 strategyId, address bApp, address token) external view returns (uint32 percentage, bool isSet) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.obligations[strategyId][bApp][token].percentage, s.obligations[strategyId][bApp][token].isSet);
     }
 
     function usedTokens(uint32 strategyId, address token) external view returns (uint32) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.usedTokens[strategyId][token];
     }
 
     function bAppTokens(address bApp, address token) external view returns (uint32 value, bool isSet) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.bAppTokens[bApp][token].value, s.bAppTokens[bApp][token].isSet);
     }
 
     function accountBAppStrategy(address account, address bApp) external view returns (uint32) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.accountBAppStrategy[account][bApp];
     }
 
     function feeUpdateRequests(uint32 strategyId) external view returns (uint32 percentage, uint32 requestTime) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.feeUpdateRequests[strategyId].percentage, s.feeUpdateRequests[strategyId].requestTime);
     }
 
     function withdrawalRequests(uint32 strategyId, address account, address token) external view returns (uint256 shares, uint32 requestTime) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.withdrawalRequests[strategyId][account][token].shares, s.withdrawalRequests[strategyId][account][token].requestTime);
     }
 
     function obligationRequests(uint32 strategyId, address token, address bApp) external view returns (uint32 percentage, uint32 requestTime) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.obligationRequests[strategyId][token][bApp].percentage, s.obligationRequests[strategyId][token][bApp].requestTime);
     }
 
     function slashingFund(address account, address token) external view returns (uint256) {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         return s.slashingFund[account][token];
     }
 
@@ -308,35 +307,35 @@ contract SSVCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatfor
     }
 
     function maxShares() external view returns (uint256) {
-        return SSVCoreStorageProtocol.load().maxShares;
+        return ProtocolStorageLib.load().maxShares;
     }
 
     function maxFeeIncrement() external view returns (uint32) {
-        return SSVCoreStorageProtocol.load().maxFeeIncrement;
+        return ProtocolStorageLib.load().maxFeeIncrement;
     }
 
     function feeTimelockPeriod() external view returns (uint32) {
-        return SSVCoreStorageProtocol.load().feeTimelockPeriod;
+        return ProtocolStorageLib.load().feeTimelockPeriod;
     }
 
     function feeExpireTime() external view returns (uint32) {
-        return SSVCoreStorageProtocol.load().feeExpireTime;
+        return ProtocolStorageLib.load().feeExpireTime;
     }
 
     function withdrawalTimelockPeriod() external view returns (uint32) {
-        return SSVCoreStorageProtocol.load().withdrawalTimelockPeriod;
+        return ProtocolStorageLib.load().withdrawalTimelockPeriod;
     }
 
     function withdrawalExpireTime() external view returns (uint32) {
-        return SSVCoreStorageProtocol.load().withdrawalExpireTime;
+        return ProtocolStorageLib.load().withdrawalExpireTime;
     }
 
     function obligationTimelockPeriod() external view returns (uint32) {
-        return SSVCoreStorageProtocol.load().obligationTimelockPeriod;
+        return ProtocolStorageLib.load().obligationTimelockPeriod;
     }
 
     function obligationExpireTime() external view returns (uint32) {
-        return SSVCoreStorageProtocol.load().obligationExpireTime;
+        return ProtocolStorageLib.load().obligationExpireTime;
     }
 
     function updateModules(SSVCoreModules[] calldata moduleIds, address[] calldata moduleAddresses) external onlyOwner {
@@ -348,14 +347,14 @@ contract SSVCore is ISSVCore, UUPSUpgradeable, Ownable2StepUpgradeable, IPlatfor
             }
             if (size == 0) revert TargetModuleDoesNotExist(uint8(moduleIds[i]));
 
-            SSVCoreStorage.load().ssvContracts[moduleIds[i]] = moduleAddresses[i];
+            CoreStorageLib.load().ssvContracts[moduleIds[i]] = moduleAddresses[i];
 
             emit ModuleUpdated(moduleIds[i], moduleAddresses[i]);
         }
     }
 
     function _delegateTo(SSVCoreModules moduleId) internal {
-        address implementation = SSVCoreStorage.load().ssvContracts[moduleId];
+        address implementation = CoreStorageLib.load().ssvContracts[moduleId];
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
             // block because it will not return to Solidity code. We overwrite the

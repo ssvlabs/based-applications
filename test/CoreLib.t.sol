@@ -4,7 +4,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 import {BasedAppManagerSetupTest} from "@ssv/test/BAppManager.setup.t.sol";
 import {CoreLib} from "@ssv/src/libraries/CoreLib.sol";
-import {SSVCoreModules} from "@ssv/src/libraries/SSVCoreStorage.sol";
+import {SSVCoreModules} from "@ssv/src/libraries/CoreStorageLib.sol";
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 
 contract CoreLibTest is BasedAppManagerSetupTest, OwnableUpgradeable {

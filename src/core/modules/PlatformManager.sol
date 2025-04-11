@@ -3,12 +3,11 @@ pragma solidity 0.8.29;
 
 import {ICore} from "@ssv/src/interfaces/ICore.sol";
 import {IPlatformManager} from "@ssv/src/interfaces/IPlatformManager.sol";
-import {SSVCoreStorage, StorageData} from "@ssv/src/libraries/SSVCoreStorage.sol";
-import {SSVCoreStorageProtocol} from "@ssv/src/libraries/SSVCoreStorageProtocol.sol";
+import {CoreStorageLib} from "@ssv/src/libraries/CoreStorageLib.sol";
+import {ProtocolStorageLib} from "@ssv/src/libraries/ProtocolStorageLib.sol";
 import {ValidationsLib, MAX_PERCENTAGE} from "@ssv/src/libraries/ValidationsLib.sol";
 
 contract PlatformManager is IPlatformManager {
-
     /// @notice Registers a bApp.
     /// @param tokens The list of tokens the bApp accepts; can be empty.
     /// @param sharedRiskLevels The shared risk level of the bApp.
@@ -16,7 +15,7 @@ contract PlatformManager is IPlatformManager {
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.registeredBApps[msg.sender]) revert BAppAlreadyRegistered();
 
@@ -30,7 +29,7 @@ contract PlatformManager is IPlatformManager {
     /// @notice Function to update the metadata URI of the Based Application
     /// @param metadataURI The new metadata URI
     function updateBAppMetadataURI(string calldata metadataURI) external {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         if (!s.registeredBApps[msg.sender]) revert BAppNotRegistered();
 
         emit BAppMetadataURIUpdated(msg.sender, metadataURI);
@@ -45,7 +44,7 @@ contract PlatformManager is IPlatformManager {
 
         uint256 length = tokens.length;
         address token;
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         for (uint256 i = 0; i < length;) {
             token = tokens[i];
             ValidationsLib.validateNonZeroAddress(token);
@@ -62,7 +61,7 @@ contract PlatformManager is IPlatformManager {
     /// @param token The address of the token
     /// @param sharedRiskLevel The shared risk level
     function _setTokenRiskLevel(address bApp, address token, uint32 sharedRiskLevel) internal {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
 
         tokenData.value = sharedRiskLevel;
@@ -90,7 +89,7 @@ contract PlatformManager is IPlatformManager {
     function delegateBalance(address account, uint32 percentage) external {
         ValidationsLib.validatePercentage(percentage);
 
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.delegations[msg.sender][account] != 0) revert DelegationAlreadyExists();
 
@@ -112,7 +111,7 @@ contract PlatformManager is IPlatformManager {
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function updateDelegatedBalance(address account, uint32 percentage) external {
         ValidationsLib.validatePercentage(percentage);
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         uint32 existingPercentage = s.delegations[msg.sender][account];
         if (existingPercentage == 0) revert DelegationDoesNotExist();
@@ -132,7 +131,7 @@ contract PlatformManager is IPlatformManager {
     /// @notice Removes delegation from an account.
     /// @param account The address of the account whose delegation is being removed.
     function removeDelegatedBalance(address account) external {
-        StorageData storage s = SSVCoreStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         uint32 percentage = s.delegations[msg.sender][account];
         if (percentage == 0) revert DelegationDoesNotExist();
@@ -151,42 +150,42 @@ contract PlatformManager is IPlatformManager {
     // ***************************************************
 
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
-        SSVCoreStorageProtocol.load().feeTimelockPeriod = feeTimelockPeriod;
+        ProtocolStorageLib.load().feeTimelockPeriod = feeTimelockPeriod;
         emit FeeTimelockPeriodUpdated(feeTimelockPeriod);
     }
 
     function updateFeeExpireTime(uint32 feeExpireTime) external {
-        SSVCoreStorageProtocol.load().feeExpireTime = feeExpireTime;
+        ProtocolStorageLib.load().feeExpireTime = feeExpireTime;
         emit FeeExpireTimeUpdated(feeExpireTime);
     }
 
     function updateWithdrawalTimelockPeriod(uint32 withdrawalTimelockPeriod) external {
-        SSVCoreStorageProtocol.load().withdrawalTimelockPeriod = withdrawalTimelockPeriod;
+        ProtocolStorageLib.load().withdrawalTimelockPeriod = withdrawalTimelockPeriod;
         emit WithdrawalTimelockPeriodUpdated(withdrawalTimelockPeriod);
     }
 
     function updateWithdrawalExpireTime(uint32 withdrawalExpireTime) external {
-        SSVCoreStorageProtocol.load().withdrawalExpireTime = withdrawalExpireTime;
+        ProtocolStorageLib.load().withdrawalExpireTime = withdrawalExpireTime;
         emit WithdrawalExpireTimeUpdated(withdrawalExpireTime);
     }
 
     function updateObligationTimelockPeriod(uint32 obligationTimelockPeriod) external {
-        SSVCoreStorageProtocol.load().obligationTimelockPeriod = obligationTimelockPeriod;
+        ProtocolStorageLib.load().obligationTimelockPeriod = obligationTimelockPeriod;
         emit ObligationTimelockPeriodUpdated(obligationTimelockPeriod);
     }
 
     function updateObligationExpireTime(uint32 obligationExpireTime) external {
-        SSVCoreStorageProtocol.load().obligationExpireTime = obligationExpireTime;
+        ProtocolStorageLib.load().obligationExpireTime = obligationExpireTime;
         emit ObligationExpireTimeUpdated(obligationExpireTime);
     }
 
     function updateMaxShares(uint256 maxShares) external {
-        SSVCoreStorageProtocol.load().maxShares = maxShares;
+        ProtocolStorageLib.load().maxShares = maxShares;
         emit StrategyMaxSharesUpdated(maxShares);
     }
 
     function updateMaxFeeIncrement(uint32 maxFeeIncrement) external {
-        SSVCoreStorageProtocol.load().maxFeeIncrement = maxFeeIncrement;
+        ProtocolStorageLib.load().maxFeeIncrement = maxFeeIncrement;
         emit StrategyMaxFeeIncrementUpdated(maxFeeIncrement);
     }
 }
