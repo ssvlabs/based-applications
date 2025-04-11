@@ -10,7 +10,7 @@ import {SSVDAO} from "@ssv/src/modules/SSVDAO.sol";
 import {IBasedAppManager} from "@ssv/src/interfaces/IBasedAppManager.sol";
 import {IStrategyManager} from "@ssv/src/interfaces/IStrategyManager.sol";
 import {ISSVDAO} from "@ssv/src/interfaces/ISSVDAO.sol";
-import {SSVCore} from "src/SSVCore.sol";
+import {BAppsCore} from "src/BAppsCore.sol";
 import {ISlashingManager} from "@ssv/src/interfaces/ISlashingManager.sol";
 import {IDelegationManager} from "@ssv/src/interfaces/IDelegationManager.sol";
 import {SlashingManager} from "@ssv/src/modules/SlashingManager.sol";
@@ -21,7 +21,7 @@ contract DeployProxy is Script {
     function run() external {
         vm.startBroadcast();
 
-        SSVCore implementation = new SSVCore();
+        BAppsCore implementation = new BAppsCore();
         StrategyManager strategyManagerMod = new StrategyManager();
         BasedAppsManager basedAppsManagerMod = new BasedAppsManager();
         SlashingManager slashingManagerMod = new SlashingManager();

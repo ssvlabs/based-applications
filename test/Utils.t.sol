@@ -2,7 +2,7 @@
 pragma solidity 0.8.29;
 
 import {Test} from "forge-std/Test.sol";
-import {SSVCore} from "src/SSVCore.sol";
+import {BAppsCore} from "src/BAppsCore.sol";
 
 contract TestUtils is Test {
     function createSingleTokenAndSingleRiskLevel(address token, uint32 sharedRiskLevel)
@@ -27,7 +27,7 @@ contract TestUtils is Test {
         obligationPercentageInput[0] = obligationPercentage;
     }
 
-    function checkBAppInfo(address[] memory tokensInput, uint32[] memory riskLevelInput, address bApp, SSVCore proxiedManager) internal view {
+    function checkBAppInfo(address[] memory tokensInput, uint32[] memory riskLevelInput, address bApp, BAppsCore proxiedManager) internal view {
         assertEq(tokensInput.length, riskLevelInput.length, "BApp tokens and sharedRiskLevel length");
         bool isRegistered = proxiedManager.registeredBApps(bApp);
         assertEq(isRegistered, true, "BApp registered");
@@ -44,7 +44,7 @@ contract TestUtils is Test {
         address bApp,
         address token,
         uint32 percentage,
-        SSVCore proxiedManager,
+        BAppsCore proxiedManager,
         uint32 expectedTokens,
         bool expectedIsSet
     ) internal view {
@@ -68,7 +68,7 @@ contract TestUtils is Test {
         uint32 expectedPercentage,
         uint32 expectedUsedTokens,
         bool expectedIsSet,
-        SSVCore proxiedManager
+        BAppsCore proxiedManager
     ) internal view {
         (uint32 percentage, bool isSet) = proxiedManager.obligations(strategyId, bApp, token);
         assertEq(percentage, expectedPercentage, "Obligation percentage");

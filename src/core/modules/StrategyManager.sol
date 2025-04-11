@@ -14,7 +14,7 @@ import {ProtocolStorageLib} from "@ssv/src/libraries/ProtocolStorageLib.sol";
 import {ValidationsLib, MAX_PERCENTAGE} from "@ssv/src/libraries/ValidationsLib.sol";
 
 /**
- * @title SSVCore
+ * @title BAppsCore
  * @notice The Core Contract to manage Based Applications, s.Delegations & Strategies for SSV Based Applications Platform.
  *
  * **************
@@ -344,7 +344,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
-    function _validateObligationUpdateInput(uint32 strategyId, address bApp, address token, uint32 obligationPercentage, CoreStorageLib.Data storage s) private view {
+    function _validateObligationUpdateInput(uint32 strategyId, address bApp, address token, uint32 obligationPercentage, CoreStorageLib.Data storage s)
+        private
+        view
+    {
         if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) revert BAppNotOptedIn();
 
         ValidationsLib.validatePercentage(obligationPercentage);
