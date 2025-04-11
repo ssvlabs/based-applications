@@ -15,9 +15,12 @@ import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 import {SlashingManager} from "@ssv/src/core/modules/SlashingManager.sol";
 import {DelegationManager} from "@ssv/src/core/modules/DelegationManager.sol";
+import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 // solhint-disable no-console
 contract DeployProxy is Script {
+    address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     function run() external {
         vm.startBroadcast();
 
@@ -29,17 +32,28 @@ contract DeployProxy is Script {
         SlashingManager slashingManagerMod = new SlashingManager();
         DelegationManager delegationManagerMod = new DelegationManager();
 
-        uint32 maxFeeIncrement = 500;
+        StorageProtocol memory config = StorageProtocol({
+            feeTimelockPeriod: 5 days,
+            feeExpireTime: 1 days,
+            withdrawalTimelockPeriod: 14 days,
+            ethAddress: ETH_ADDRESS,
+            maxShares: 1e50,
+            withdrawalExpireTime: 3 days,
+            obligationTimelockPeriod: 14 days,
+            obligationExpireTime: 3 days,
+            maxPercentage: 10_000,
+            maxFeeIncrement: 500
+        });
 
-        bytes memory initData = abi.encodeWithSignature(
-            "initialize(address,address,address,address,uint32)",
+        bytes memory initData = abi.encodeWithSelector(
+            implementation.initialize.selector,
             msg.sender,
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             ISSVDAO(ssvDAOMod),
             ISlashingManager(slashingManagerMod),
             IDelegationManager(delegationManagerMod),
-            maxFeeIncrement
+            config
         );
 
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
@@ -52,6 +66,16 @@ contract DeployProxy is Script {
         console.log("Module DelegationManager deployed at:", address(delegationManagerMod));
         console.log("Proxy deployed at:", address(proxy));
 
+        console.log("Fee Timelock Period:", config.feeTimelockPeriod);
+        console.log("Fee Expire Time:", config.feeExpireTime);
+        console.log("Withdrawal Timelock Period:", config.withdrawalTimelockPeriod);
+        console.log("Withdrawal Expire Time:", config.withdrawalExpireTime);
+        console.log("Obligation Timelock Period:", config.obligationTimelockPeriod);
+        console.log("Obligation Expire Time:", config.obligationExpireTime);
+        console.log("Max Shares:", config.maxShares);
+        console.log("Max Percentage:", config.maxPercentage);
+        console.log("Max Fee Increment:", config.maxFeeIncrement);
+        console.log("ETH Address:", config.ethAddress);
         vm.stopBroadcast();
     }
 }

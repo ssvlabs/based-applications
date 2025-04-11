@@ -20,30 +20,6 @@ contract SlashingManager is ISlashingManager, ReentrancyGuardTransient {
     // ** Section: Slashing **
     // ***********************
 
-    /// @notice Freeze the balance of a strategy
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param data Optional parameter that could be required by the service
-    // function freeze(uint32 strategyId, address bApp, bytes calldata data) external {
-    //     StorageData storage s = SSVBasedAppsStorage.load();
-
-    //     if (!s.registeredBApps[bApp]) revert ICore.BAppNotRegistered();
-
-    //     bool success;
-    //     if (CoreLib.isBApp(bApp)) {
-    //         // everyone can freeze the strategy based on the compliant bApp logic
-    //         success = IBasedApp(bApp).authorizeFreeze(strategyId, data);
-    //         if (!success) revert ICore.BAppFreezeNotAuthorized();
-    //     } else {
-    //         // Only the EOA or contract non-compliant owner can freeze
-    //         if (msg.sender != bApp) revert ICore.InvalidBAppOwner(msg.sender, bApp);
-    //     }
-
-    //     s.strategies[strategyId].freezingTime = uint32(block.timestamp);
-
-    //     emit ISlashingManager.StrategyFrozen(strategyId, bApp, data);
-    // }
-
     /// @notice Get the slashable balance for a strategy
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
