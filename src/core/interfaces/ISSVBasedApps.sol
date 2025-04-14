@@ -10,6 +10,7 @@ import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol
 interface ISSVBasedApps {
     event ModuleUpdated(SSVCoreModules indexed moduleId, address moduleAddress);
 
+    function getModuleAddress(SSVCoreModules moduleId) external view returns (address);
     function getVersion() external pure returns (string memory version);
     function initialize(
         address owner_,
