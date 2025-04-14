@@ -11,12 +11,10 @@ import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {SSVBasedApps} from "src/core/SSVBasedApps.sol";
-import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 // solhint-disable no-console
 contract DeployProxy is Script {
-    address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-
     function run() external {
         vm.startBroadcast();
 
@@ -26,16 +24,14 @@ contract DeployProxy is Script {
         BasedAppsManager basedAppsManagerMod = new BasedAppsManager();
         ProtocolManager protocolManagerMod = new ProtocolManager();
 
-        StorageProtocol memory config = StorageProtocol({
+        ProtocolStorageLib.Data memory config = ProtocolStorageLib.Data({
             feeTimelockPeriod: 5 days,
             feeExpireTime: 1 days,
             withdrawalTimelockPeriod: 14 days,
-            ethAddress: ETH_ADDRESS,
             maxShares: 1e50,
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxPercentage: 10_000,
             maxFeeIncrement: 500
         });
 
@@ -63,9 +59,7 @@ contract DeployProxy is Script {
         console.log("Obligation Timelock Period:", config.obligationTimelockPeriod);
         console.log("Obligation Expire Time:", config.obligationExpireTime);
         console.log("Max Shares:", config.maxShares);
-        console.log("Max Percentage:", config.maxPercentage);
         console.log("Max Fee Increment:", config.maxFeeIncrement);
-        console.log("ETH Address:", config.ethAddress);
         vm.stopBroadcast();
     }
 }

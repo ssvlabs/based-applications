@@ -2,6 +2,7 @@
 pragma solidity 0.8.29;
 
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {ETH_ADDRESS} from "@ssv/src/core/libraries/ValidationLib.sol";
 
 import {Setup} from "@ssv/test/helpers/Setup.t.sol";
 
@@ -42,17 +43,12 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
         assertEq(proxiedManager.obligationExpireTime(), 1 days, "Obligation expire time update failed");
     }
 
-    function testUpdateMaxPercentage() public {
-        vm.prank(OWNER);
-        proxiedManager.updateMaxPercentage(1234);
-        assertEq(proxiedManager.maxPercentage(), 1234, "Max percentage update failed");
+    function testMaxPercentage() public view {
+        assertEq(proxiedManager.maxPercentage(), 10_000, "Max percentage set failed");
     }
 
-    function testUpdateEthAddress() public {
-        vm.prank(OWNER);
-        address newAddress = address(0x1234567890123456789012345678901234567890);
-        proxiedManager.updateEthAddress(newAddress);
-        assertEq(proxiedManager.ethAddress(), newAddress, "ETH address update failed");
+    function testEthAddress() public view {
+        assertEq(proxiedManager.ethAddress(), ETH_ADDRESS, "ETH address set failed");
     }
 
     function testUpdateMaxShares() public {

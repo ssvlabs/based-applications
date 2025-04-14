@@ -5,16 +5,21 @@ import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {SSVCoreModules} from "@ssv/src/core/libraries/CoreStorageLib.sol";
-import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 interface ISSVBasedApps {
+    event ModuleUpdated(SSVCoreModules indexed moduleId, address moduleAddress);
+
     function getVersion() external pure returns (string memory version);
     function initialize(
         address owner_,
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        StorageProtocol memory config
+        ProtocolStorageLib.Data memory config
     ) external;
     function updateModule(SSVCoreModules moduleId, address moduleAddress) external;
+
+    error TargetModuleDoesNotExist(uint8 moduleId);
+    error InvalidMaxFeeIncrement();
 }

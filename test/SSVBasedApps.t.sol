@@ -6,7 +6,7 @@ import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/acces
 import {Setup, IStrategyManager, IBasedAppManager, IProtocolManager, SSVBasedApps, ERC1967Proxy} from "@ssv/test/helpers/Setup.t.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     function testInitialBalanceIsZero() public view {
@@ -92,7 +92,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     }
 
     function testRevertInitializeWithZeroFee() public {
-        StorageProtocol memory configZeroFee = StorageProtocol({
+        ProtocolStorageLib.Data memory configZeroFee = ProtocolStorageLib.Data({
             maxFeeIncrement: 0,
             feeTimelockPeriod: 5 days,
             feeExpireTime: 1 days,
@@ -100,9 +100,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxShares: 1e50,
-            maxPercentage: 10_000, // 100%
-            ethAddress: ETH_ADDRESS
+            maxShares: 1e50
         });
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
 
@@ -118,16 +116,14 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     }
 
     function testRevertInitializeWithExcessiveFee() public {
-        StorageProtocol memory configExcessiveFee = StorageProtocol({
+        ProtocolStorageLib.Data memory configExcessiveFee = ProtocolStorageLib.Data({
             feeTimelockPeriod: 5 days,
             feeExpireTime: 1 days,
             withdrawalTimelockPeriod: 14 days,
-            ethAddress: ETH_ADDRESS,
             maxShares: 1e50,
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxPercentage: 10_000, // 100%
             maxFeeIncrement: 10_001
         });
         vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));

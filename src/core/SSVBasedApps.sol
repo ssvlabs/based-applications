@@ -5,14 +5,14 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import {ValidationLib} from "@ssv/src/core/libraries/ValidationLib.sol";
+import {ValidationLib, MAX_PERCENTAGE, ETH_ADDRESS} from "@ssv/src/core/libraries/ValidationLib.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {ISSVBasedApps} from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {CoreStorageLib, SSVCoreModules} from "@ssv/src/core/libraries/CoreStorageLib.sol";
-import {SSVBasedAppsStorageProtocol, StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 import {SSVProxy} from "@ssv/src/core/SSVProxy.sol";
 
 contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable, IBasedAppManager, IStrategyManager, IProtocolManager, SSVProxy {
@@ -24,7 +24,7 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        StorageProtocol memory config
+        ProtocolStorageLib.Data memory config
     ) external override initializer onlyProxy {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
@@ -36,10 +36,10 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        StorageProtocol memory config
+        ProtocolStorageLib.Data memory config
     ) internal onlyInitializing {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
         s.ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER] = address(ssvStrategyManager_);
         s.ssvContracts[SSVCoreModules.SSV_BAPPS_MANAGER] = address(ssvBasedAppManger_);
         s.ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER] = address(protocolManager_);
@@ -53,8 +53,6 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         sp.withdrawalExpireTime = config.withdrawalExpireTime;
         sp.obligationTimelockPeriod = config.obligationTimelockPeriod;
         sp.obligationExpireTime = config.obligationExpireTime;
-        sp.maxPercentage = config.maxPercentage;
-        sp.ethAddress = config.ethAddress;
         sp.maxShares = config.maxShares;
 
         // sp.feeExpireTime = 1 days;
@@ -137,9 +135,9 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
 
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
         uint256 balance = strategyTokenShares.totalTokenBalance;
-        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
 
-        return balance * percentage / sp.maxPercentage;
+        return balance * percentage / MAX_PERCENTAGE;
     }
 
     function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external {
@@ -328,44 +326,44 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     // ** Section: External Protocol Views **
     // **************************************
 
-    function maxPercentage() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().maxPercentage;
+    function maxPercentage() external pure returns (uint32) {
+        return MAX_PERCENTAGE;
     }
 
-    function ethAddress() external view returns (address) {
-        return SSVBasedAppsStorageProtocol.load().ethAddress;
+    function ethAddress() external pure returns (address) {
+        return ETH_ADDRESS;
     }
 
     function maxShares() external view returns (uint256) {
-        return SSVBasedAppsStorageProtocol.load().maxShares;
+        return ProtocolStorageLib.load().maxShares;
     }
 
     function maxFeeIncrement() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().maxFeeIncrement;
+        return ProtocolStorageLib.load().maxFeeIncrement;
     }
 
     function feeTimelockPeriod() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().feeTimelockPeriod;
+        return ProtocolStorageLib.load().feeTimelockPeriod;
     }
 
     function feeExpireTime() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().feeExpireTime;
+        return ProtocolStorageLib.load().feeExpireTime;
     }
 
     function withdrawalTimelockPeriod() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().withdrawalTimelockPeriod;
+        return ProtocolStorageLib.load().withdrawalTimelockPeriod;
     }
 
     function withdrawalExpireTime() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().withdrawalExpireTime;
+        return ProtocolStorageLib.load().withdrawalExpireTime;
     }
 
     function obligationTimelockPeriod() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().obligationTimelockPeriod;
+        return ProtocolStorageLib.load().obligationTimelockPeriod;
     }
 
     function obligationExpireTime() external view returns (uint32) {
-        return SSVBasedAppsStorageProtocol.load().obligationExpireTime;
+        return ProtocolStorageLib.load().obligationExpireTime;
     }
 
     // *********************************

@@ -17,7 +17,7 @@ import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import {SSVBasedApps} from "@ssv/src/core/SSVBasedApps.sol";
 import {ProtocolManager} from "@ssv/src/core/modules/ProtocolManager.sol";
 import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
-import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
@@ -81,7 +81,7 @@ contract Setup is Test {
     uint32 public constant MAX_FEE_INCREMENT = 500;
     // Array containing all the BApps created
     IBasedApp[] public bApps;
-    StorageProtocol public config;
+    ProtocolStorageLib.Data public config;
 
     function setUp() public virtual {
         vm.label(OWNER, "Owner");
@@ -97,7 +97,7 @@ contract Setup is Test {
         protocolManagerMod = new ProtocolManager();
         implementation = new SSVBasedApps();
 
-        config = StorageProtocol({
+        config = ProtocolStorageLib.Data({
             maxFeeIncrement: MAX_FEE_INCREMENT,
             feeTimelockPeriod: 5 days,
             feeExpireTime: 1 days,
@@ -105,9 +105,7 @@ contract Setup is Test {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxShares: 1e50,
-            maxPercentage: 10_000, // 100%
-            ethAddress: ETH_ADDRESS
+            maxShares: 1e50
         });
 
         // config.maxFeeIncrement = 500;

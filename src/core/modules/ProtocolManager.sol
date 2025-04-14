@@ -2,56 +2,56 @@
 pragma solidity 0.8.29;
 
 import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import {SSVBasedAppsStorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
+import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 contract ProtocolManager is IProtocolManager {
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
-        SSVBasedAppsStorageProtocol.load().feeTimelockPeriod = feeTimelockPeriod;
+        ProtocolStorageLib.load().feeTimelockPeriod = feeTimelockPeriod;
         emit FeeTimelockPeriodUpdated(feeTimelockPeriod);
     }
 
     function updateFeeExpireTime(uint32 feeExpireTime) external {
-        SSVBasedAppsStorageProtocol.load().feeExpireTime = feeExpireTime;
+        ProtocolStorageLib.load().feeExpireTime = feeExpireTime;
         emit FeeExpireTimeUpdated(feeExpireTime);
     }
 
     function updateWithdrawalTimelockPeriod(uint32 withdrawalTimelockPeriod) external {
-        SSVBasedAppsStorageProtocol.load().withdrawalTimelockPeriod = withdrawalTimelockPeriod;
+        ProtocolStorageLib.load().withdrawalTimelockPeriod = withdrawalTimelockPeriod;
         emit WithdrawalTimelockPeriodUpdated(withdrawalTimelockPeriod);
     }
 
     function updateWithdrawalExpireTime(uint32 withdrawalExpireTime) external {
-        SSVBasedAppsStorageProtocol.load().withdrawalExpireTime = withdrawalExpireTime;
+        ProtocolStorageLib.load().withdrawalExpireTime = withdrawalExpireTime;
         emit WithdrawalExpireTimeUpdated(withdrawalExpireTime);
     }
 
     function updateObligationTimelockPeriod(uint32 obligationTimelockPeriod) external {
-        SSVBasedAppsStorageProtocol.load().obligationTimelockPeriod = obligationTimelockPeriod;
+        ProtocolStorageLib.load().obligationTimelockPeriod = obligationTimelockPeriod;
         emit ObligationTimelockPeriodUpdated(obligationTimelockPeriod);
     }
 
     function updateObligationExpireTime(uint32 obligationExpireTime) external {
-        SSVBasedAppsStorageProtocol.load().obligationExpireTime = obligationExpireTime;
+        ProtocolStorageLib.load().obligationExpireTime = obligationExpireTime;
         emit ObligationExpireTimeUpdated(obligationExpireTime);
     }
 
-    function updateMaxPercentage(uint32 maxPercentage) external {
-        SSVBasedAppsStorageProtocol.load().maxPercentage = maxPercentage;
-        emit MaxPercentageUpdated(maxPercentage);
-    }
+    // function updateMaxPercentage(uint32 maxPercentage) external {
+    //     ProtocolStorageLib.load().maxPercentage = maxPercentage;
+    //     emit MaxPercentageUpdated(maxPercentage);
+    // }
 
-    function updateEthAddress(address ethAddress) external {
-        SSVBasedAppsStorageProtocol.load().ethAddress = ethAddress;
-        emit EthAddressUpdated(ethAddress);
-    }
+    // function updateEthAddress(address ethAddress) external {
+    //     ProtocolStorageLib.load().ethAddress = ethAddress;
+    //     emit EthAddressUpdated(ethAddress);
+    // }
 
     function updateMaxShares(uint256 maxShares) external {
-        SSVBasedAppsStorageProtocol.load().maxShares = maxShares;
+        ProtocolStorageLib.load().maxShares = maxShares;
         emit StrategyMaxSharesUpdated(maxShares);
     }
 
     function updateMaxFeeIncrement(uint32 maxFeeIncrement) external {
-        SSVBasedAppsStorageProtocol.load().maxFeeIncrement = maxFeeIncrement;
+        ProtocolStorageLib.load().maxFeeIncrement = maxFeeIncrement;
         emit StrategyMaxFeeIncrementUpdated(maxFeeIncrement);
     }
 }

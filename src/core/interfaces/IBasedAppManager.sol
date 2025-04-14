@@ -10,4 +10,11 @@ interface IBasedAppManager {
 
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
     function updateBAppMetadataURI(string calldata metadataURI) external;
+
+    error BAppAlreadyRegistered();
+    error BAppDoesNotSupportInterface();
+    error BAppNotRegistered();
+    error BAppSlashingFailed();
+    error TokenAlreadyAddedToBApp(address token);
+    error ZeroAddressNotAllowed();
 }

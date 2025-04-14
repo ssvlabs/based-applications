@@ -8,6 +8,9 @@ import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
+uint32 constant MAX_PERCENTAGE = 1e4; // 100% in basis points
+address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
 library ValidationLib {
     event ModuleUpgraded(SSVCoreModules indexed moduleId, address moduleAddress);
 
