@@ -100,19 +100,6 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
         proxiedManager.updateObligationExpireTime(1 days);
     }
 
-    function testRevertUpdateMaxPercentageWithNonOwner() public {
-        vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
-        proxiedManager.updateMaxPercentage(1234);
-    }
-
-    function testRevertUpdateEthAddressWithNonOwner() public {
-        vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
-        address newAddress = address(0x1234567890123456789012345678901234567890);
-        proxiedManager.updateEthAddress(newAddress);
-    }
-
     function testRevertUpdateMaxSharesWithNonOwner() public {
         vm.prank(ATTACKER);
         vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));

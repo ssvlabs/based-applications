@@ -213,14 +213,6 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
-    function updateMaxPercentage(uint32 percentage) external onlyOwner {
-        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
-    }
-
-    function updateEthAddress(address value) external onlyOwner {
-        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
-    }
-
     function updateMaxShares(uint256 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
