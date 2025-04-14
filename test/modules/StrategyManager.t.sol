@@ -1251,4 +1251,12 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         proxiedManager.proposeWithdrawalETH(STRATEGY1, newWithdrawalAmount);
         checkProposedWithdrawal(STRATEGY1, USER1, proxiedManager.ethAddress(), newTimestamp, newWithdrawalAmount);
     }
+
+    function testIsBApp() public {
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER1);
+            bool success = proxiedManager._isBApp(address(bApps[i]));
+            assertEq(success, true, "isBApp");
+        }
+    }
 }

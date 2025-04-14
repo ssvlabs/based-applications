@@ -144,7 +144,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(nonCompliantBApp), token, slashAmount, "");
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(nonCompliantBApp), token, slashAmount, address(nonCompliantBApp));
         nonCompliantBApp.slash(STRATEGY1, token, slashAmount);
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -234,7 +234,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, USER1);
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
@@ -272,7 +272,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, USER1, token, slashAmount, USER1);
         proxiedManager.slash(STRATEGY1, USER1, token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 

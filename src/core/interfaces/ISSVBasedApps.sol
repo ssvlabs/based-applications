@@ -18,7 +18,7 @@ interface ISSVBasedApps {
         IProtocolManager protocolManager_,
         ProtocolStorageLib.Data memory config
     ) external;
-    function updateModule(SSVCoreModules moduleId, address moduleAddress) external;
+    function updateModule(SSVCoreModules[] calldata moduleIds, address[] calldata moduleAddresses) external;
 
     error TargetModuleDoesNotExist(uint8 moduleId);
     error InvalidMaxFeeIncrement();

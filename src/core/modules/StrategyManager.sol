@@ -4,6 +4,7 @@ pragma solidity 0.8.29;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 import {ValidationLib, MAX_PERCENTAGE, ETH_ADDRESS} from "@ssv/src/core/libraries/ValidationLib.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
@@ -201,12 +202,19 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         s.accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        if (ValidationLib.isBApp(bApp)) {
+        if (_isBApp(bApp)) {
             bool success = IBasedApp(bApp).optInToBApp(strategyId, tokens, obligationPercentages, data);
             if (!success) revert BAppOptInFailed();
         }
 
         emit BAppOptedInByStrategy(strategyId, bApp, data, tokens, obligationPercentages);
+    }
+
+    /// @notice Function to check if an address uses the correct bApp interface
+    /// @param bApp The address of the bApp
+    /// @return True if the address uses the correct bApp interface
+    function _isBApp(address bApp) public returns (bool) {
+        return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }
 
     /// @notice Deposit ERC20 tokens into the strategy
@@ -591,7 +599,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         bool exit;
         bool success;
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
-        if (ValidationLib.isBApp(bApp)) {
+        if (_isBApp(bApp)) {
             (success, receiver, exit) = IBasedApp(bApp).slash(strategyId, token, amount, data);
             if (!success) revert IStrategyManager.BAppSlashingFailed();
 
@@ -613,13 +621,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             s.strategyTokenShares[strategyId][token].currentGeneration += 1;
         }
 
-        // emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0); //todo adjust value
-        emit IStrategyManager.StrategySlashed(strategyId, bApp, token, amount, data);
+        emit IStrategyManager.StrategySlashed(strategyId, bApp, token, amount, receiver);
     }
 
     function _exitStrategy(uint32 strategyId, address bApp, address token) private {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         s.obligations[strategyId][bApp][token].percentage = 0;
+
+        // emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0); //todo adjust value
     }
 
     function _adjustObligation(uint32 strategyId, address bApp, address token, uint256 amount) internal {
@@ -636,6 +645,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             uint32 postSlashPercentage = uint32(postSlashObligatedBalance * MAX_PERCENTAGE / currentStrategyBalance);
             s.obligations[strategyId][bApp][token].percentage = postSlashPercentage;
         }
+
+        // todo check value
+        // emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0); //todo adjust value
     }
 
     /// @notice Withdraw the slashing fund for a token

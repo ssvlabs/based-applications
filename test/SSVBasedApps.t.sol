@@ -7,6 +7,7 @@ import {Setup, IStrategyManager, IBasedAppManager, IProtocolManager, SSVBasedApp
 import {ISSVBasedApps} from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {SSVCoreModules} from "@ssv/src/core/libraries/CoreStorageLib.sol";
 
 contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     function testInitialBalanceIsZero() public view {
@@ -136,5 +137,77 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             configExcessiveFee
         );
         proxy = new ERC1967Proxy(address(implementation), initData);
+    }
+
+    function testUpdateStrategyModule() public {
+        SSVCoreModules[] memory moduleIds = new SSVCoreModules[](1);
+        address[] memory moduleAddresses = new address[](1);
+
+        moduleIds[0] = SSVCoreModules.SSV_STRATEGY_MANAGER;
+
+        address newModuleAddress = makeAddr("NewStrategyModule");
+        vm.etch(newModuleAddress, new bytes(100));
+        moduleAddresses[0] = address(newModuleAddress);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.ModuleUpdated(SSVCoreModules.SSV_STRATEGY_MANAGER, address(newModuleAddress));
+        vm.prank(OWNER);
+        proxiedManager.updateModule(moduleIds, moduleAddresses);
+
+        assertEq(proxiedManager.getModuleAddress(SSVCoreModules.SSV_STRATEGY_MANAGER), newModuleAddress);
+    }
+
+    function testUpdateBasedAppsModule() public {
+        SSVCoreModules[] memory moduleIds = new SSVCoreModules[](1);
+        address[] memory moduleAddresses = new address[](1);
+
+        moduleIds[0] = SSVCoreModules.SSV_BAPPS_MANAGER;
+
+        address newModuleAddress = makeAddr("NewBAppsModule");
+        vm.etch(newModuleAddress, new bytes(100));
+        moduleAddresses[0] = address(newModuleAddress);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.ModuleUpdated(SSVCoreModules.SSV_BAPPS_MANAGER, address(newModuleAddress));
+        vm.prank(OWNER);
+        proxiedManager.updateModule(moduleIds, moduleAddresses);
+    }
+
+    function testUpdateProtocolModule() public {
+        SSVCoreModules[] memory moduleIds = new SSVCoreModules[](1);
+        address[] memory moduleAddresses = new address[](1);
+
+        moduleIds[0] = SSVCoreModules.SSV_PROTOCOL_MANAGER;
+
+        address newModuleAddress = makeAddr("NewProtocolModule");
+        vm.etch(newModuleAddress, new bytes(100));
+        moduleAddresses[0] = address(newModuleAddress);
+
+        vm.expectEmit(true, true, true, true);
+        emit ISSVBasedApps.ModuleUpdated(SSVCoreModules.SSV_PROTOCOL_MANAGER, address(newModuleAddress));
+        vm.prank(OWNER);
+        proxiedManager.updateModule(moduleIds, moduleAddresses);
+    }
+
+    function testRevertUpdateModuleWithNonOwner() public {
+        SSVCoreModules[] memory moduleIds = new SSVCoreModules[](1);
+        address[] memory moduleAddresses = new address[](1);
+
+        moduleIds[0] = SSVCoreModules.SSV_PROTOCOL_MANAGER;
+
+        moduleAddresses[0] = address(strategyManagerMod);
+        vm.expectRevert(abi.encodeWithSelector(OwnableUnauthorizedAccount.selector, address(ATTACKER)));
+        vm.prank(ATTACKER);
+        proxiedManager.updateModule(moduleIds, moduleAddresses);
+    }
+
+    function testRevertUpdateModuleWithNonContract() public {
+        SSVCoreModules[] memory moduleIds = new SSVCoreModules[](1);
+        address[] memory moduleAddresses = new address[](1);
+        moduleIds[0] = SSVCoreModules.SSV_PROTOCOL_MANAGER;
+        moduleAddresses[0] = address(0);
+        vm.expectRevert(abi.encodeWithSelector(ISSVBasedApps.TargetModuleDoesNotExist.selector, uint8(SSVCoreModules.SSV_PROTOCOL_MANAGER)));
+        vm.prank(OWNER);
+        proxiedManager.updateModule(moduleIds, moduleAddresses);
     }
 }

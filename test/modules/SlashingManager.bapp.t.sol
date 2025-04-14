@@ -37,7 +37,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, address(bApp1));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -56,7 +56,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, address(bApp1));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, newStrategyBalance);
@@ -183,7 +183,7 @@ contract SlashingManagerTest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, address(bApp1));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
@@ -220,7 +220,7 @@ contract SlashingManagerTest is StrategyManagerTest {
 
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, address(bApp1));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
@@ -250,7 +250,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp1), token, slashAmount, address(bApp1));
         checkGeneration(STRATEGY1, token, 0);
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         uint256 newStrategyBalance = depositAmount - slashAmount;
@@ -338,7 +338,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, address(0));
         proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
         (uint32 adjustedPercentage,) = proxiedManager.obligations(STRATEGY1, address(bApp3), token);
         assertEq(adjustedPercentage, 9000, "Obligation percentage");
@@ -361,7 +361,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, address(0));
         proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
         uint32 adjustedPercentage = checkAdjustedPercentage(token, depositAmount, slashAmount, percentage);
         uint256 newStrategyBalance = depositAmount - slashAmount;
@@ -381,7 +381,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, address(0));
         proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
         (uint32 adjustedPercentage,) = proxiedManager.obligations(STRATEGY1, address(bApp3), token);
         assertEq(adjustedPercentage, 0, "Should match the calculated percentage with the one saved in storage");
@@ -400,7 +400,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
+        emit IStrategyManager.StrategySlashed(STRATEGY1, address(bApp3), token, slashAmount, address(0));
         proxiedManager.slash(STRATEGY1, address(bApp3), token, slashAmount, abi.encodePacked("0x00"));
         (uint32 adjustedPercentage,) = proxiedManager.obligations(STRATEGY1, address(bApp3), token);
         assertEq(adjustedPercentage, 9000, "Obligation percentage");

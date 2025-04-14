@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import {ValidationLib, MAX_PERCENTAGE, ETH_ADDRESS} from "@ssv/src/core/libraries/ValidationLib.sol";
+import {MAX_PERCENTAGE, ETH_ADDRESS} from "@ssv/src/core/libraries/ValidationLib.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {ISSVBasedApps} from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
@@ -53,16 +53,6 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         sp.obligationTimelockPeriod = config.obligationTimelockPeriod;
         sp.obligationExpireTime = config.obligationExpireTime;
         sp.maxShares = config.maxShares;
-
-        // sp.feeExpireTime = 1 days;
-        // sp.feeTimelockPeriod = 7 days;
-        // sp.withdrawalTimelockPeriod = 14 days;
-        // sp.withdrawalExpireTime = 3 days;
-        // sp.obligationTimelockPeriod = 14 days;
-        // sp.obligationExpireTime = 3 days;
-        // sp.maxPercentage = 1e4;
-        // sp.ethAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-        // sp.maxShares = 1e50;
 
         emit MaxFeeIncrementSet(sp.maxFeeIncrement);
     }
@@ -188,6 +178,10 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     }
 
     function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data) external {
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
+    }
+
+    function _isBApp(address bApp) public returns (bool) {
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
@@ -365,19 +359,23 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         return ProtocolStorageLib.load().obligationExpireTime;
     }
 
+    function getVersion() external pure returns (string memory) {
+        return "0.0.1";
+    }
+
     // *********************************
     // ** Section: External Libraries **
     // *********************************
-
-    function getVersion() external pure returns (string memory version) {
-        return ValidationLib.getVersion();
+    /**
+     * @notice Retrieves the currently configured Module contract address.
+     * @param moduleId The ID of the SSV Module.
+     * @return The address of the SSV Module.
+     */
+    function getModuleAddress(SSVCoreModules moduleId) external view returns (address) {
+        return CoreStorageLib.load().ssvContracts[moduleId];
     }
 
-    function updateModule(SSVCoreModules moduleId, address moduleAddress) external onlyOwner {
-        ValidationLib.setModuleContract(moduleId, moduleAddress);
-    }
-
-    function updateModules(SSVCoreModules[] calldata moduleIds, address[] calldata moduleAddresses) external onlyOwner {
+    function updateModule(SSVCoreModules[] calldata moduleIds, address[] calldata moduleAddresses) external onlyOwner {
         uint32 size;
         for (uint256 i; i < moduleIds.length; i++) {
             // solhint-disable-next-line no-inline-assembly

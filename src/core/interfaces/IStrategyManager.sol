@@ -16,7 +16,6 @@ interface IStrategyManager {
     event StrategyMetadataURIUpdated(uint32 indexed strategyId, string metadataURI);
     event StrategyWithdrawal(uint32 indexed strategyId, address indexed account, address token, uint256 amount, bool isFast);
     event StrategyWithdrawalProposed(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
-    //delegation
     event AccountMetadataURIUpdated(address indexed account, string metadataURI);
     event DelegationCreated(address indexed delegator, address indexed receiver, uint32 percentage);
     event DelegationRemoved(address indexed delegator, address indexed receiver);
@@ -37,11 +36,14 @@ interface IStrategyManager {
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
-    // delegation todo
+    function _isBApp(address bApp) external returns (bool); //todo
     function delegateBalance(address receiver, uint32 percentage) external;
     function removeDelegatedBalance(address receiver) external;
     function updateAccountMetadataURI(string calldata metadataURI) external;
     function updateDelegatedBalance(address receiver, uint32 percentage) external;
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
+    function withdrawETHSlashingFund(uint256 amount) external;
+    function withdrawSlashingFund(address token, uint256 amount) external;
 
     error InvalidStrategyOwner(address caller, address expectedOwner);
     error InvalidStrategyFee();
@@ -64,7 +66,6 @@ interface IStrategyManager {
     error InsufficientBalance();
     error FeeAlreadySet();
     error InvalidAccountGeneration();
-
     error DelegationAlreadyExists();
     error ExceedingPercentageUpdate();
     error DelegationDoesNotExist();
@@ -73,11 +74,7 @@ interface IStrategyManager {
 
     event SlashingFundWithdrawn(address token, uint256 amount);
     event StrategyFrozen(uint32 indexed strategyId, address indexed bApp, bytes data);
-    event StrategySlashed(uint32 indexed strategyId, address indexed bApp, address token, uint256 amount, bytes data);
+    event StrategySlashed(uint32 indexed strategyId, address indexed bApp, address token, uint256 amount, address receiver);
 
     error BAppSlashingFailed();
-
-    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
-    function withdrawETHSlashingFund(uint256 amount) external;
-    function withdrawSlashingFund(address token, uint256 amount) external;
 }

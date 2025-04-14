@@ -44,7 +44,6 @@ contract BasedAppsManager is IBasedAppManager {
     /// @param tokens The list of tokens to add
     /// @param sharedRiskLevels The shared risk levels of the tokens
     function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
-        //_validateArraysLength(tokens, sharedRiskLevels);
         ValidationLib.validateArrayLengths(tokens, sharedRiskLevels);
         uint256 length = tokens.length;
         address token;
@@ -52,7 +51,6 @@ contract BasedAppsManager is IBasedAppManager {
         for (uint256 i = 0; i < length;) {
             token = tokens[i];
             ValidationLib.validateNonZeroAddress(token);
-            //_validateTokenInput(token);
             if (s.bAppTokens[bApp][token].isSet) revert IBasedAppManager.TokenAlreadyAddedToBApp(token);
             _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
             unchecked {
@@ -72,17 +70,4 @@ contract BasedAppsManager is IBasedAppManager {
         tokenData.value = sharedRiskLevel;
         tokenData.isSet = true;
     }
-
-    // /// @notice Validate the length of two arrays
-    // /// @param tokens The list of tokens
-    // /// @param uint32Array The list of uint32 values
-    // function _validateArraysLength(address[] calldata tokens, uint32[] calldata uint32Array) internal pure {
-    //     if (tokens.length != uint32Array.length) revert ICore.LengthsNotMatching();
-    // }
-
-    // /// @notice Internal function to validate the token and shared risk level
-    // /// @param token The token address to be validated
-    // function _validateTokenInput(address token) internal pure {
-    //     if (token == address(0)) revert ICore.ZeroAddressNotAllowed();
-    // }
 }

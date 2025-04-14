@@ -129,7 +129,7 @@ contract Setup is Test {
         );
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
-        assertEq(proxiedManager.getVersion(), "v0.0.0", "Version mismatch");
+        assertEq(proxiedManager.getVersion(), "0.0.1", "Version mismatch");
         assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
         vm.stopPrank();
 
