@@ -20,6 +20,6 @@ interface ISSVBasedApps {
     ) external;
     function updateModule(SSVCoreModules[] calldata moduleIds, address[] calldata moduleAddresses) external;
 
-    error TargetModuleDoesNotExist(uint8 moduleId);
     error InvalidMaxFeeIncrement();
+    error TargetModuleDoesNotExist(uint8 moduleId);
 }
