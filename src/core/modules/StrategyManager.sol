@@ -213,7 +213,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Function to check if an address uses the correct bApp interface
     /// @param bApp The address of the bApp
     /// @return True if the address uses the correct bApp interface
-    function _isBApp(address bApp) public returns (bool) {
+    function _isBApp(address bApp) internal view returns (bool) {
         return ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
     }
 

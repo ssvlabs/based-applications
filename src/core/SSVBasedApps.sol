@@ -181,10 +181,6 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
-    function _isBApp(address bApp) public returns (bool) {
-        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
-    }
-
     // *************************************
     // ** Section: External Functions DAO **
     // *************************************
