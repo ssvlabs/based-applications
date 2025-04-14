@@ -35,16 +35,6 @@ contract ProtocolManager is IProtocolManager {
         emit ObligationExpireTimeUpdated(obligationExpireTime);
     }
 
-    // function updateMaxPercentage(uint32 maxPercentage) external {
-    //     ProtocolStorageLib.load().maxPercentage = maxPercentage;
-    //     emit MaxPercentageUpdated(maxPercentage);
-    // }
-
-    // function updateEthAddress(address ethAddress) external {
-    //     ProtocolStorageLib.load().ethAddress = ethAddress;
-    //     emit EthAddressUpdated(ethAddress);
-    // }
-
     function updateMaxShares(uint256 maxShares) external {
         ProtocolStorageLib.load().maxShares = maxShares;
         emit StrategyMaxSharesUpdated(maxShares);
