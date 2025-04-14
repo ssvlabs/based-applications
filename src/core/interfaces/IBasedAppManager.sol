@@ -14,7 +14,6 @@ interface IBasedAppManager {
     error BAppAlreadyRegistered();
     error BAppDoesNotSupportInterface();
     error BAppNotRegistered();
-    error BAppSlashingFailed();
     error TokenAlreadyAddedToBApp(address token);
     error ZeroAddressNotAllowed();
 }

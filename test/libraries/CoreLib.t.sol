@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {ValidationLib} from "@ssv/src/core/libraries/ValidationLib.sol";
-import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {ISSVBasedApps} from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import {Setup} from "@ssv/test/helpers/Setup.t.sol";
 import {SSVCoreModules} from "@ssv/src/core/libraries/CoreStorageLib.sol";
 
@@ -36,7 +36,7 @@ contract ValidationLibTest is Setup, Ownable2StepUpgradeable {
     }
 
     function testRevertUpdateModuleWithNonContract() public {
-        vm.expectRevert(abi.encodeWithSelector(ICore.TargetModuleDoesNotExistWithData.selector, uint8(SSVCoreModules.SSV_STRATEGY_MANAGER)));
+        vm.expectRevert(abi.encodeWithSelector(ISSVBasedApps.TargetModuleDoesNotExist.selector, uint8(SSVCoreModules.SSV_STRATEGY_MANAGER)));
         vm.prank(OWNER);
         proxiedManager.updateModule(SSVCoreModules.SSV_STRATEGY_MANAGER, address(0));
     }

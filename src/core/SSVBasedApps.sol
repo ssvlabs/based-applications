@@ -43,7 +43,7 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
         s.ssvContracts[SSVCoreModules.SSV_BAPPS_MANAGER] = address(ssvBasedAppManger_);
         s.ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER] = address(protocolManager_);
 
-        if (config.maxFeeIncrement == 0 || config.maxFeeIncrement > 10_000) revert ICore.InvalidMaxFeeIncrement();
+        if (config.maxFeeIncrement == 0 || config.maxFeeIncrement > 10_000) revert InvalidMaxFeeIncrement();
 
         sp.maxFeeIncrement = config.maxFeeIncrement;
         sp.feeTimelockPeriod = config.feeTimelockPeriod;

@@ -3,7 +3,8 @@ pragma solidity 0.8.29;
 
 import {IERC20, IStrategyManager, IBasedApp} from "@ssv/test/helpers/Setup.t.sol";
 import {StrategyManagerTest} from "@ssv/test/modules/StrategyManager.t.sol";
-import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
 contract SlashingManagerTest is StrategyManagerTest {
     function testGetSlashableBalanceBasic() public {
@@ -73,7 +74,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppSlashingFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.BAppSlashingFailed.selector));
         proxiedManager.slash(STRATEGY1, address(bApp2), token, slashAmount, abi.encodePacked("0x00"));
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, depositAmount);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -87,7 +88,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         uint256 slashAmount = 1;
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotRegistered.selector));
+        vm.expectRevert(abi.encodeWithSelector(IBasedAppManager.BAppNotRegistered.selector));
         proxiedManager.slash(STRATEGY1, USER1, address(erc20mock), slashAmount, abi.encodePacked("0x00"));
     }
 
@@ -128,7 +129,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidToken.selector));
         proxiedManager.withdrawSlashingFund(ETH_ADDRESS, slashAmount);
     }
 
@@ -136,7 +137,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(address(bApp1));
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientBalance.selector));
         proxiedManager.withdrawSlashingFund(address(erc20mock), slashAmount + 1);
     }
 
@@ -144,7 +145,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAmount.selector));
         proxiedManager.withdrawSlashingFund(address(erc20mock), 0);
     }
 
@@ -152,7 +153,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(address(bApp1));
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientBalance.selector));
         proxiedManager.withdrawETHSlashingFund(slashAmount + 1);
     }
 
@@ -160,7 +161,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 slashAmount = 100;
         testSlashBApp(slashAmount);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAmount.selector));
         proxiedManager.withdrawETHSlashingFund(0);
     }
 
@@ -279,7 +280,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         address token = address(erc20mock);
         checkGeneration(STRATEGY1, token, 1);
         vm.prank(USER2);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAccountGeneration.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, token, withdrawalAmount);
     }
 
@@ -292,7 +293,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.depositERC20(STRATEGY1, IERC20(erc20mock), depositAmount);
         vm.prank(USER1);
         checkGeneration(STRATEGY1, token, 0);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientBalance.selector));
         proxiedManager.slash(STRATEGY1, address(bApp1), token, slashAmount, abi.encodePacked("0x00"));
         checkTotalSharesAndTotalBalance(STRATEGY1, token, depositAmount, depositAmount);
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);

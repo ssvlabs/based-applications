@@ -4,8 +4,8 @@ pragma solidity 0.8.29;
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {Setup, IStrategyManager, IBasedAppManager, IProtocolManager, SSVBasedApps, ERC1967Proxy} from "@ssv/test/helpers/Setup.t.sol";
+import {ISSVBasedApps} from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
-import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
@@ -102,7 +102,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             obligationExpireTime: 3 days,
             maxShares: 1e50
         });
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISSVBasedApps.InvalidMaxFeeIncrement.selector));
 
         bytes memory initData = abi.encodeWithSelector(
             implementation.initialize.selector,
@@ -126,7 +126,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             obligationExpireTime: 3 days,
             maxFeeIncrement: 10_001
         });
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidMaxFeeIncrement.selector));
+        vm.expectRevert(abi.encodeWithSelector(ISSVBasedApps.InvalidMaxFeeIncrement.selector));
         bytes memory initData = abi.encodeWithSelector(
             implementation.initialize.selector,
             address(OWNER),

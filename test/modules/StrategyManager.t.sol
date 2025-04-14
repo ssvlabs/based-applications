@@ -3,9 +3,10 @@ pragma solidity 0.8.29;
 
 import {IERC20, BasedAppMock} from "@ssv/test/helpers/Setup.t.sol";
 import {BasedAppsManagerTest} from "@ssv/test/modules/BasedAppsManager.t.sol";
-import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {UtilsTest} from "@ssv/test/helpers/Utils.t.sol";
+import {ValidationLib} from "@ssv/src/core/libraries/ValidationLib.sol";
 
 contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function updateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) internal {
@@ -68,7 +69,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
 
     function testRevertCreateStrategyWithTooHighFee() public {
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyFee.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyFee.selector));
         proxiedManager.createStrategy(10_001, "");
         vm.stopPrank();
     }
@@ -114,7 +115,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertInvalidDepositWithZeroAmount() public {
         testCreateStrategyAndSingleDeposit(1);
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAmount.selector));
         proxiedManager.depositERC20(STRATEGY1, erc20mock, 0);
         vm.stopPrank();
     }
@@ -141,7 +142,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         uint256 depositAmount = proxiedManager.maxShares() + 1;
         vm.prank(USER3);
-        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingMaxShares.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.ExceedingMaxShares.selector));
         proxiedManager.depositERC20(STRATEGY1, erc20mock, depositAmount);
     }
 
@@ -149,7 +150,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         uint256 depositAmount = proxiedManager.maxShares() + 1;
         vm.prank(USER3);
-        vm.expectRevert(abi.encodeWithSelector(ICore.ExceedingMaxShares.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.ExceedingMaxShares.selector));
         proxiedManager.depositETH{value: depositAmount}(STRATEGY1);
     }
 
@@ -168,7 +169,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertInvalidProposeWithdrawalWithZeroAmount() public {
         testCreateStrategyAndSingleDeposit();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAmount.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 0);
         vm.stopPrank();
     }
@@ -176,7 +177,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertInvalidProposeWithdrawalETHWithZeroAmount() public {
         testCreateStrategyETHAndDepositETH();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAmount.selector));
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 0);
         vm.stopPrank();
     }
@@ -184,7 +185,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertInvalidProposeWithdrawalWithInsufficientBalance() public {
         testCreateStrategyAndSingleDeposit();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientBalance.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 2000 * 10 ** 18);
         vm.stopPrank();
     }
@@ -192,7 +193,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertInvalidProposeWithdrawalETHWithInsufficientBalance() public {
         testCreateStrategyETHAndDepositETH();
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientBalance.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientBalance.selector));
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 2 ether);
         vm.stopPrank();
     }
@@ -304,7 +305,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppOptInFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.BAppOptInFailed.selector));
         proxiedManager.optInToBApp(STRATEGY4, address(bApp1), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         checkStrategyInfo(USER2, 0, address(bApp1), address(erc20mock), 0, proxiedManager, 0, false);
         uint32 counter = bApp1.counter();
@@ -352,7 +353,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         (address[] memory tokensInput, uint32[] memory obligationPercentagesInput) =
             createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.TokenNotSupportedByBApp.selector, address(erc20mock)));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.TokenNotSupportedByBApp.selector, address(erc20mock)));
             proxiedManager.optInToBApp(STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         }
         vm.stopPrank();
@@ -382,7 +383,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             createSingleTokenAndSingleObligationPercentage(address(erc20mock), proxiedManager.maxPercentage() + 1);
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+            vm.expectRevert(abi.encodeWithSelector(ValidationLib.InvalidPercentage.selector));
             proxiedManager.optInToBApp(STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         }
         vm.stopPrank();
@@ -427,7 +428,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             createSingleTokenAndSingleObligationPercentage(address(erc20mock), percentage);
         vm.startPrank(ATTACKER);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
             proxiedManager.optInToBApp(STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         }
         vm.stopPrank();
@@ -443,7 +444,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = proxiedManager.maxPercentage(); // 100%
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.LengthsNotMatching.selector));
+            vm.expectRevert(abi.encodeWithSelector(ValidationLib.LengthsNotMatching.selector));
             proxiedManager.optInToBApp(STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         }
         vm.stopPrank();
@@ -460,7 +461,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         obligationPercentagesInput[0] = 6000; // 60%
         obligationPercentagesInput[1] = 5000; // 50%
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.TokenNotSupportedByBApp.selector, address(erc20mock2)));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.TokenNotSupportedByBApp.selector, address(erc20mock2)));
             proxiedManager.optInToBApp(STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         }
         vm.stopPrank();
@@ -477,7 +478,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage; // 90%
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyOptedIn.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.BAppAlreadyOptedIn.selector));
             proxiedManager.optInToBApp(STRATEGY1, address(bApps[i]), tokensInput, obligationPercentagesInput, abi.encodePacked("0x00"));
         }
         vm.stopPrank();
@@ -513,7 +514,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertStrategyOwnerDepositETHWithNoObligationRevertWithZeroAmount() public {
         testStrategyOptInToBApp(9000);
         vm.startPrank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAmount.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAmount.selector));
         proxiedManager.depositETH{value: 0 ether}(STRATEGY1);
         vm.stopPrank();
     }
@@ -522,7 +523,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.TokenNotSupportedByBApp.selector, address(erc20mock2)));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.TokenNotSupportedByBApp.selector, address(erc20mock2)));
             proxiedManager.createObligation(STRATEGY1, address(bApps[i]), address(erc20mock2), 100);
         }
         vm.stopPrank();
@@ -544,7 +545,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+            vm.expectRevert(abi.encodeWithSelector(ValidationLib.InvalidPercentage.selector));
             proxiedManager.createObligation(STRATEGY1, address(bApps[i]), address(erc20mock), 10_001);
         }
     }
@@ -552,7 +553,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertCreateObligationToNonExistingBApp() public {
         testStrategyOptInToBApp(9000);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotOptedIn.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.BAppNotOptedIn.selector));
         proxiedManager.createObligation(STRATEGY1, NON_EXISTENT_BAPP, address(erc20mock), 100);
     }
 
@@ -560,7 +561,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32 nonExistentStrategy = 333;
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(USER1), 0x00));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(USER1), 0x00));
             proxiedManager.createObligation(nonExistentStrategy, address(bApps[i]), address(erc20mock), 100);
         }
     }
@@ -569,7 +570,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(ATTACKER);
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
             proxiedManager.createObligation(STRATEGY1, address(bApps[i]), address(erc20mock), 100);
         }
     }
@@ -578,7 +579,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBAppWithMultipleTokens(9000);
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.ObligationAlreadySet.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.ObligationAlreadySet.selector));
             proxiedManager.createObligation(STRATEGY1, address(bApps[i]), address(erc20mock), 100);
         }
         vm.stopPrank();
@@ -602,7 +603,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateNewObligationSuccessful();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.ObligationAlreadySet.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.ObligationAlreadySet.selector));
             proxiedManager.createObligation(STRATEGY1, address(bApps[i]), address(erc20mock2), 10_000);
         }
     }
@@ -611,14 +612,14 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         vm.assume(fee > 0 && fee <= proxiedManager.maxPercentage());
         vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
         proxiedManager.proposeFeeUpdate(STRATEGY1, fee);
     }
 
     function testRevertStrategyFeeUpdateFailsWithNoProposal() public {
         testStrategyOptInToBApp(9000);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.NoPendingFeeUpdate.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.NoPendingFeeUpdate.selector));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
     }
 
@@ -626,7 +627,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         vm.assume(fee > proxiedManager.maxPercentage());
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+        vm.expectRevert(abi.encodeWithSelector(ValidationLib.InvalidPercentage.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, fee);
     }
 
@@ -635,7 +636,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         (, uint32 fee,) = proxiedManager.strategies(STRATEGY1);
         vm.assume(proposedFee < proxiedManager.maxPercentage() && proposedFee > fee + proxiedManager.maxFeeIncrement());
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentageIncrement.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidPercentageIncrement.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, proposedFee);
     }
 
@@ -643,7 +644,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         (, uint32 fee,) = proxiedManager.strategies(STRATEGY1);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.FeeAlreadySet.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.FeeAlreadySet.selector));
         proxiedManager.proposeFeeUpdate(STRATEGY1, fee);
     }
 
@@ -674,7 +675,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyProposeFeeUpdate();
         vm.warp(block.timestamp + proxiedManager.feeTimelockPeriod() + timeAfterLimit);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.RequestTimeExpired.selector));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
     }
 
@@ -682,7 +683,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyProposeFeeUpdate();
         vm.warp(block.timestamp + proxiedManager.feeTimelockPeriod() - 1 seconds);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.TimelockNotElapsed.selector));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
     }
 
@@ -698,7 +699,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertStrategyFastFeeUpdateInvalidPercentage() public {
         testStrategyOptInToBApp(9000);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentageIncrement.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidPercentageIncrement.selector));
         proxiedManager.reduceFee(STRATEGY1, 100);
     }
 
@@ -706,7 +707,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(ATTACKER);
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
             proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock), 1000);
         }
     }
@@ -716,7 +717,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.assume(obligationPercentage > 10_000);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidPercentage.selector));
+            vm.expectRevert(abi.encodeWithSelector(ValidationLib.InvalidPercentage.selector));
             proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock), obligationPercentage);
         }
     }
@@ -725,7 +726,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyProposeFeeUpdate();
         vm.warp(block.timestamp + proxiedManager.feeTimelockPeriod());
         vm.prank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
         proxiedManager.finalizeFeeUpdate(STRATEGY1);
     }
 
@@ -801,7 +802,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod() + timeAfterLimit);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.RequestTimeExpired.selector));
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock));
         }
     }
@@ -814,7 +815,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod() - timeToLimit);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.TimelockNotElapsed.selector));
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock));
         }
     }
@@ -826,7 +827,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(ATTACKER);
-            vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(ATTACKER), USER1));
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock));
         }
     }
@@ -836,7 +837,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(initialObligationPercentage);
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectRevert(abi.encodeWithSelector(ICore.NoPendingObligationUpdate.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.NoPendingObligationUpdate.selector));
             proxiedManager.finalizeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock));
         }
         vm.stopPrank();
@@ -872,7 +873,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertAsyncWithdrawFromStrategyOnlyFinalize() public {
         testCreateStrategyAndMultipleDeposits(100_000, 20_000, 200_000);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.NoPendingWithdrawal.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.NoPendingWithdrawal.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
     }
 
@@ -905,14 +906,14 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertAsyncWithdrawETHFromStrategyOnlyFinalize() public {
         testCreateStrategyETHAndDepositETH();
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.NoPendingWithdrawal.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.NoPendingWithdrawal.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
     }
 
     function testRevertAsyncWithdrawETHFromStrategyWithMadeUpToken() public {
         testCreateStrategyAndMultipleDeposits(100_000, 20_000, 200_000);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientLiquidity.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientLiquidity.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, address(1), 1000);
     }
 
@@ -921,7 +922,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testProposeWithdrawalETHFromStrategy(withdrawalAmount);
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod() - 1 seconds);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
     }
 
@@ -930,7 +931,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testProposeWithdrawalETHFromStrategy(withdrawalAmount);
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod() + proxiedManager.withdrawalExpireTime() + 1 seconds);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.RequestTimeExpired.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
     }
 
@@ -938,7 +939,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategyETHAndDepositETH();
         vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidToken.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidToken.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, ETH_ADDRESS, withdrawalAmount);
     }
 
@@ -946,7 +947,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testProposeWithdrawalFromStrategy();
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod() - 1 seconds);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.TimelockNotElapsed.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.TimelockNotElapsed.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
     }
 
@@ -954,7 +955,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testProposeWithdrawalFromStrategy();
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod() + proxiedManager.withdrawalExpireTime() + 1 seconds);
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.RequestTimeExpired.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.RequestTimeExpired.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
     }
 
@@ -1016,7 +1017,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testRegisterBApp();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotOptedIn.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.BAppNotOptedIn.selector));
             proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 5000);
         }
     }
@@ -1026,7 +1027,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
 
-            vm.expectRevert(abi.encodeWithSelector(ICore.ObligationAlreadySet.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.ObligationAlreadySet.selector));
             proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApps[i]), ETH_ADDRESS, 10_000);
         }
     }
@@ -1036,7 +1037,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
 
-            vm.expectRevert(abi.encodeWithSelector(ICore.ObligationHasNotBeenCreated.selector));
+            vm.expectRevert(abi.encodeWithSelector(IStrategyManager.ObligationHasNotBeenCreated.selector));
             proxiedManager.proposeUpdateObligation(STRATEGY1, address(bApps[i]), address(erc20mock2), 8000);
         }
     }
@@ -1055,7 +1056,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         string memory metadataURI = "https://metadata-attacker.com";
         vm.startPrank(ATTACKER);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidStrategyOwner.selector, address(ATTACKER), address(USER1)));
         proxiedManager.updateStrategyMetadataURI(STRATEGY1, metadataURI);
         vm.stopPrank();
     }
@@ -1075,7 +1076,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         checkProposedObligation(STRATEGY1, address(bApp1), token, 0, 0, 0, true);
         checkObligationInfo(STRATEGY1, address(bApp1), token, 0, uint32(bApps.length) - 1, true, proxiedManager);
 
-        vm.expectRevert(abi.encodeWithSelector(ICore.ObligationAlreadySet.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.ObligationAlreadySet.selector));
         proxiedManager.createObligation(STRATEGY1, address(bApp1), token, 1000);
         updateObligation(STRATEGY1, address(bApp1), token, 1000);
         checkObligationInfo(STRATEGY1, address(bApp1), token, 1000, uint32(bApps.length), true, proxiedManager);
@@ -1178,14 +1179,14 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testRevertProposeWithdrawInsufficientLiquidity() public {
         testCreateObligationETHWithZeroPercentage(); // Registers BApp and does the opt in
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientLiquidity.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientLiquidity.selector));
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
     }
 
     function testRevertProposeWithdrawInsufficientLiquidityETH() public {
         testCreateObligationETHWithZeroPercentage(); // Registers BApp and does the opt in
         vm.prank(USER1);
-        vm.expectRevert(abi.encodeWithSelector(ICore.InsufficientLiquidity.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InsufficientLiquidity.selector));
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
     }
 
@@ -1207,7 +1208,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 10_000);
         proxiedManager.slash(STRATEGY1, address(bApp1), address(erc20mock), 10_000, abi.encode("0x00"));
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAccountGeneration.selector));
         proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
         vm.stopPrank();
     }
@@ -1230,7 +1231,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
         proxiedManager.slash(STRATEGY1, address(bApp1), ETH_ADDRESS, 1 ether, abi.encode("0x00"));
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
-        vm.expectRevert(abi.encodeWithSelector(ICore.InvalidAccountGeneration.selector));
+        vm.expectRevert(abi.encodeWithSelector(IStrategyManager.InvalidAccountGeneration.selector));
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
         vm.stopPrank();
     }

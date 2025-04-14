@@ -11,9 +11,7 @@ library ProtocolStorageLib {
         uint32 withdrawalExpireTime;
         uint32 obligationTimelockPeriod;
         uint32 obligationExpireTime;
-        // uint32 maxPercentage; FYI removed, used as a constant
         uint32 maxFeeIncrement;
-        // address ethAddress; FYI removed, used as a constant
         uint256 maxShares;
     }
 

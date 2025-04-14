@@ -3,13 +3,15 @@ pragma solidity 0.8.29;
 
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {CoreStorageLib} from "@ssv/src/core/libraries/CoreStorageLib.sol";
+import {ValidationLib} from "@ssv/src/core/libraries/ValidationLib.sol";
 
 contract BasedAppsManager is IBasedAppManager {
     /// @notice Allow the function to be called only by a registered bApp
     modifier onlyRegisteredBApp() {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        if (!s.registeredBApps[msg.sender]) revert ICore.BAppNotRegistered();
+        if (!s.registeredBApps[msg.sender]) revert IBasedAppManager.BAppNotRegistered();
         _;
     }
 
@@ -22,7 +24,7 @@ contract BasedAppsManager is IBasedAppManager {
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
-        if (s.registeredBApps[msg.sender]) revert ICore.BAppAlreadyRegistered();
+        if (s.registeredBApps[msg.sender]) revert IBasedAppManager.BAppAlreadyRegistered();
 
         s.registeredBApps[msg.sender] = true;
 
@@ -42,14 +44,16 @@ contract BasedAppsManager is IBasedAppManager {
     /// @param tokens The list of tokens to add
     /// @param sharedRiskLevels The shared risk levels of the tokens
     function _addNewTokens(address bApp, address[] calldata tokens, uint32[] calldata sharedRiskLevels) internal {
-        _validateArraysLength(tokens, sharedRiskLevels);
+        //_validateArraysLength(tokens, sharedRiskLevels);
+        ValidationLib.validateArrayLengths(tokens, sharedRiskLevels);
         uint256 length = tokens.length;
         address token;
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         for (uint256 i = 0; i < length;) {
             token = tokens[i];
-            _validateTokenInput(token);
-            if (s.bAppTokens[bApp][token].isSet) revert ICore.TokenAlreadyAddedToBApp(token);
+            ValidationLib.validateNonZeroAddress(token);
+            //_validateTokenInput(token);
+            if (s.bAppTokens[bApp][token].isSet) revert IBasedAppManager.TokenAlreadyAddedToBApp(token);
             _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
             unchecked {
                 i++;
@@ -69,16 +73,16 @@ contract BasedAppsManager is IBasedAppManager {
         tokenData.isSet = true;
     }
 
-    /// @notice Validate the length of two arrays
-    /// @param tokens The list of tokens
-    /// @param uint32Array The list of uint32 values
-    function _validateArraysLength(address[] calldata tokens, uint32[] calldata uint32Array) internal pure {
-        if (tokens.length != uint32Array.length) revert ICore.LengthsNotMatching();
-    }
+    // /// @notice Validate the length of two arrays
+    // /// @param tokens The list of tokens
+    // /// @param uint32Array The list of uint32 values
+    // function _validateArraysLength(address[] calldata tokens, uint32[] calldata uint32Array) internal pure {
+    //     if (tokens.length != uint32Array.length) revert ICore.LengthsNotMatching();
+    // }
 
-    /// @notice Internal function to validate the token and shared risk level
-    /// @param token The token address to be validated
-    function _validateTokenInput(address token) internal pure {
-        if (token == address(0)) revert ICore.ZeroAddressNotAllowed();
-    }
+    // /// @notice Internal function to validate the token and shared risk level
+    // /// @param token The token address to be validated
+    // function _validateTokenInput(address token) internal pure {
+    //     if (token == address(0)) revert ICore.ZeroAddressNotAllowed();
+    // }
 }

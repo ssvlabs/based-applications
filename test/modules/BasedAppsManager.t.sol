@@ -8,7 +8,8 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import {UtilsTest} from "@ssv/test/helpers/Utils.t.sol";
 import {IBasedAppManager, IBasedApp} from "@ssv/test/helpers/Setup.t.sol";
-import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {ValidationLib} from "@ssv/src/core/libraries/ValidationLib.sol";
 
 contract BasedAppsManagerTest is UtilsTest {
     string public metadataURI = "http://metadata.com";
@@ -148,7 +149,7 @@ contract BasedAppsManagerTest is UtilsTest {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndRiskInputsWithTheSameToken();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.TokenAlreadyAddedToBApp.selector, tokensInput[0]));
+            vm.expectRevert(abi.encodeWithSelector(IBasedAppManager.TokenAlreadyAddedToBApp.selector, tokensInput[0]));
             bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
         }
     }
@@ -157,7 +158,7 @@ contract BasedAppsManagerTest is UtilsTest {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createSingleTokenAndSingleRiskLevel(address(0), 102);
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.ZeroAddressNotAllowed.selector));
+            vm.expectRevert(abi.encodeWithSelector(ValidationLib.ZeroAddressNotAllowed.selector));
             bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[i]);
         }
     }
@@ -169,13 +170,13 @@ contract BasedAppsManagerTest is UtilsTest {
         uint32[] memory sharedRiskLevelInput = new uint32[](1);
         sharedRiskLevelInput[0] = 102;
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
+        vm.expectRevert(abi.encodeWithSelector(IBasedAppManager.BAppAlreadyRegistered.selector));
         bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
+        vm.expectRevert(abi.encodeWithSelector(IBasedAppManager.BAppAlreadyRegistered.selector));
         bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
         bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
-        vm.expectRevert(abi.encodeWithSelector(ICore.BAppAlreadyRegistered.selector));
+        vm.expectRevert(abi.encodeWithSelector(IBasedAppManager.BAppAlreadyRegistered.selector));
         bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
         vm.stopPrank();
     }
@@ -195,7 +196,7 @@ contract BasedAppsManagerTest is UtilsTest {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndMoreRiskInputs();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.LengthsNotMatching.selector));
+            vm.expectRevert(abi.encodeWithSelector(ValidationLib.LengthsNotMatching.selector));
             bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[i]);
         }
     }
@@ -204,7 +205,7 @@ contract BasedAppsManagerTest is UtilsTest {
         (address[] memory tokensInput, uint32[] memory sharedRiskLevelInput) = createTwoTokenAndLessRiskInputs();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.LengthsNotMatching.selector));
+            vm.expectRevert(abi.encodeWithSelector(ValidationLib.LengthsNotMatching.selector));
             bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, metadataURIs[i]);
         }
     }
@@ -232,7 +233,7 @@ contract BasedAppsManagerTest is UtilsTest {
     function testRevertUpdateBAppMetadataWithNonRegisteredBApp() public {
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectRevert(abi.encodeWithSelector(ICore.BAppNotRegistered.selector));
+            vm.expectRevert(abi.encodeWithSelector(IBasedAppManager.BAppNotRegistered.selector));
             bApps[i].updateBAppMetadataURI(metadataURI);
         }
     }
