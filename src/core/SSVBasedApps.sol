@@ -13,9 +13,8 @@ import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {CoreStorageLib, SSVCoreModules} from "@ssv/src/core/libraries/CoreStorageLib.sol";
 import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
-import {SSVProxy} from "@ssv/src/core/SSVProxy.sol";
 
-contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable, IBasedAppManager, IStrategyManager, IProtocolManager, SSVProxy {
+contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable, IBasedAppManager, IStrategyManager, IProtocolManager {
     // ***************************
     // ** Section: Initializers **
     // ***************************
@@ -85,47 +84,47 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
 
     // solhint-disable no-unused-vars
     function updateBAppMetadataURI(string calldata metadataURI) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_BAPPS_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
     }
 
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_BAPPS_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
     }
 
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId) {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function delegateBalance(address receiver, uint32 percentage) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function depositERC20(uint32 strategyId, IERC20 token, uint256 amount) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function depositETH(uint32 strategyId) external payable {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function finalizeFeeUpdate(uint32 strategyId) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function finalizeUpdateObligation(uint32 strategyId, address bApp, address token) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function finalizeWithdrawal(uint32 strategyId, IERC20 token) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function finalizeWithdrawalETH(uint32 strategyId) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function getSlashableBalance(uint32 strategyId, address bApp, address token) public view returns (uint256 slashableBalance) {
@@ -141,55 +140,55 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     }
 
     function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function proposeUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function proposeWithdrawal(uint32 strategyId, address token, uint256 amount) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function reduceFee(uint32 strategyId, uint32 proposedFee) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function removeDelegatedBalance(address receiver) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function updateDelegatedBalance(address receiver, uint32 percentage) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function updateAccountMetadataURI(string calldata metadataURI) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function withdrawSlashingFund(address token, uint256 amount) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function withdrawETHSlashingFund(uint256 amount) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens, uint32[] calldata obligationPercentages, bytes calldata data) external {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
     // *************************************
@@ -197,43 +196,43 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
     // *************************************
 
     function updateFeeTimelockPeriod(uint32 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateFeeExpireTime(uint32 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateWithdrawalTimelockPeriod(uint32 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateWithdrawalExpireTime(uint32 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateObligationTimelockPeriod(uint32 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateObligationExpireTime(uint32 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateMaxPercentage(uint32 percentage) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateEthAddress(address value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateMaxShares(uint256 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateMaxFeeIncrement(uint32 value) external onlyOwner {
-        _delegate(CoreStorageLib.load().ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER]);
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     // *****************************
@@ -376,5 +375,43 @@ contract SSVBasedApps is ISSVBasedApps, UUPSUpgradeable, Ownable2StepUpgradeable
 
     function updateModule(SSVCoreModules moduleId, address moduleAddress) external onlyOwner {
         ValidationLib.setModuleContract(moduleId, moduleAddress);
+    }
+
+    function updateModules(SSVCoreModules[] calldata moduleIds, address[] calldata moduleAddresses) external onlyOwner {
+        uint32 size;
+        for (uint256 i; i < moduleIds.length; i++) {
+            // solhint-disable-next-line no-inline-assembly
+            assembly {
+                size := extcodesize(calldataload(add(moduleAddresses.offset, mul(i, 32))))
+            }
+            if (size == 0) revert TargetModuleDoesNotExist(uint8(moduleIds[i]));
+
+            CoreStorageLib.load().ssvContracts[moduleIds[i]] = moduleAddresses[i];
+
+            emit ModuleUpdated(moduleIds[i], moduleAddresses[i]);
+        }
+    }
+
+    function _delegateTo(SSVCoreModules moduleId) internal {
+        address implementation = CoreStorageLib.load().ssvContracts[moduleId];
+        assembly {
+            // Copy msg.data. We take full control of memory in this inline assembly
+            // block because it will not return to Solidity code. We overwrite the
+            // Solidity scratch pad at memory position 0.
+            calldatacopy(0, 0, calldatasize())
+
+            // Call the implementation.
+            // out and outsize are 0 because we don't know the size yet.
+            let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)
+
+            // Copy the returned data.
+            returndatacopy(0, 0, returndatasize())
+
+            switch result
+            // delegatecall returns 0 on error.
+            case 0 { revert(0, returndatasize()) }
+            // slither-disable-next-line incorrect-return
+            default { return(0, returndatasize()) }
+        }
     }
 }
