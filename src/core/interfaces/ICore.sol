@@ -107,7 +107,6 @@ interface ICore {
     error PercentageAlreadySet();
     error RequestTimeExpired();
     error SharedRiskLevelAlreadySet();
-    error StrategyIsFrozen();
     error TargetModuleDoesNotExistWithData(uint8 moduleId); // 0x208bb85d
     error TimelockNotElapsed();
     error TokenAlreadyAddedToBApp(address token);

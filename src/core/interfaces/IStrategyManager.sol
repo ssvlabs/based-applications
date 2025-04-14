@@ -16,6 +16,11 @@ interface IStrategyManager {
     event StrategyMetadataURIUpdated(uint32 indexed strategyId, string metadataURI);
     event StrategyWithdrawal(uint32 indexed strategyId, address indexed account, address token, uint256 amount, bool isFast);
     event StrategyWithdrawalProposed(uint32 indexed strategyId, address indexed account, address token, uint256 amount);
+    //delegation
+    event AccountMetadataURIUpdated(address indexed account, string metadataURI);
+    event DelegationCreated(address indexed delegator, address indexed receiver, uint32 percentage);
+    event DelegationRemoved(address indexed delegator, address indexed receiver);
+    event DelegationUpdated(address indexed delegator, address indexed receiver, uint32 percentage);
 
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external;
     function createStrategy(uint32 fee, string calldata metadataURI) external returns (uint32 strategyId);
@@ -32,4 +37,44 @@ interface IStrategyManager {
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
     function updateStrategyMetadataURI(uint32 strategyId, string calldata metadataURI) external;
+    // delegation todo
+    function delegateBalance(address receiver, uint32 percentage) external;
+    function removeDelegatedBalance(address receiver) external;
+    function updateAccountMetadataURI(string calldata metadataURI) external;
+    function updateDelegatedBalance(address receiver, uint32 percentage) external;
+
+    error InvalidStrategyOwner(address caller, address expectedOwner);
+    error InvalidStrategyFee();
+    error BAppAlreadyOptedIn();
+    error BAppOptInFailed();
+    error BAppNotOptedIn();
+    error InvalidToken();
+    error NoPendingFeeUpdate();
+    error NoPendingObligationUpdate();
+    error InvalidPercentageIncrement();
+    error TokenNotSupportedByBApp(address token);
+    error ObligationAlreadySet();
+    error ObligationHasNotBeenCreated();
+    error TimelockNotElapsed();
+    error RequestTimeExpired();
+    error InvalidAmount();
+    error ExceedingMaxShares();
+    error InsufficientLiquidity();
+    error NoPendingWithdrawal();
+    error InsufficientBalance();
+    error FeeAlreadySet();
+    error InvalidAccountGeneration();
+
+    error DelegationAlreadyExists();
+    error ExceedingPercentageUpdate();
+    error DelegationDoesNotExist();
+    error DelegationExistsWithSameValue();
+
+    event SlashingFundWithdrawn(address token, uint256 amount);
+    event StrategyFrozen(uint32 indexed strategyId, address indexed bApp, bytes data);
+    event StrategySlashed(uint32 indexed strategyId, address indexed bApp, address token, uint256 amount, bytes data);
+
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external;
+    function withdrawETHSlashingFund(uint256 amount) external;
+    function withdrawSlashingFund(address token, uint256 amount) external;
 }

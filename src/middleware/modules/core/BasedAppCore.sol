@@ -7,7 +7,7 @@ import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
-import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
+import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 
 // =====================================================================================
 // ⚠️ WARNING: IMPLEMENT OWNER OR ACCESS ROLES ⚠️
@@ -58,11 +58,11 @@ abstract contract BasedAppCore is IBasedApp {
     }
 
     function withdrawSlashingFund(address token, uint256 amount) external virtual {
-        ISlashingManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(token, amount);
+        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(token, amount);
     }
 
     function withdrawETHSlashingFund(uint256 amount) external virtual {
-        ISlashingManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(amount);
+        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(amount);
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager

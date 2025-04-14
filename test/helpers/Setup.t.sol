@@ -9,15 +9,11 @@ import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
 import {BasedAppMock2} from "@ssv/test/mocks/MockBApp2.sol";
 import {BasedAppMock3} from "@ssv/test/mocks/MockBAppAccessControl.sol";
 import {BasedAppsManager} from "@ssv/src/core/modules/BasedAppsManager.sol";
-import {DelegationManager} from "@ssv/src/core/modules/DelegationManager.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
-import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
-import {SlashingManager} from "@ssv/src/core/modules/SlashingManager.sol";
 import {SSVBasedApps} from "@ssv/src/core/SSVBasedApps.sol";
 import {ProtocolManager} from "@ssv/src/core/modules/ProtocolManager.sol";
 import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
@@ -33,8 +29,6 @@ contract Setup is Test {
     StrategyManager public strategyManagerMod;
     BasedAppsManager public basedAppsManagerMod;
     ProtocolManager public protocolManagerMod;
-    SlashingManager public slashingManagerMod;
-    DelegationManager public delegationManagerMod;
 
     // Proxies
     ERC1967Proxy public proxy; // UUPS Proxy contract
@@ -101,8 +95,6 @@ contract Setup is Test {
         basedAppsManagerMod = new BasedAppsManager();
         strategyManagerMod = new StrategyManager();
         protocolManagerMod = new ProtocolManager();
-        slashingManagerMod = new SlashingManager();
-        delegationManagerMod = new DelegationManager();
         implementation = new SSVBasedApps();
 
         config = StorageProtocol({
@@ -135,8 +127,6 @@ contract Setup is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
-            ISlashingManager(slashingManagerMod),
-            IDelegationManager(delegationManagerMod),
             config
         );
         proxy = new ERC1967Proxy(address(implementation), data);

@@ -11,10 +11,6 @@ import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import {SSVBasedApps} from "src/core/SSVBasedApps.sol";
-import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
-import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
-import {SlashingManager} from "@ssv/src/core/modules/SlashingManager.sol";
-import {DelegationManager} from "@ssv/src/core/modules/DelegationManager.sol";
 import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 // solhint-disable no-console
@@ -29,8 +25,6 @@ contract DeployProxy is Script {
         StrategyManager strategyManagerMod = new StrategyManager();
         BasedAppsManager basedAppsManagerMod = new BasedAppsManager();
         ProtocolManager protocolManagerMod = new ProtocolManager();
-        SlashingManager slashingManagerMod = new SlashingManager();
-        DelegationManager delegationManagerMod = new DelegationManager();
 
         StorageProtocol memory config = StorageProtocol({
             feeTimelockPeriod: 5 days,
@@ -51,8 +45,6 @@ contract DeployProxy is Script {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
-            ISlashingManager(slashingManagerMod),
-            IDelegationManager(delegationManagerMod),
             config
         );
 
@@ -62,8 +54,6 @@ contract DeployProxy is Script {
         console.log("Module StrategyManager deployed at:", address(strategyManagerMod));
         console.log("Module BasedAppsManager deployed at:", address(basedAppsManagerMod));
         console.log("Module ProtocolManager deployed at:", address(protocolManagerMod));
-        console.log("Module SlashingManager deployed at:", address(slashingManagerMod));
-        console.log("Module DelegationManager deployed at:", address(delegationManagerMod));
         console.log("Proxy deployed at:", address(proxy));
 
         console.log("Fee Timelock Period:", config.feeTimelockPeriod);

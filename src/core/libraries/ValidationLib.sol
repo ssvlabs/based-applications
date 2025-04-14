@@ -3,13 +3,13 @@ pragma solidity 0.8.29;
 
 import {ERC165Checker} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
-import {SSVBasedAppsStorage, SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {CoreStorageLib, SSVCoreModules} from "@ssv/src/core/libraries/CoreStorageLib.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
-library CoreLib {
-    event ModuleUpgraded(SSVBasedAppsModules indexed moduleId, address moduleAddress);
+library ValidationLib {
+    event ModuleUpgraded(SSVCoreModules indexed moduleId, address moduleAddress);
 
     function getVersion() internal pure returns (string memory) {
         return "v0.0.0";
@@ -55,10 +55,10 @@ library CoreLib {
         return size > 0;
     }
 
-    function setModuleContract(SSVBasedAppsModules moduleId, address moduleAddress) internal {
+    function setModuleContract(SSVCoreModules moduleId, address moduleAddress) internal {
         if (!isContract(moduleAddress)) revert ICore.TargetModuleDoesNotExistWithData(uint8(moduleId));
 
-        SSVBasedAppsStorage.load().ssvContracts[moduleId] = moduleAddress;
+        CoreStorageLib.load().ssvContracts[moduleId] = moduleAddress;
         emit ModuleUpgraded(moduleId, moduleAddress);
     }
 }

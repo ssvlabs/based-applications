@@ -3,16 +3,7 @@ pragma solidity 0.8.29;
 
 import {Ownable2StepUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-import {
-    Setup,
-    IStrategyManager,
-    IBasedAppManager,
-    ISlashingManager,
-    IDelegationManager,
-    IProtocolManager,
-    SSVBasedApps,
-    ERC1967Proxy
-} from "@ssv/test/helpers/Setup.t.sol";
+import {Setup, IStrategyManager, IBasedAppManager, IProtocolManager, SSVBasedApps, ERC1967Proxy} from "@ssv/test/helpers/Setup.t.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
@@ -88,13 +79,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(ATTACKER);
         proxiedManager.initialize(
-            address(OWNER),
-            IBasedAppManager(basedAppsManagerMod),
-            IStrategyManager(strategyManagerMod),
-            IProtocolManager(protocolManagerMod),
-            ISlashingManager(slashingManagerMod),
-            IDelegationManager(delegationManagerMod),
-            config
+            address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), IProtocolManager(protocolManagerMod), config
         );
     }
 
@@ -102,13 +87,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.expectRevert(abi.encodeWithSelector(InvalidInitialization.selector));
         vm.prank(OWNER);
         proxiedManager.initialize(
-            address(OWNER),
-            IBasedAppManager(basedAppsManagerMod),
-            IStrategyManager(strategyManagerMod),
-            IProtocolManager(protocolManagerMod),
-            ISlashingManager(slashingManagerMod),
-            IDelegationManager(delegationManagerMod),
-            config
+            address(OWNER), IBasedAppManager(basedAppsManagerMod), IStrategyManager(strategyManagerMod), IProtocolManager(protocolManagerMod), config
         );
     }
 
@@ -133,8 +112,6 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             address(basedAppsManagerMod),
             address(strategyManagerMod),
             address(protocolManagerMod),
-            address(slashingManagerMod),
-            address(delegationManagerMod),
             configZeroFee
         );
         proxy = new ERC1967Proxy(address(implementation), initData);
@@ -160,8 +137,6 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             address(basedAppsManagerMod),
             address(strategyManagerMod),
             address(protocolManagerMod),
-            address(slashingManagerMod),
-            address(delegationManagerMod),
             configExcessiveFee
         );
         proxy = new ERC1967Proxy(address(implementation), initData);

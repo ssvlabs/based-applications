@@ -3,12 +3,12 @@ pragma solidity 0.8.29;
 
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import {SSVBasedAppsStorage, StorageData} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {CoreStorageLib} from "@ssv/src/core/libraries/CoreStorageLib.sol";
 
 contract BasedAppsManager is IBasedAppManager {
     /// @notice Allow the function to be called only by a registered bApp
     modifier onlyRegisteredBApp() {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         if (!s.registeredBApps[msg.sender]) revert ICore.BAppNotRegistered();
         _;
     }
@@ -20,7 +20,7 @@ contract BasedAppsManager is IBasedAppManager {
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.registeredBApps[msg.sender]) revert ICore.BAppAlreadyRegistered();
 
@@ -45,7 +45,7 @@ contract BasedAppsManager is IBasedAppManager {
         _validateArraysLength(tokens, sharedRiskLevels);
         uint256 length = tokens.length;
         address token;
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         for (uint256 i = 0; i < length;) {
             token = tokens[i];
             _validateTokenInput(token);
@@ -62,7 +62,7 @@ contract BasedAppsManager is IBasedAppManager {
     /// @param token The address of the token
     /// @param sharedRiskLevel The shared risk level
     function _setTokenRiskLevel(address bApp, address token, uint32 sharedRiskLevel) internal {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
 
         tokenData.value = sharedRiskLevel;

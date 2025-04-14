@@ -6,7 +6,7 @@ import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import {ISlashingManager} from "@ssv/src/core/interfaces/ISlashingManager.sol";
 import {IDelegationManager} from "@ssv/src/core/interfaces/IDelegationManager.sol";
 import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import {SSVBasedAppsModules} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {SSVCoreModules} from "@ssv/src/core/libraries/CoreStorageLib.sol";
 import {StorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 interface ISSVBasedApps {
@@ -16,9 +16,7 @@ interface ISSVBasedApps {
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        ISlashingManager ssvSlashingManager_,
-        IDelegationManager ssvDelegationManager_,
         StorageProtocol memory config
     ) external;
-    function updateModule(SSVBasedAppsModules moduleId, address moduleAddress) external;
+    function updateModule(SSVCoreModules moduleId, address moduleAddress) external;
 }

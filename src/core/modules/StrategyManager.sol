@@ -5,10 +5,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {CoreLib} from "@ssv/src/core/libraries/CoreLib.sol";
+import {ValidationLib} from "@ssv/src/core/libraries/ValidationLib.sol";
 import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
 import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {StorageData, SSVBasedAppsStorage} from "@ssv/src/core/libraries/SSVBasedAppsStorage.sol";
+import {CoreStorageLib} from "@ssv/src/core/libraries/CoreStorageLib.sol";
 import {StorageProtocol, SSVBasedAppsStorageProtocol} from "@ssv/src/core/libraries/SSVBasedAppsStorageProtocol.sol";
 
 import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
@@ -61,12 +61,91 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Allow the function to be called only by the strategy owner
     /// @param strategyId The ID of the strategy
     modifier onlyStrategyOwner(uint32 strategyId) {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.strategies[strategyId].owner != msg.sender) {
             revert ICore.InvalidStrategyOwner(msg.sender, s.strategies[strategyId].owner);
         }
         _;
+    }
+
+    // *****************************************
+    // *********** Section: Account ************
+    // *****************************************
+
+    /// @notice Function to update the metadata URI of the Account
+    /// @param metadataURI The new metadata URI
+    function updateAccountMetadataURI(string calldata metadataURI) external {
+        emit AccountMetadataURIUpdated(msg.sender, metadataURI);
+    }
+
+    // *****************************************
+    // ** Section: Delegate Validator Balance **
+    // *****************************************
+
+    /// @notice Function to delegate a percentage of the account's balance to another account
+    /// @param account The address of the account to delegate to
+    /// @param percentage The percentage of the account's balance to delegate
+    /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
+    function delegateBalance(address account, uint32 percentage) external {
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        if (percentage == 0 || percentage > sp.maxPercentage) revert ICore.InvalidPercentage();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        if (s.delegations[msg.sender][account] != 0) revert ICore.DelegationAlreadyExists();
+
+        unchecked {
+            uint32 newTotal = s.totalDelegatedPercentage[msg.sender] + percentage;
+            if (newTotal > sp.maxPercentage) {
+                revert ICore.ExceedingPercentageUpdate();
+            }
+            s.totalDelegatedPercentage[msg.sender] = newTotal;
+        }
+        s.delegations[msg.sender][account] = percentage;
+
+        emit DelegationCreated(msg.sender, account, percentage);
+    }
+
+    /// @notice Function to update the delegated validator balance percentage to another account
+    /// @param account The address of the account to delegate to
+    /// @param percentage The updated percentage of the account's balance to delegate
+    /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
+    function updateDelegatedBalance(address account, uint32 percentage) external {
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+
+        if (percentage == 0 || percentage > sp.maxPercentage) revert ICore.InvalidPercentage();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        uint32 existingPercentage = s.delegations[msg.sender][account];
+        if (existingPercentage == 0) revert ICore.DelegationDoesNotExist();
+        if (existingPercentage == percentage) revert ICore.DelegationExistsWithSameValue();
+
+        unchecked {
+            uint32 newTotalPercentage = s.totalDelegatedPercentage[msg.sender] - existingPercentage + percentage;
+            if (newTotalPercentage > sp.maxPercentage) revert ICore.ExceedingPercentageUpdate();
+            s.totalDelegatedPercentage[msg.sender] = newTotalPercentage;
+        }
+
+        s.delegations[msg.sender][account] = percentage;
+
+        emit DelegationUpdated(msg.sender, account, percentage);
+    }
+
+    /// @notice Removes delegation from an account.
+    /// @param account The address of the account whose delegation is being removed.
+    function removeDelegatedBalance(address account) external {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        uint32 percentage = s.delegations[msg.sender][account];
+        if (percentage == 0) revert ICore.DelegationDoesNotExist();
+
+        unchecked {
+            s.totalDelegatedPercentage[msg.sender] -= percentage;
+        }
+
+        delete s.delegations[msg.sender][account];
+
+        emit DelegationRemoved(msg.sender, account);
     }
 
     // ***********************
@@ -80,7 +159,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         if (fee > sp.maxPercentage) revert ICore.InvalidStrategyFee();
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         unchecked {
             strategyId = ++s._strategyCounter;
@@ -112,7 +191,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         onlyStrategyOwner(strategyId)
     {
         if (tokens.length != obligationPercentages.length) revert ICore.LengthsNotMatching();
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         // Check if a strategy exists for the given bApp.
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (s.accountBAppStrategy[msg.sender][bApp] != 0) revert ICore.BAppAlreadyOptedIn();
@@ -121,7 +200,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         s.accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        if (CoreLib.isBApp(bApp)) {
+        if (ValidationLib.isBApp(bApp)) {
             bool success = IBasedApp(bApp).optInToBApp(strategyId, tokens, obligationPercentages, data);
             if (!success) revert ICore.BAppOptInFailed();
         }
@@ -197,7 +276,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function createObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external onlyStrategyOwner(strategyId) {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
 
@@ -213,7 +292,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function proposeUpdateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) external onlyStrategyOwner(strategyId) {
         _validateObligationUpdateInput(strategyId, bApp, token, obligationPercentage);
 
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         ICore.ObligationRequest storage request = s.obligationRequests[strategyId][bApp][token];
 
@@ -228,7 +307,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp.
     /// @param token The ERC20 token address.
     function finalizeUpdateObligation(uint32 strategyId, address bApp, address token) external onlyStrategyOwner(strategyId) {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         ICore.ObligationRequest storage request = s.obligationRequests[strategyId][bApp][address(token)];
         uint256 requestTime = request.requestTime;
@@ -254,7 +333,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
     function reduceFee(uint32 strategyId, uint32 proposedFee) external onlyStrategyOwner(strategyId) {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (proposedFee >= s.strategies[strategyId].fee) revert ICore.InvalidPercentageIncrement();
 
@@ -270,7 +349,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
 
         if (proposedFee > sp.maxPercentage) revert ICore.InvalidPercentage();
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         ICore.Strategy storage strategy = s.strategies[strategyId];
         uint32 fee = strategy.fee;
@@ -289,7 +368,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Finalize the fee update for a strategy
     /// @param strategyId The ID of the strategy
     function finalizeFeeUpdate(uint32 strategyId) external onlyStrategyOwner(strategyId) {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.Strategy storage strategy = s.strategies[strategyId];
         ICore.FeeUpdateRequest storage request = s.feeUpdateRequests[strategyId];
 
@@ -331,7 +410,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function _createSingleObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (!s.bAppTokens[bApp][token].isSet) revert ICore.TokenNotSupportedByBApp(token);
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
@@ -354,7 +433,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @param obligationPercentage The obligation percentage
     function _validateObligationUpdateInput(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private view {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) revert ICore.BAppNotOptedIn();
         StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
@@ -372,7 +451,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param bApp The address of the bApp
     /// @param token The address of the token
     function _updateObligation(uint32 strategyId, address bApp, address token, uint32 obligationPercentage) private {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.obligations[strategyId][bApp][token].percentage == 0 && obligationPercentage > 0) {
             s.usedTokens[strategyId][token] += 1;
@@ -396,7 +475,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function _beforeDeposit(uint32 strategyId, address token, uint256 amount) internal {
         if (amount == 0) revert ICore.InvalidAmount();
 
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
         uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
@@ -424,7 +503,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function _proposeWithdrawal(uint32 strategyId, address token, uint256 amount) internal {
         if (amount == 0) revert ICore.InvalidAmount();
 
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
 
         if (strategyTokenShares.currentGeneration != strategyTokenShares.accountGeneration[msg.sender]) revert ICore.InvalidAccountGeneration();
@@ -444,7 +523,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     }
 
     function _finalizeWithdrawal(uint32 strategyId, address token) private returns (uint256 amount) {
-        StorageData storage s = SSVBasedAppsStorage.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[strategyId][msg.sender][token];
         uint256 requestTime = request.requestTime;
@@ -472,5 +551,131 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         delete s.withdrawalRequests[strategyId][msg.sender][token];
 
         return amount;
+    }
+
+    // ***********************
+    // ** Section: Slashing **
+    // ***********************
+
+    /// @notice Get the slashable balance for a strategy
+    /// @param strategyId The ID of the strategy
+    /// @param bApp The address of the bApp
+    /// @param token The address of the token
+    /// @return slashableBalance The slashable balance
+    function getSlashableBalance(uint32 strategyId, address bApp, address token) internal view returns (uint256 slashableBalance) {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+
+        uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
+        uint256 balance = strategyTokenShares.totalTokenBalance;
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+
+        return balance * percentage / sp.maxPercentage;
+    }
+
+    /// @notice Slash a strategy
+    /// @param strategyId The ID of the strategy
+    /// @param bApp The address of the bApp
+    /// @param token The address of the token
+    /// @param amount The amount to slash
+    /// @param data Optional parameter that could be required by the service
+    function slash(uint32 strategyId, address bApp, address token, uint256 amount, bytes calldata data) external nonReentrant {
+        if (amount == 0) revert ICore.InvalidAmount();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        if (!s.registeredBApps[bApp]) revert ICore.BAppNotRegistered();
+
+        uint256 slashableBalance = getSlashableBalance(strategyId, bApp, token);
+        if (slashableBalance < amount) revert ICore.InsufficientBalance();
+
+        address receiver;
+        bool exit;
+        bool success;
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+        if (ValidationLib.isBApp(bApp)) {
+            (success, receiver, exit) = IBasedApp(bApp).slash(strategyId, token, amount, data);
+            if (!success) revert ICore.BAppSlashingFailed();
+
+            if (exit) _exitStrategy(strategyId, bApp, token);
+            else _adjustObligation(strategyId, bApp, token, amount);
+        } else {
+            // Only the bApp EOA or non-compliant bapp owner can slash
+            if (msg.sender != bApp) revert ICore.InvalidBAppOwner(msg.sender, bApp);
+            receiver = bApp;
+            _exitStrategy(strategyId, bApp, token);
+        }
+
+        strategyTokenShares.totalTokenBalance -= amount;
+        s.slashingFund[receiver][token] += amount;
+
+        if (strategyTokenShares.totalTokenBalance == 0) {
+            delete s.strategyTokenShares[strategyId][token].totalTokenBalance;
+            delete s.strategyTokenShares[strategyId][token].totalShareBalance;
+            s.strategyTokenShares[strategyId][token].currentGeneration += 1;
+        }
+
+        // emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0); //todo adjust value
+        emit IStrategyManager.StrategySlashed(strategyId, bApp, token, amount, data);
+    }
+
+    function _exitStrategy(uint32 strategyId, address bApp, address token) private {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        s.obligations[strategyId][bApp][token].percentage = 0;
+    }
+
+    function _adjustObligation(uint32 strategyId, address bApp, address token, uint256 amount) internal {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        ICore.Obligation storage obligation = s.obligations[strategyId][bApp][token];
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[strategyId][token];
+        uint256 currentStrategyBalance = strategyTokenShares.totalTokenBalance;
+        uint256 currentObligatedBalance = obligation.percentage * currentStrategyBalance / sp.maxPercentage;
+        uint256 postSlashStrategyBalance = currentStrategyBalance - amount;
+        uint256 postSlashObligatedBalance = currentObligatedBalance - amount;
+        if (postSlashStrategyBalance == 0) {
+            s.obligations[strategyId][bApp][token].percentage = 0;
+        } else {
+            uint32 postSlashPercentage = uint32(postSlashObligatedBalance * sp.maxPercentage / currentStrategyBalance);
+            s.obligations[strategyId][bApp][token].percentage = postSlashPercentage;
+        }
+    }
+
+    /// @notice Withdraw the slashing fund for a token
+    /// @param token The address of the token
+    /// @param amount The amount to withdraw
+    function withdrawSlashingFund(address token, uint256 amount) external nonReentrant {
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+
+        if (token == sp.ethAddress) revert ICore.InvalidToken();
+
+        _withdrawSlashingFund(token, amount);
+
+        IERC20(token).safeTransfer(msg.sender, amount);
+
+        emit IStrategyManager.SlashingFundWithdrawn(token, amount);
+    }
+
+    /// @notice Withdraw the slashing fund for ETH
+    /// @param amount The amount to withdraw
+    function withdrawETHSlashingFund(uint256 amount) external nonReentrant {
+        StorageProtocol storage sp = SSVBasedAppsStorageProtocol.load();
+        _withdrawSlashingFund(sp.ethAddress, amount);
+
+        payable(msg.sender).transfer(amount);
+
+        emit IStrategyManager.SlashingFundWithdrawn(sp.ethAddress, amount);
+    }
+
+    /// @notice General withdraw code the slashing fund
+    /// @param token The address of the token
+    /// @param amount The amount to withdraw
+    function _withdrawSlashingFund(address token, uint256 amount) internal {
+        if (amount == 0) revert ICore.InvalidAmount();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        if (s.slashingFund[msg.sender][token] < amount) revert ICore.InsufficientBalance();
+
+        s.slashingFund[msg.sender][token] -= amount;
     }
 }
