@@ -628,7 +628,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         s.obligations[strategyId][bApp][token].percentage = 0;
 
-        // emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0); //todo adjust value
+        emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
     }
 
     function _adjustObligation(uint32 strategyId, address bApp, address token, uint256 amount) internal {
@@ -641,13 +641,12 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 postSlashObligatedBalance = currentObligatedBalance - amount;
         if (postSlashStrategyBalance == 0) {
             s.obligations[strategyId][bApp][token].percentage = 0;
+            emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
         } else {
             uint32 postSlashPercentage = uint32(postSlashObligatedBalance * MAX_PERCENTAGE / currentStrategyBalance);
             s.obligations[strategyId][bApp][token].percentage = postSlashPercentage;
+            emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, postSlashPercentage);
         }
-
-        // todo check value
-        // emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0); //todo adjust value
     }
 
     /// @notice Withdraw the slashing fund for a token
