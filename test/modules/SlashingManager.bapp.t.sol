@@ -655,6 +655,7 @@ contract SlashingManagerTest is StrategyManagerTest {
                 percentage > 0 &&
                 percentage <= proxiedManager.maxPercentage() &&
                 slashAmount > 0 &&
+                slashAmount != depositAmount &&
                 slashAmount <=
                 (depositAmount * percentage) / proxiedManager.maxPercentage()
         );
