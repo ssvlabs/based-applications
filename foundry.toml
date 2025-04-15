@@ -1,10 +1,10 @@
 [profile.default]
+solc = "0.8.29"
 src = "src"
 out = "out"
 libs = ["lib"]
-solc = "0.8.29"
 optimizer = true
-optimizer_runs = 10000
+optimizer_runs = 10_000
 gas_reports = ["*"]
 gas_reports_ignore = ["ERC20Mock", "BasedAppMock", "BasedAppMock2", "BasedAppMock3", "ERC1967Proxy"]
 
@@ -19,4 +19,8 @@ tab_width = 4
 
 [fuzz]
 runs = 10
+
+[profile.ci]
+verbosity = 3
+fuzz = { runs = 10_000 }
 

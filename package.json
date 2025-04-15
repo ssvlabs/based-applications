@@ -33,12 +33,12 @@
     "test-coverage-report": "forge coverage --no-match-coverage \"(script|test)\" --report debug > test.txt"
   },
   "devDependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.2.0",
-    "husky": "^9.1.7"
+    "@openzeppelin/contracts-upgradeable": "^5.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "solhint": "^5.0.5"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run format && npm run lint:solhint && npm run test-coverage"
-    }
+  "lint-staged": {
+    "src/**/*.sol": "solhint"
   }
 }
