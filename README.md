@@ -9,15 +9,25 @@
 
 ## :book: _Description_
 
-This repository contains the core Based Applications Contracts, including UUPS upgradeable contracts for managing delegations, creating strategies, and registering bApps on the SSV Based-Applications Platform. 
+This repository contains the SSV Based Applications Platform Contracts.
 
-### **Main Contracts**
+The repository is structured in two main folders inside `src`:
 
-- **`SSVBasedApps.sol`** – Core contract managing bApps, delegations, and strategies.
+- **`core/`**: contains the main platform contract: `SSVBasedApps.sol`;
   
-- **`IBasedAppManager.sol`** – Interface for the Based Application Manager.
+- **`middleware/`** contains the module contracts to build a based application. 
+
+### **Core Platform**
+
+The core contract is build in a diamond-like pattern: 
+
+- **`SSVBasedApps.sol`** – Core contract where all the functions are declared and via an internal proxy it redirects to the right implementation. 
+
+The functions are implemented in 3 different modules:
   
-- **`ICore.sol`** – Core interface defining key structs for staking and obligation mechanisms.
+- **`StrategyManager.sol`** – Implements functions related to strategies, validator balance delegation, opting-in to bApp, and slashing;
+- **`BasedAppsManager.sol`** – Implements functions related to bApps like the registration and update the metadata;
+- **`PlatformManager.sol`** – Implements functions for updating the global variables like timelocks length, max number of shares, etc. The variable update process will be handled by the SSV DAO.
   
 &nbsp;
 
