@@ -36,7 +36,9 @@
     "@openzeppelin/contracts-upgradeable": "^5.2.0",
     "husky": "^9.1.7"
   },
+  "husky": {
     "hooks": {
       "pre-commit": "npm run format && npm run lint:solhint && npm run test-coverage"
     }
+  }
 }
