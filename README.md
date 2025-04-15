@@ -35,9 +35,68 @@ The functions are implemented in 3 different modules:
 
 This `middleware` folder contains the modules for building a bapp: 
 
-- **`modules/core`**: the base layer for a bApp to be compliant and be recognized by the system
+- **`modules/core`**: the base layer for a bApp to be compliant and be recognized by the system;
 
-- **`examples`**: con
+- **`examples`**: contains example of working compliant bApps.
+
+&nbsp;
+
+## 🔨 Slashing Mechanism
+
+The `slash` function allows for the reduction of a strategy’s token balance under specific conditions, either as a penalty or to enforce protocol-defined behavior. Slashing can happen in two distinct modes, depending on whether:
+
+**1)** The bApp is a compliant smart contract;
+
+**2)** The bApp is a non-compliant smart contract or an EOA.
+
+### 🧠 Compliant BApp
+
+If the bApp is a compliant contract implementing the required interface `IBasedApp`,
+
+The slash function of the bApp is called: `(success, receiver, exit) = IBasedApp(bApp).slash(...)`
+
+*	`data` parameter is forwarded and may act as a proof or auxiliary input.
+
+*	The bApp decides:
+
+    *	Who receives the slashed funds by setting the `receiver` fund;
+
+    *	Whether to exit the strategy or adjust obligations;
+
+    *	If `exit == true`, the strategy is exited and the obligation value is set to 0;
+
+    *	Otherwise, obligations are updated proportionally based on remaining balances;
+
+    *	Funds are credited to the receiver in the slashing fund.
+
+### 🔐 Non-compliant bApp (EOA or Non-compliant Contract)
+
+If the bApp is an EOA or does not comply with the required interface:
+
+*	Only the bApp itself can invoke slashing;
+
+*	The receiver of slashed funds is forcibly set to the bApp itself;
+
+*	The strategy is always exited (no obligation adjustment);
+s
+*	Funds are added to the bApp’s slashing fund.
+
+### Post Slashing
+
+After the obligation is exited it is possible to update it to a value higher than 0 but the user will need to wait the obligation timelock which right now it's set to 14 days.
+
+### 💸 Slashing Fund
+
+Slashed tokens are not immediately transferred. They are deposited into an internal slashing fund.
+
+The receiver (set during slashing) can later withdraw them using:
+
+```
+function withdrawSlashingFund(address token, uint256 amount) external
+function withdrawETHSlashingFund(uint256 amount) external
+```
+
+These functions verify balances and authorize the caller to retrieve their accumulated slashed tokens.
 
 &nbsp;
 
