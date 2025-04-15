@@ -18,18 +18,19 @@ import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     using SafeERC20 for IERC20;
 
-    /// @notice Allow the function to be called only by the strategy owner
+    /// @notice Checks if the caller is the strategy owner
     /// @param strategyId The ID of the strategy
-    modifier onlyStrategyOwner(uint32 strategyId) {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-
+    /// @param s The CoreStorageLib data
+    function _onlyStrategyOwner(
+        uint32 strategyId,
+        CoreStorageLib.Data storage s
+    ) private view {
         if (s.strategies[strategyId].owner != msg.sender) {
-            revert IStrategyManager.InvalidStrategyOwner(
+            revert InvalidStrategyOwner(
                 msg.sender,
                 s.strategies[strategyId].owner
             );
         }
-        _;
     }
 
     // *****************************************
@@ -151,7 +152,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function updateStrategyMetadataURI(
         uint32 strategyId,
         string calldata metadataURI
-    ) external onlyStrategyOwner(strategyId) {
+    ) external {
+        _onlyStrategyOwner(strategyId, CoreStorageLib.load());
         emit StrategyMetadataURIUpdated(strategyId, metadataURI);
     }
 
@@ -168,8 +170,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address[] calldata tokens,
         uint32[] calldata obligationPercentages,
         bytes calldata data
-    ) external onlyStrategyOwner(strategyId) {
-        //if (tokens.length != obligationPercentages.length) revert ICore.LengthsNotMatching();
+    ) external {
+        _onlyStrategyOwner(strategyId, CoreStorageLib.load());
+
         ValidationLib.validateArrayLengths(tokens, obligationPercentages);
 
         CoreStorageLib.Data storage s = CoreStorageLib.load();
@@ -304,8 +307,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address bApp,
         address token,
         uint32 obligationPercentage
-    ) external onlyStrategyOwner(strategyId) {
+    ) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
+        _onlyStrategyOwner(strategyId, s);
 
         if (s.accountBAppStrategy[msg.sender][bApp] != strategyId)
             revert BAppNotOptedIn();
@@ -324,15 +328,17 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address bApp,
         address token,
         uint32 obligationPercentage
-    ) external onlyStrategyOwner(strategyId) {
+    ) external {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        _onlyStrategyOwner(strategyId, s);
+
         _validateObligationUpdateInput(
             strategyId,
             bApp,
             token,
             obligationPercentage
         );
-
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         ICore.ObligationRequest storage request = s.obligationRequests[
             strategyId
@@ -357,8 +363,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32 strategyId,
         address bApp,
         address token
-    ) external onlyStrategyOwner(strategyId) {
+    ) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        _onlyStrategyOwner(strategyId, s);
 
         ICore.ObligationRequest storage request = s.obligationRequests[
             strategyId
@@ -392,11 +400,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Instantly lowers the fee for a strategy
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
-    function reduceFee(
-        uint32 strategyId,
-        uint32 proposedFee
-    ) external onlyStrategyOwner(strategyId) {
+    function reduceFee(uint32 strategyId, uint32 proposedFee) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        _onlyStrategyOwner(strategyId, s);
 
         if (proposedFee >= s.strategies[strategyId].fee)
             revert InvalidPercentageIncrement();
@@ -409,16 +416,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @notice Propose a new fee for a strategy
     /// @param strategyId The ID of the strategy
     /// @param proposedFee The proposed fee
-    function proposeFeeUpdate(
-        uint32 strategyId,
-        uint32 proposedFee
-    ) external onlyStrategyOwner(strategyId) {
+    function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        _onlyStrategyOwner(strategyId, s);
+
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
 
-        // if (proposedFee > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         ValidationLib.validatePercentage(proposedFee);
-
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         ICore.Strategy storage strategy = s.strategies[strategyId];
         uint32 fee = strategy.fee;
@@ -439,10 +444,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
     /// @notice Finalize the fee update for a strategy
     /// @param strategyId The ID of the strategy
-    function finalizeFeeUpdate(
-        uint32 strategyId
-    ) external onlyStrategyOwner(strategyId) {
+    function finalizeFeeUpdate(uint32 strategyId) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        _onlyStrategyOwner(strategyId, s);
+
         ICore.Strategy storage strategy = s.strategies[strategyId];
         ICore.FeeUpdateRequest storage request = s.feeUpdateRequests[
             strategyId
