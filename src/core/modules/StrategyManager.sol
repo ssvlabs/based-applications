@@ -882,7 +882,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     function withdrawETHSlashingFund(uint256 amount) external nonReentrant {
         _withdrawSlashingFund(ETH_ADDRESS, amount);
 
-        payable(msg.sender).transfer(amount);
+        // payable(msg.sender).transfer(amount);
+        (bool success, ) = payable(msg.sender).call{ value: amount }("");
+        if (!success) revert WithdrawTransferFailed();
 
         emit IStrategyManager.SlashingFundWithdrawn(ETH_ADDRESS, amount);
     }

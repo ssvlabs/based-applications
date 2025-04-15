@@ -88,6 +88,14 @@ interface IStrategyManager {
         address token,
         uint256 amount
     );
+    event SlashingFundWithdrawn(address token, uint256 amount);
+    event StrategySlashed(
+        uint32 indexed strategyId,
+        address indexed bApp,
+        address token,
+        uint256 amount,
+        address receiver
+    );
 
     function createObligation(
         uint32 strategyId,
@@ -182,18 +190,5 @@ interface IStrategyManager {
     error RequestTimeExpired();
     error TimelockNotElapsed();
     error TokenNotSupportedByBApp(address token);
-
-    event SlashingFundWithdrawn(address token, uint256 amount);
-    event StrategyFrozen(
-        uint32 indexed strategyId,
-        address indexed bApp,
-        bytes data
-    );
-    event StrategySlashed(
-        uint32 indexed strategyId,
-        address indexed bApp,
-        address token,
-        uint256 amount,
-        address receiver
-    );
+    error WithdrawTransferFailed();
 }
