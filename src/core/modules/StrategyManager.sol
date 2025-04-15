@@ -171,11 +171,12 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32[] calldata obligationPercentages,
         bytes calldata data
     ) external {
-        _onlyStrategyOwner(strategyId, CoreStorageLib.load());
+                CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        _onlyStrategyOwner(strategyId, s);
 
         ValidationLib.validateArrayLengths(tokens, obligationPercentages);
 
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
         // Check if a strategy exists for the given bApp.
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (s.accountBAppStrategy[msg.sender][bApp] != 0)
