@@ -15,48 +15,6 @@ import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol"
 
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
-/**
- * @title SSVBasedApps
- * @notice The Core Contract to manage Based Applications, s.Delegations & Strategies for SSV Based Applications Platform.
- *
- * **************
- * ** GLOSSARY **
- * **************
- * @dev The following terms are used throughout the contract:
- *
- * - **Account**: An Ethereum address that can:
- *   1. Delegate its balance to another address.
- *   2. Create and manage a strategy.
- *   3. Create and manage a bApp.
- *
- * - **Based Application**: or bApp.
- *   The entity that requests validation services from operators. On-chain is represented by an Ethereum address.
- *   A bApp can be created by registering to this Core Contract, specifying the risk level.
- *   The bApp can also specify one or many tokens as slashable capital to be provided by strategies.
- *   During the bApp registration, the bApp owner can set the shared risk level and optionally a metadata URI, to be used in the SSV bApp marketplace.
- *
- * - **Delegator**: An Ethereum address that has Ethereum Validator Balance of Staked ETH within the SSV platform. This capital delegated is non-slashable.
- *   The delegator can decide to delegate its balance to itself or/and to a single or many receiver accounts.
- *   The delegator has to set its address as the receiver account, when the delegator wants to delegate its balance to itself.
- *   The delegated balance goes to an account and not to a strategy. This receiver account can manage only a single strategy.
- *
- * - **Strategy**: The entity that manages the slashable assets bounded to based apps.
- *   The strategy has its own balance, accounted in this core contract.
- *   The strategy can be created by an account that becomes its owner.
- *   The assets can be ERC20 tokens or Native ETH tokens, that can be deposited or withdrawn by the participants.
- *   The strategy can manage its assets via s.obligations to one or many bApps.
- *
- * - **Obligation**: A percentage of the strategy's balance of ERC20 (or Native ETH), that is reserved for securing a bApp.
- *   The obligation is set exclusively by the strategy owner and can be updated by the strategy owner.
- *   The tokens specified in an obligation needs to match the tokens specified in the bApp.
- *
- * *************
- * ** AUTHORS **
- * *************
- * @author
- * Marco Tabasco
- * Riccardo Persiani
- */
 contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     using SafeERC20 for IERC20;
 

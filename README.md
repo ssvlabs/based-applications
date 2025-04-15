@@ -11,7 +11,7 @@
 
 This repository contains the SSV Based Applications Platform Contracts.
 
-The repository is structured in two main folders inside `src`:
+The contracts are organized under the `src/` directory into two main folders:
 
 - **`core/`**: contains the main platform contract: `SSVBasedApps.sol`;
   
@@ -78,18 +78,20 @@ If the bApp is an EOA or does not comply with the required interface:
 *	The receiver of slashed funds is forcibly set to the bApp itself;
 
 *	The strategy is always exited (no obligation adjustment);
-s
+
 *	Funds are added to the bApp’s slashing fund.
 
-### Post Slashing
+### ⏳ Post Slashing
 
-After the obligation is exited it is possible to update it to a value higher than 0 but the user will need to wait the obligation timelock which right now it's set to 14 days.
+⚠️ Important: After an obligation has been exited, it can be updated again to a value greater than 0, but only after a 14-day obligation timelock.
+
+This acts as a safeguard to prevent immediate re-entry and encourages more deliberate strategy participation.
 
 ### 💸 Slashing Fund
 
 Slashed tokens are not immediately transferred. They are deposited into an internal slashing fund.
 
-The receiver (set during slashing) can later withdraw them using:
+The `receiver` (set during slashing) can later withdraw them using:
 
 ```
 function withdrawSlashingFund(address token, uint256 amount) external

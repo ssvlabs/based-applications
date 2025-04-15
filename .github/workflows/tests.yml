@@ -38,10 +38,9 @@ jobs:
         run: |
           forge --version
 
-      - name: Run Forge fmt
+      - name: Run Prettier Format Check
         run: |
           npm run lint:check
-        id: fmt
 
       - name: Run Forge build
         run: |
