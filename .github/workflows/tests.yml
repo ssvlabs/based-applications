@@ -29,7 +29,7 @@ jobs:
 
       - name: Run Forge fmt
         run: |
-          forge fmt --check
+          npm run lint:check
         id: fmt
 
       - name: Run Forge build
