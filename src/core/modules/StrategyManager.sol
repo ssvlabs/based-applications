@@ -171,7 +171,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32[] calldata obligationPercentages,
         bytes calldata data
     ) external {
-                CoreStorageLib.Data storage s = CoreStorageLib.load();
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         _onlyStrategyOwner(strategyId, s);
 
