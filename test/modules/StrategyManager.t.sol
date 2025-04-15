@@ -1364,9 +1364,10 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     }
 
     function testRevertStrategyFeeUpdateTooLate(uint256 timeAfterLimit) public {
-        vm.assume(
-            timeAfterLimit > proxiedManager.feeExpireTime() &&
-                timeAfterLimit < 100 * 365 days
+        timeAfterLimit = bound(
+            timeAfterLimit,
+            proxiedManager.feeExpireTime() + 1,
+            100 * 365 days
         );
         testStrategyProposeFeeUpdate();
         vm.warp(
@@ -1632,9 +1633,10 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             initialObligationPercentage,
             proposedObligationPercentage
         );
-        vm.assume(
-            timeAfterLimit > proxiedManager.obligationExpireTime() &&
-                timeAfterLimit < 100 * 365 days
+        timeAfterLimit = bound(
+            timeAfterLimit,
+            proxiedManager.obligationExpireTime() + 1,
+            100 * 365 days
         );
         vm.warp(
             block.timestamp +
