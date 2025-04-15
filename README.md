@@ -17,7 +17,7 @@ The repository is structured in two main folders inside `src`:
   
 - **`middleware/`** contains the module contracts to build a based application. 
 
-### **Core Platform**
+### **The Core Platform**
 
 The core contract is build in a diamond-like pattern: 
 
@@ -26,10 +26,19 @@ The core contract is build in a diamond-like pattern:
 The functions are implemented in 3 different modules:
   
 - **`StrategyManager.sol`** – Implements functions related to strategies, validator balance delegation, opting-in to bApp, and slashing;
+  
 - **`BasedAppsManager.sol`** – Implements functions related to bApps like the registration and update the metadata;
+  
 - **`PlatformManager.sol`** – Implements functions for updating the global variables like timelocks length, max number of shares, etc. The variable update process will be handled by the SSV DAO.
   
+### **The Middleware**
+
+This middleware folder contains the modules for building a bapp: 
+
+- **`modules/core`**: the base layer for a bApp to be compliant and be recognized by the system
+
 &nbsp;
+
 
 ## :page_with_curl: _Instructions_
 
