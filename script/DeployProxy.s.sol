@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {Script, console} from "@ssv/forge-std/Script.sol";
-import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
-import {BasedAppsManager} from "@ssv/src/core/modules/BasedAppsManager.sol";
-import {ProtocolManager} from "@ssv/src/core/modules/ProtocolManager.sol";
-import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import {SSVBasedApps} from "src/core/SSVBasedApps.sol";
-import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import { Script, console } from "@ssv/forge-std/Script.sol";
+import { StrategyManager } from "@ssv/src/core/modules/StrategyManager.sol";
+import { BasedAppsManager } from "@ssv/src/core/modules/BasedAppsManager.sol";
+import { ProtocolManager } from "@ssv/src/core/modules/ProtocolManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import { SSVBasedApps } from "src/core/SSVBasedApps.sol";
+import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 // solhint-disable no-console
 contract DeployProxy is Script {
@@ -44,19 +44,37 @@ contract DeployProxy is Script {
             config
         );
 
-        ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), initData);
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            initData
+        );
 
         console.log("Implementation deployed at:", address(implementation));
-        console.log("Module StrategyManager deployed at:", address(strategyManagerMod));
-        console.log("Module BasedAppsManager deployed at:", address(basedAppsManagerMod));
-        console.log("Module ProtocolManager deployed at:", address(protocolManagerMod));
+        console.log(
+            "Module StrategyManager deployed at:",
+            address(strategyManagerMod)
+        );
+        console.log(
+            "Module BasedAppsManager deployed at:",
+            address(basedAppsManagerMod)
+        );
+        console.log(
+            "Module ProtocolManager deployed at:",
+            address(protocolManagerMod)
+        );
         console.log("Proxy deployed at:", address(proxy));
 
         console.log("Fee Timelock Period:", config.feeTimelockPeriod);
         console.log("Fee Expire Time:", config.feeExpireTime);
-        console.log("Withdrawal Timelock Period:", config.withdrawalTimelockPeriod);
+        console.log(
+            "Withdrawal Timelock Period:",
+            config.withdrawalTimelockPeriod
+        );
         console.log("Withdrawal Expire Time:", config.withdrawalExpireTime);
-        console.log("Obligation Timelock Period:", config.obligationTimelockPeriod);
+        console.log(
+            "Obligation Timelock Period:",
+            config.obligationTimelockPeriod
+        );
         console.log("Obligation Expire Time:", config.obligationExpireTime);
         console.log("Max Shares:", config.maxShares);
         console.log("Max Fee Increment:", config.maxFeeIncrement);

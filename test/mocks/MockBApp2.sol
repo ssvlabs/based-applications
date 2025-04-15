@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {BasedAppCore} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
+import { BasedAppCore } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
 contract BasedAppMock2 is BasedAppCore {
-    event OptInToBApp(uint32 indexed strategyId, address[] tokens, uint32[] obligationPercentages, bytes data);
+    event OptInToBApp(
+        uint32 indexed strategyId,
+        address[] tokens,
+        uint32[] obligationPercentages,
+        bytes data
+    );
 
     uint32 public counter;
 
@@ -12,7 +17,12 @@ contract BasedAppMock2 is BasedAppCore {
         counter = 0;
     }
 
-    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata)
+    function slash(
+        uint32,
+        /*strategyId*/ address,
+        /*token*/ uint256,
+        /*amount*/ bytes calldata
+    )
         external
         view
         override

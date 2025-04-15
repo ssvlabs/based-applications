@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {ICore} from "@ssv/src/core/interfaces/ICore.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 enum SSVCoreModules {
     SSV_PROTOCOL_MANAGER,
@@ -89,7 +89,8 @@ library CoreStorageLib {
         mapping(address bApp => mapping(address token => ICore.SharedRiskLevel)) bAppTokens;
     }
 
-    uint256 private constant SSV_BASED_APPS_STORAGE_POSITION = uint256(keccak256("ssv.based-apps.storage.main")) - 1;
+    uint256 private constant SSV_BASED_APPS_STORAGE_POSITION =
+        uint256(keccak256("ssv.based-apps.storage.main")) - 1;
 
     function load() internal pure returns (Data storage sd) {
         uint256 position = SSV_BASED_APPS_STORAGE_POSITION;

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
+import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
-import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
-import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 
 // =====================================================================================
 // ⚠️ WARNING: IMPLEMENT OWNER OR ACCESS ROLES ⚠️
@@ -47,42 +47,62 @@ abstract contract BasedAppCore is IBasedApp {
     ///        "logo": "https://link-to-your-logo.png",
     ///        "social": "https://x.com/ssv_network"
     ///    }
-    function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external virtual {
-        IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(tokens, sharedRiskLevels, metadataURI);
+    function registerBApp(
+        address[] calldata tokens,
+        uint32[] calldata sharedRiskLevels,
+        string calldata metadataURI
+    ) external virtual {
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(
+            tokens,
+            sharedRiskLevels,
+            metadataURI
+        );
     }
 
     /// @notice Updates the metadata URI of a BApp
     /// @param metadataURI new metadata URI
-    function updateBAppMetadataURI(string calldata metadataURI) external virtual {
-        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(metadataURI);
+    function updateBAppMetadataURI(
+        string calldata metadataURI
+    ) external virtual {
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(
+            metadataURI
+        );
     }
 
-    function withdrawSlashingFund(address token, uint256 amount) external virtual {
-        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(token, amount);
+    function withdrawSlashingFund(
+        address token,
+        uint256 amount
+    ) external virtual {
+        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawSlashingFund(
+            token,
+            amount
+        );
     }
 
     function withdrawETHSlashingFund(uint256 amount) external virtual {
-        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(amount);
+        IStrategyManager(SSV_BASED_APPS_NETWORK).withdrawETHSlashingFund(
+            amount
+        );
     }
 
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
-    function optInToBApp(uint32, /*strategyId*/ address[] calldata, /*tokens*/ uint32[] calldata, /*obligationPercentages*/ bytes calldata /*data*/ )
-        external
-        virtual
-        onlySSVBasedAppManager
-        returns (bool success)
-    {
+    function optInToBApp(
+        uint32,
+        /*strategyId*/ address[] calldata,
+        /*tokens*/ uint32[] calldata,
+        /*obligationPercentages*/ bytes calldata /*data*/
+    ) external virtual onlySSVBasedAppManager returns (bool success) {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         return true;
     }
 
-    function slash(uint32, /*strategyId*/ address, /*token*/ uint256, /*amount*/ bytes calldata)
-        external
-        virtual
-        onlySSVBasedAppManager
-        returns (bool, address, bool)
-    {
+    function slash(
+        uint32,
+        /*strategyId*/ address,
+        /*token*/ uint256,
+        /*amount*/ bytes calldata
+    ) external virtual onlySSVBasedAppManager returns (bool, address, bool) {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
@@ -92,8 +112,12 @@ abstract contract BasedAppCore is IBasedApp {
     /// @notice Checks if the contract supports the interface
     /// @param interfaceId interface id
     /// @return true if the contract supports the interface
-    function supportsInterface(bytes4 interfaceId) public pure virtual returns (bool) {
-        return interfaceId == type(IBasedApp).interfaceId || interfaceId == type(IERC165).interfaceId;
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public pure virtual returns (bool) {
+        return
+            interfaceId == type(IBasedApp).interfaceId ||
+            interfaceId == type(IERC165).interfaceId;
     }
 
     // Receive function to accept plain Ether transfers

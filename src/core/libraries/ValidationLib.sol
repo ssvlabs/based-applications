@@ -21,7 +21,10 @@ library ValidationLib {
         }
     }
 
-    function validateArrayLengths(address[] calldata tokens, uint32[] memory values) internal pure {
+    function validateArrayLengths(
+        address[] calldata tokens,
+        uint32[] memory values
+    ) internal pure {
         if (tokens.length != values.length) {
             revert LengthsNotMatching();
         }

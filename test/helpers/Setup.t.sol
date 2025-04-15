@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {Test} from "forge-std/Test.sol";
+import { Test } from "forge-std/Test.sol";
 
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import {BasedAppMock} from "@ssv/test/mocks/MockBApp.sol";
-import {BasedAppMock2} from "@ssv/test/mocks/MockBApp2.sol";
-import {BasedAppMock3} from "@ssv/test/mocks/MockBAppAccessControl.sol";
-import {BasedAppsManager} from "@ssv/src/core/modules/BasedAppsManager.sol";
-import {IBasedAppManager} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import {IERC20, ERC20Mock} from "@ssv/test/mocks/MockERC20.sol";
-import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import {IStrategyManager} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {NonCompliantBApp} from "@ssv/test/mocks/MockNonCompliantBApp.sol";
-import {SSVBasedApps} from "@ssv/src/core/SSVBasedApps.sol";
-import {ProtocolManager} from "@ssv/src/core/modules/ProtocolManager.sol";
-import {StrategyManager} from "@ssv/src/core/modules/StrategyManager.sol";
-import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import { BasedAppMock } from "@ssv/test/mocks/MockBApp.sol";
+import { BasedAppMock2 } from "@ssv/test/mocks/MockBApp2.sol";
+import { BasedAppMock3 } from "@ssv/test/mocks/MockBAppAccessControl.sol";
+import { BasedAppsManager } from "@ssv/src/core/modules/BasedAppsManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IERC20, ERC20Mock } from "@ssv/test/mocks/MockERC20.sol";
+import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { NonCompliantBApp } from "@ssv/test/mocks/MockNonCompliantBApp.sol";
+import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
+import { ProtocolManager } from "@ssv/src/core/modules/ProtocolManager.sol";
+import { StrategyManager } from "@ssv/src/core/modules/StrategyManager.sol";
+import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
-import {WhitelistExample} from "@ssv/src/middleware/examples/WhitelistExample.sol";
-import {IBasedApp} from "@ssv/src/middleware/interfaces/IBasedApp.sol";
+import { WhitelistExample } from "@ssv/src/middleware/examples/WhitelistExample.sol";
+import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 contract Setup is Test {
     // Main Contract
@@ -72,12 +72,14 @@ contract Setup is Test {
     uint256 public constant INITIAL_USER2_BALANCE_ETH = 10 ether;
     uint256 public constant INITIAL_RECEIVER_BALANCE_ERC20 = 1000 * 10 ** 18;
     uint256 public constant INITIAL_RECEIVER_BALANCE_ETH = 10 ether;
-    uint256 public constant INITIAL_ATTACKER_BALANCE_ERC20 = 100_000_000 * 10 ** 18;
+    uint256 public constant INITIAL_ATTACKER_BALANCE_ERC20 =
+        100_000_000 * 10 ** 18;
     uint256 public constant INITIAL_ATTACKER_BALANCE_ETH = 10 ether;
     uint256 public constant INITIAL_USER3_BALANCE_ERC20 = 1e51;
     uint256 public constant INITIAL_USER3_BALANCE_ETH = 1e51;
     // Constants
-    address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant ETH_ADDRESS =
+        0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint32 public constant MAX_FEE_INCREMENT = 500;
     // Array containing all the BApps created
     IBasedApp[] public bApps;
@@ -130,7 +132,11 @@ contract Setup is Test {
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
         assertEq(proxiedManager.getVersion(), "0.0.1", "Version mismatch");
-        assertEq(proxiedManager.maxFeeIncrement(), 500, "Initialization failed");
+        assertEq(
+            proxiedManager.maxFeeIncrement(),
+            500,
+            "Initialization failed"
+        );
         vm.stopPrank();
 
         vm.startPrank(USER1);

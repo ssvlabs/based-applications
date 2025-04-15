@@ -33,12 +33,13 @@ The functions are implemented in 3 different modules:
   
 ### **The Middleware**
 
-This middleware folder contains the modules for building a bapp: 
+This `middleware` folder contains the modules for building a bapp: 
 
 - **`modules/core`**: the base layer for a bApp to be compliant and be recognized by the system
 
-&nbsp;
+- **`examples`**: con
 
+&nbsp;
 
 ## :page_with_curl: _Instructions_
 

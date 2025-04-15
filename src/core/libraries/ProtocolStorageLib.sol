@@ -15,7 +15,8 @@ library ProtocolStorageLib {
         uint256 maxShares;
     }
 
-    uint256 private constant SSV_STORAGE_POSITION = uint256(keccak256("ssv.based-apps.storage.protocol")) - 1;
+    uint256 private constant SSV_STORAGE_POSITION =
+        uint256(keccak256("ssv.based-apps.storage.protocol")) - 1;
 
     function load() internal pure returns (Data storage sd) {
         uint256 position = SSV_STORAGE_POSITION;

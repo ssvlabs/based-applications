@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
-import {IProtocolManager} from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import {ProtocolStorageLib} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 contract ProtocolManager is IProtocolManager {
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
@@ -15,8 +15,12 @@ contract ProtocolManager is IProtocolManager {
         emit FeeExpireTimeUpdated(feeExpireTime);
     }
 
-    function updateWithdrawalTimelockPeriod(uint32 withdrawalTimelockPeriod) external {
-        ProtocolStorageLib.load().withdrawalTimelockPeriod = withdrawalTimelockPeriod;
+    function updateWithdrawalTimelockPeriod(
+        uint32 withdrawalTimelockPeriod
+    ) external {
+        ProtocolStorageLib
+            .load()
+            .withdrawalTimelockPeriod = withdrawalTimelockPeriod;
         emit WithdrawalTimelockPeriodUpdated(withdrawalTimelockPeriod);
     }
 
@@ -25,8 +29,12 @@ contract ProtocolManager is IProtocolManager {
         emit WithdrawalExpireTimeUpdated(withdrawalExpireTime);
     }
 
-    function updateObligationTimelockPeriod(uint32 obligationTimelockPeriod) external {
-        ProtocolStorageLib.load().obligationTimelockPeriod = obligationTimelockPeriod;
+    function updateObligationTimelockPeriod(
+        uint32 obligationTimelockPeriod
+    ) external {
+        ProtocolStorageLib
+            .load()
+            .obligationTimelockPeriod = obligationTimelockPeriod;
         emit ObligationTimelockPeriodUpdated(obligationTimelockPeriod);
     }
 
