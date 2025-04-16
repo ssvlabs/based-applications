@@ -103,8 +103,9 @@ contract SSVBasedApps is
             protocolManager_
         );
 
-        if (config.maxFeeIncrement == 0 || config.maxFeeIncrement > 10_000)
+        if (config.maxFeeIncrement == 0 || config.maxFeeIncrement > 10_000) {
             revert InvalidMaxFeeIncrement();
+        }
 
         sp.maxFeeIncrement = config.maxFeeIncrement;
         sp.feeTimelockPeriod = config.feeTimelockPeriod;

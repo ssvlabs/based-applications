@@ -114,7 +114,8 @@ contract ERC20Mock is Context, IERC20 {
      */
     function approve(
         address,
-        /*spender*/ uint256 /*amount*/
+        /*spender*/
+        uint256 /*amount*/
     ) public virtual override returns (bool) {
         return true;
     }

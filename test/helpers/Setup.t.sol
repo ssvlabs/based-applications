@@ -8,6 +8,7 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { BasedAppMock } from "@ssv/test/mocks/MockBApp.sol";
 import { BasedAppMock2 } from "@ssv/test/mocks/MockBApp2.sol";
 import { BasedAppMock3 } from "@ssv/test/mocks/MockBAppAccessControl.sol";
+import { BasedAppMock4 } from "@ssv/test/mocks/MockBApp4RejectEth.sol";
 import { BasedAppsManager } from "@ssv/src/core/modules/BasedAppsManager.sol";
 import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { IERC20, ERC20Mock } from "@ssv/test/mocks/MockERC20.sol";
@@ -37,6 +38,7 @@ contract Setup is Test {
     BasedAppMock public bApp1;
     BasedAppMock2 public bApp2;
     BasedAppMock3 public bApp3;
+    BasedAppMock4 public bApp4;
     NonCompliantBApp public nonCompliantBApp;
     WhitelistExample public whitelistExample;
     // Tokens
@@ -110,17 +112,6 @@ contract Setup is Test {
             maxShares: 1e50
         });
 
-        // config.maxFeeIncrement = 500;
-        // config.feeTimelockPeriod = 5 days;
-        // config.feeExpireTime = 1 days;
-        // config.withdrawalTimelockPeriod = 14 days;
-        // config.withdrawalExpireTime = 3 days;
-        // config.obligationTimelockPeriod = 14 days;
-        // config.obligationExpireTime = 3 days;
-        // config.maxShares = 1e50;
-        // config.maxPercentage = 10_000; // 100%
-        // config.ethAddress = ETH_ADDRESS;
-
         bytes memory data = abi.encodeWithSelector(
             implementation.initialize.selector,
             address(OWNER),
@@ -143,6 +134,7 @@ contract Setup is Test {
         bApp1 = new BasedAppMock(address(proxiedManager), USER1);
         bApp2 = new BasedAppMock2(address(proxiedManager));
         bApp3 = new BasedAppMock3(address(proxiedManager), USER1);
+        bApp4 = new BasedAppMock4(address(proxiedManager), USER1);
         bApp3.hasRole(bApp3.OWNER_ROLE(), USER1);
         bApp3.hasRole(bApp3.MANAGER_ROLE(), USER1);
         bApp3.grantManagerRole(USER1);
@@ -155,11 +147,13 @@ contract Setup is Test {
         bApps.push(bApp1);
         bApps.push(bApp2);
         bApps.push(bApp3);
+        bApps.push(bApp4);
 
         vm.startPrank(OWNER);
         vm.label(address(bApp1), "BasedApp1");
         vm.label(address(bApp2), "BasedApp2");
         vm.label(address(bApp3), "BasedApp3");
+        vm.label(address(bApp4), "BasedApp4");
         vm.label(address(nonCompliantBApp), "NonCompliantBApp");
         vm.label(address(whitelistExample), "WhitelistExample");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");

@@ -88,9 +88,12 @@ abstract contract BasedAppCore is IBasedApp {
     /// @notice Allows a Strategy to Opt-in to a BApp, it can be called only by the SSV Based App Manager
     function optInToBApp(
         uint32,
-        /*strategyId*/ address[] calldata,
-        /*tokens*/ uint32[] calldata,
-        /*obligationPercentages*/ bytes calldata /*data*/
+        /*strategyId*/
+        address[] calldata,
+        /*tokens*/
+        uint32[] calldata,
+        /*obligationPercentages*/
+        bytes calldata /*data*/
     ) external virtual onlySSVBasedAppManager returns (bool success) {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
@@ -99,9 +102,12 @@ abstract contract BasedAppCore is IBasedApp {
 
     function slash(
         uint32,
-        /*strategyId*/ address,
-        /*token*/ uint256,
-        /*amount*/ bytes calldata
+        /*strategyId*/
+        address,
+        /*token*/
+        uint256,
+        /*amount*/
+        bytes calldata
     ) external virtual onlySSVBasedAppManager returns (bool, address, bool) {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
@@ -121,5 +127,5 @@ abstract contract BasedAppCore is IBasedApp {
     }
 
     // Receive function to accept plain Ether transfers
-    receive() external payable {}
+    receive() external payable virtual {}
 }

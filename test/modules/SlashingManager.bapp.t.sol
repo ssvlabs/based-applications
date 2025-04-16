@@ -165,7 +165,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
         checkSlashableBalance(
             STRATEGY1,
-            address(bApp1),
+            address(bApp2),
             token,
             (depositAmount * percentage) / proxiedManager.maxPercentage()
         );
@@ -752,11 +752,12 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkSlashingFund(address(0), token, slashAmount);
     }
 
-    function testSlashBAppAdjustBasicETH() public {
-        uint256 depositAmount = 100_000;
+    function testSlashBAppAdjustBasicETHWithAdjust() public {
+        uint256 depositAmount = 100 ether;
         address token = ETH_ADDRESS;
-        uint256 slashAmount = 10_000;
+        uint256 slashAmount = 10 ether;
         testStrategyOptInToBAppWithETH();
+        vm.deal(USER2, depositAmount);
         vm.prank(USER2);
         proxiedManager.depositETH{ value: depositAmount }(STRATEGY1);
         vm.prank(USER1);
@@ -789,7 +790,60 @@ contract SlashingManagerTest is StrategyManagerTest {
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(bApp3), token, 81_000);
+        checkSlashableBalance(STRATEGY1, address(bApp3), token, 81 ether);
         checkSlashingFund(address(0), token, slashAmount);
+    }
+
+    function testSlashBAppAdjustBasicETH() public {
+        uint256 depositAmount = 100 ether;
+        address token = ETH_ADDRESS;
+        uint256 slashAmount = 10 ether;
+        testStrategyOptInToBAppWithETH();
+        vm.deal(USER2, depositAmount);
+        vm.prank(USER2);
+        proxiedManager.depositETH{ value: depositAmount }(STRATEGY1);
+        vm.prank(USER1);
+        vm.expectEmit(true, true, true, true);
+        emit IStrategyManager.StrategySlashed(
+            STRATEGY1,
+            address(bApp4),
+            token,
+            slashAmount,
+            address(bApp4)
+        );
+        proxiedManager.slash(
+            STRATEGY1,
+            address(bApp4),
+            token,
+            slashAmount,
+            abi.encodePacked("0x00")
+        );
+        (uint32 adjustedPercentage, ) = proxiedManager.obligations(
+            STRATEGY1,
+            address(bApp4),
+            token
+        );
+        assertEq(adjustedPercentage, 0, "Obligation percentage");
+        uint256 newStrategyBalance = depositAmount - slashAmount;
+        checkTotalSharesAndTotalBalance(
+            STRATEGY1,
+            token,
+            depositAmount,
+            newStrategyBalance
+        );
+        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
+        checkSlashableBalance(STRATEGY1, address(bApp4), token, 0 ether);
+        checkSlashingFund(address(bApp4), token, slashAmount);
+    }
+
+    function testRevertBAppRejectsWithdrawalInternally() public {
+        testSlashBAppAdjustBasicETH();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.WithdrawTransferFailed.selector
+            )
+        );
+        bApp4.withdrawETHSlashingFund(1 ether);
     }
 }

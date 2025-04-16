@@ -13,8 +13,10 @@ contract WhitelistExample is OwnableBasedApp, BasedAppWhitelisted {
     function optInToBApp(
         uint32 strategyId,
         address[] calldata,
-        /*tokens*/ uint32[] calldata,
-        /*obligationPercentages*/ bytes calldata /*data*/
+        /*tokens*/
+        uint32[] calldata,
+        /*obligationPercentages*/
+        bytes calldata /*data*/
     ) external view override onlySSVBasedAppManager returns (bool success) {
         if (!isWhitelisted[strategyId]) revert NonWhitelistedCaller();
         return true;

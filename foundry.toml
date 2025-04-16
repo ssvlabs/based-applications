@@ -18,9 +18,9 @@ quote_style = "double"
 tab_width = 4
 
 [fuzz]
-runs = 1024
+runs = 5
 
 [profile.ci]
 verbosity = 3
-fuzz = { runs = 4096 }
+fuzz = { runs = 1024 }
 

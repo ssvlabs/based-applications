@@ -19,7 +19,8 @@ contract BasedAppsManagerTest is UtilsTest {
     string[] public metadataURIs = [
         "http://metadata.com",
         "http://metadata2.com",
-        "http://metadata3.com"
+        "http://metadata3.com",
+        "http://metadata4.com"
     ];
 
     function createTwoTokenAndRiskInputs()

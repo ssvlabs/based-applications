@@ -11,8 +11,9 @@ contract BasedAppsManager is IBasedAppManager {
     /// @notice Allow the function to be called only by a registered bApp
     modifier onlyRegisteredBApp() {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        if (!s.registeredBApps[msg.sender])
+        if (!s.registeredBApps[msg.sender]) {
             revert IBasedAppManager.BAppNotRegistered();
+        }
         _;
     }
 
@@ -29,8 +30,9 @@ contract BasedAppsManager is IBasedAppManager {
     ) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
-        if (s.registeredBApps[msg.sender])
+        if (s.registeredBApps[msg.sender]) {
             revert IBasedAppManager.BAppAlreadyRegistered();
+        }
 
         s.registeredBApps[msg.sender] = true;
 
@@ -63,8 +65,9 @@ contract BasedAppsManager is IBasedAppManager {
         for (uint256 i = 0; i < length; ) {
             token = tokens[i];
             ValidationLib.validateNonZeroAddress(token);
-            if (s.bAppTokens[bApp][token].isSet)
+            if (s.bAppTokens[bApp][token].isSet) {
                 revert IBasedAppManager.TokenAlreadyAddedToBApp(token);
+            }
             _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
             unchecked {
                 i++;

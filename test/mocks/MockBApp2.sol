@@ -19,9 +19,12 @@ contract BasedAppMock2 is BasedAppCore {
 
     function slash(
         uint32,
-        /*strategyId*/ address,
-        /*token*/ uint256,
-        /*amount*/ bytes calldata
+        /*strategyId*/
+        address,
+        /*token*/
+        uint256,
+        /*amount*/
+        bytes calldata
     )
         external
         view
