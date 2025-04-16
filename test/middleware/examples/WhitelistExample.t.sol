@@ -18,18 +18,14 @@ contract WhitelistExampleTest is UtilsTest {
             ""
         );
         assertEq(strategyId1, STRATEGY1, "Should set the correct strategy ID");
-        (
-            address owner,
-            uint32 delegationFeeOnRewards,
-            uint32 freezingTime
-        ) = proxiedManager.strategies(strategyId1);
+        (address owner, uint32 delegationFeeOnRewards) = proxiedManager
+            .strategies(strategyId1);
         assertEq(owner, USER1, "Should set the correct strategy owner");
         assertEq(
             delegationFeeOnRewards,
             STRATEGY1_INITIAL_FEE,
             "Should set the correct strategy fee"
         );
-        assertEq(freezingTime, 0, "Should set the correct freezing time");
         vm.stopPrank();
     }
 

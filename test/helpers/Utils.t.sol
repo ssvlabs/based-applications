@@ -87,7 +87,7 @@ contract UtilsTest is Setup {
         assertEq(obligationPercentage, percentage, "Obligation percentage");
         uint256 usedTokens = proxiedManager.usedTokens(strategyId, token);
         assertEq(usedTokens, expectedTokens, "Used tokens");
-        (address strategyOwner, , ) = proxiedManager.strategies(strategyId);
+        (address strategyOwner, ) = proxiedManager.strategies(strategyId);
         if (strategyOwner != address(0)) {
             assertEq(owner, strategyOwner, "Strategy owner");
         }
@@ -208,7 +208,7 @@ contract UtilsTest is Setup {
         uint32 expectedProposedFee,
         uint256 expectedUpdateTime
     ) internal view {
-        (address owner, uint32 fee, ) = proxiedManager.strategies(strategyId);
+        (address owner, uint32 fee ) = proxiedManager.strategies(strategyId);
         (uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager
             .feeUpdateRequests(strategyId);
         assertEq(
@@ -238,7 +238,7 @@ contract UtilsTest is Setup {
         address expectedOwner,
         uint32 expectedFee
     ) internal view {
-        (address owner, uint32 fee, ) = proxiedManager.strategies(strategyId);
+        (address owner, uint32 fee) = proxiedManager.strategies(strategyId);
         assertEq(
             owner,
             expectedOwner,
