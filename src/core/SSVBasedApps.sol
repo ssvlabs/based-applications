@@ -199,24 +199,6 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
-    function getSlashableBalance(
-        uint32 strategyId,
-        address bApp,
-        address token
-    ) public view returns (uint256 slashableBalance) {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
-            strategyId
-        ][token];
-
-        uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 balance = strategyTokenShares.totalTokenBalance;
-        ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
-
-        return (balance * percentage) / MAX_PERCENTAGE;
-    }
-
     function proposeFeeUpdate(uint32 strategyId, uint32 proposedFee) external {
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
@@ -265,24 +247,6 @@ contract SSVBasedApps is
     }
 
     function updateAccountMetadataURI(string calldata metadataURI) external {
-        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
-    }
-
-    function slash(
-        uint32 strategyId,
-        address bApp,
-        address token,
-        uint256 amount,
-        bytes calldata data
-    ) external {
-        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
-    }
-
-    function withdrawSlashingFund(address token, uint256 amount) external {
-        _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
-    }
-
-    function withdrawETHSlashingFund(uint256 amount) external {
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 

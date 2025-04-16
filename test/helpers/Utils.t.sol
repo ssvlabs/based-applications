@@ -113,37 +113,6 @@ contract UtilsTest is Setup {
         assertEq(usedTokens, expectedUsedTokens, "Used tokens");
     }
 
-    function checkSlashableBalance(
-        uint32 strategyId,
-        address bApp,
-        address token,
-        uint256 expectedSlashableBalance
-    ) internal view {
-        uint256 slashableBalance = proxiedManager.getSlashableBalance(
-            strategyId,
-            bApp,
-            token
-        );
-        assertEq(
-            slashableBalance,
-            expectedSlashableBalance,
-            "Should match the expected slashable balance"
-        );
-    }
-
-    function checkSlashingFund(
-        address account,
-        address token,
-        uint256 expectedAmount
-    ) internal view {
-        uint256 slashingFund = proxiedManager.slashingFund(account, token);
-        assertEq(
-            slashingFund,
-            expectedAmount,
-            "Should match the expected slashing fund balance"
-        );
-    }
-
     function checkGeneration(
         uint32 strategyId,
         address token,

@@ -19,23 +19,4 @@ contract BasedAppMock3 is AccessControlBasedApp {
     ) AccessControlBasedApp(_basedAppManager, owner) {
         counter = 0;
     }
-
-    function slash(
-        uint32,
-        /*strategyId*/
-        address,
-        /*token*/
-        uint256,
-        /*amount*/
-        bytes calldata
-    )
-        external
-        view
-        override
-        onlySSVBasedAppManager
-        returns (bool, address, bool)
-    {
-        ///@dev return false on purpose to revert
-        return (true, address(0), false);
-    }
 }

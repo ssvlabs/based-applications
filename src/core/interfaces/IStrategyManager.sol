@@ -88,14 +88,6 @@ interface IStrategyManager {
         address token,
         uint256 amount
     );
-    event SlashingFundWithdrawn(address token, uint256 amount);
-    event StrategySlashed(
-        uint32 indexed strategyId,
-        address indexed bApp,
-        address token,
-        uint256 amount,
-        address receiver
-    );
 
     function createObligation(
         uint32 strategyId,
@@ -144,13 +136,6 @@ interface IStrategyManager {
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
     function removeDelegatedBalance(address receiver) external;
-    function slash(
-        uint32 strategyId,
-        address bApp,
-        address token,
-        uint256 amount,
-        bytes calldata data
-    ) external;
     function updateAccountMetadataURI(string calldata metadataURI) external;
     function updateDelegatedBalance(
         address receiver,
@@ -160,13 +145,10 @@ interface IStrategyManager {
         uint32 strategyId,
         string calldata metadataURI
     ) external;
-    function withdrawETHSlashingFund(uint256 amount) external;
-    function withdrawSlashingFund(address token, uint256 amount) external;
 
     error BAppAlreadyOptedIn();
     error BAppNotOptedIn();
     error BAppOptInFailed();
-    error BAppSlashingFailed();
     error DelegationAlreadyExists();
     error DelegationDoesNotExist();
     error DelegationExistsWithSameValue();
@@ -190,5 +172,4 @@ interface IStrategyManager {
     error RequestTimeExpired();
     error TimelockNotElapsed();
     error TokenNotSupportedByBApp(address token);
-    error WithdrawTransferFailed();
 }
