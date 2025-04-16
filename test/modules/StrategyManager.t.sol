@@ -2655,8 +2655,6 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.stopPrank();
     }
 
-    function testDepositETHWithTotalEthBalance0() public {}
-
     function testProposeUpdateAndProposeAnotherChangeToUpdate() public {
         uint256 withdrawalAmount = 1 ether;
         testStrategyOptInToBAppWithETH();
