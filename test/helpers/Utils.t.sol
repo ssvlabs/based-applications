@@ -208,7 +208,7 @@ contract UtilsTest is Setup {
         uint32 expectedProposedFee,
         uint256 expectedUpdateTime
     ) internal view {
-        (address owner, uint32 fee ) = proxiedManager.strategies(strategyId);
+        (address owner, uint32 fee) = proxiedManager.strategies(strategyId);
         (uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager
             .feeUpdateRequests(strategyId);
         assertEq(
