@@ -53,7 +53,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @dev The percentage is scaled by 1e4 so the minimum unit is 0.01%
     function delegateBalance(address account, uint32 percentage) external {
         ValidationLib.validatePercentageAndNonZero(percentage);
-        //  if (percentage == 0 || percentage > MAX_PERCENTAGE) revert IStrategyManager.InvalidPercentage();
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (s.delegations[msg.sender][account] != 0) {
@@ -83,7 +82,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     ) external {
         ValidationLib.validatePercentageAndNonZero(percentage);
 
-        //        if (percentage == 0 || percentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         uint32 existingPercentage = s.delegations[msg.sender][account];
