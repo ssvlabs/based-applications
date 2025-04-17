@@ -60,7 +60,7 @@ contract BasedAppsManager is IBasedAppManager {
         ICore.SharedRiskLevel storage tokenData;
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
 
-        for (uint256 i = 0; i < tokenConfigs.length;) {
+        for (uint256 i = 0; i < tokenConfigs.length; ) {
             token = tokenConfigs[i].token;
             tokenData = s.bAppTokens[msg.sender][token];
             // Update current value if the previous effect time has passed
@@ -97,9 +97,9 @@ contract BasedAppsManager is IBasedAppManager {
             if (s.bAppTokens[bApp][token].isSet) {
                 revert IBasedAppManager.TokenAlreadyAddedToBApp(token);
             }
-                    ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
-       tokenData.currentValue = sharedRiskLevels[i];
-        tokenData.isSet = true;
+            ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
+            tokenData.currentValue = sharedRiskLevels[i];
+            tokenData.isSet = true;
             unchecked {
                 i++;
             }
