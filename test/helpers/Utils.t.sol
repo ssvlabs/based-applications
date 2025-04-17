@@ -54,12 +54,8 @@ contract UtilsTest is Setup {
         bool isRegistered = proxiedManager.registeredBApps(bApp);
         assertEq(isRegistered, true, "BApp registered");
         for (uint32 i = 0; i < tokensInput.length; i++) {
-            (
-                uint32 sharedRiskLevel,
-                bool isSet,
-                uint32 pendingValue,
-                uint32 effectiveTime
-            ) = proxiedManager.bAppTokens(bApp, tokensInput[i]);
+            (uint32 sharedRiskLevel, bool isSet, , ) = proxiedManager
+                .bAppTokens(bApp, tokensInput[i]);
             assertEq(
                 riskLevelInput[i],
                 sharedRiskLevel,
@@ -352,7 +348,7 @@ contract UtilsTest is Setup {
         assertEq(isRegistered, true, "BApp registered");
         for (uint32 i = 0; i < tokenConfigs.length; i++) {
             (
-                uint32 sharedRiskLevel,
+                ,
                 bool isSet,
                 uint32 pendingValue,
                 uint32 effectiveTime
