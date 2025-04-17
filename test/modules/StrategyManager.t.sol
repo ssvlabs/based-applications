@@ -46,9 +46,36 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             STRATEGY1_INITIAL_FEE,
             ""
         );
+        uint32[] memory strategies = proxiedManager.strategyOwners(USER1);
+        assertEq(
+            strategies.length,
+            1,
+            "Should have created 1 strategy for USER1"
+        );
+        assertEq(
+            strategies[0],
+            strategyId1,
+            "Should have the correct ID for Strategy 1"
+        );
         proxiedManager.createStrategy(STRATEGY2_INITIAL_FEE, "");
         proxiedManager.createStrategy(STRATEGY3_INITIAL_FEE, "");
-
+        strategies = proxiedManager.strategyOwners(USER1);
+        assertEq(strategies.length, 3, "Should have created the strategy");
+        assertEq(
+            strategies[0],
+            strategyId1,
+            "Should have the correct ID for Strategy 1"
+        );
+        assertEq(
+            strategies[1],
+            STRATEGY2,
+            "Should have the correct ID for Strategy 2"
+        );
+        assertEq(
+            strategies[2],
+            STRATEGY3,
+            "Should have the correct ID for Strategy 3"
+        );
         assertEq(
             strategyId1,
             STRATEGY1,
@@ -69,6 +96,17 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32 strategyId4 = proxiedManager.createStrategy(
             STRATEGY4_INITIAL_FEE,
             ""
+        );
+        strategies = proxiedManager.strategyOwners(USER2);
+        assertEq(
+            strategies.length,
+            1,
+            "Should have created one strategy for USER2"
+        );
+        assertEq(
+            strategies[0],
+            strategyId4,
+            "Should have the correct ID for Strategy 4"
         );
         assertEq(
             strategyId4,
