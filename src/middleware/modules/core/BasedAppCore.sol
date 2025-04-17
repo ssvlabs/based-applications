@@ -9,6 +9,8 @@ import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol"
 
 import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
+
 // =====================================================================================
 // ⚠️ WARNING: IMPLEMENT OWNER OR ACCESS ROLES ⚠️
 // -------------------------------------------------------------------------------------
@@ -66,6 +68,16 @@ abstract contract BasedAppCore is IBasedApp {
     ) external virtual {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(
             metadataURI
+        );
+    }
+
+    /// @notice Updates the tokens of a BApp
+    /// @param tokenConfigs new list of tokens and their shared risk levels
+    function updateBAppTokens(
+        ICore.TokenConfig[] calldata tokenConfigs
+    ) external virtual {
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppsTokens(
+            tokenConfigs
         );
     }
 

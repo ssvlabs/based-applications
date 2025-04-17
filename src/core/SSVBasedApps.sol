@@ -72,7 +72,7 @@ contract SSVBasedApps is
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        ProtocolStorageLib.Data memory config
+        ProtocolStorageLib.Data calldata config
     ) external override initializer onlyProxy {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
@@ -89,7 +89,7 @@ contract SSVBasedApps is
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        ProtocolStorageLib.Data memory config
+        ProtocolStorageLib.Data calldata config
     ) internal onlyInitializing {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
@@ -114,6 +114,8 @@ contract SSVBasedApps is
         sp.withdrawalExpireTime = config.withdrawalExpireTime;
         sp.obligationTimelockPeriod = config.obligationTimelockPeriod;
         sp.obligationExpireTime = config.obligationExpireTime;
+        sp.tokenUpdateTimelockPeriod = config.tokenUpdateTimelockPeriod;
+        sp.tokenUpdateExpireTime = config.tokenUpdateExpireTime;
         sp.maxShares = config.maxShares;
 
         emit MaxFeeIncrementSet(sp.maxFeeIncrement);
@@ -143,6 +145,12 @@ contract SSVBasedApps is
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels,
         string calldata metadataURI
+    ) external {
+        _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
+    }
+
+    function updateBAppsTokens(
+        ICore.TokenConfig[] calldata tokenConfigs
     ) external {
         _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
     }
@@ -324,6 +332,14 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
+    function updateTokenUpdateTimelockPeriod(uint32 value) external onlyOwner {
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
+    }
+
+    function updateTokenUpdateExpireTime(uint32 value) external onlyOwner {
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
+    }
+
     function updateMaxShares(uint256 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
@@ -363,6 +379,13 @@ contract SSVBasedApps is
     ) external view returns (address strategyOwner, uint32 fee) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
+    }
+
+    function strategyOwners(
+        address owner
+    ) external view returns (uint32[] memory strategyIds) {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        return s.strategyOwners[owner];
     }
 
     function strategyAccountShares(
@@ -432,11 +455,22 @@ contract SSVBasedApps is
     function bAppTokens(
         address bApp,
         address token
-    ) external view returns (uint32 value, bool isSet) {
+    )
+        external
+        view
+        returns (
+            uint32 currentValue,
+            bool isSet,
+            uint32 pendingValue,
+            uint32 effectTime
+        )
+    {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (
-            s.bAppTokens[bApp][token].value,
-            s.bAppTokens[bApp][token].isSet
+            s.bAppTokens[bApp][token].currentValue,
+            s.bAppTokens[bApp][token].isSet,
+            s.bAppTokens[bApp][token].pendingValue,
+            s.bAppTokens[bApp][token].effectTime
         );
     }
 
@@ -532,6 +566,14 @@ contract SSVBasedApps is
 
     function obligationExpireTime() external view returns (uint32) {
         return ProtocolStorageLib.load().obligationExpireTime;
+    }
+
+    function tokenUpdateTimelockPeriod() external view returns (uint32) {
+        return ProtocolStorageLib.load().tokenUpdateTimelockPeriod;
+    }
+
+    function tokenUpdateExpireTime() external view returns (uint32) {
+        return ProtocolStorageLib.load().tokenUpdateExpireTime;
     }
 
     function getVersion() external pure returns (string memory) {

@@ -163,6 +163,8 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
+            tokenUpdateTimelockPeriod: 14 days,
+            tokenUpdateExpireTime: 3 days,
             maxShares: 1e50
         });
         vm.expectRevert(
@@ -192,6 +194,8 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
                 withdrawalExpireTime: 3 days,
                 obligationTimelockPeriod: 14 days,
                 obligationExpireTime: 3 days,
+                tokenUpdateTimelockPeriod: 14 days,
+                tokenUpdateExpireTime: 3 days,
                 maxFeeIncrement: 10_001
             });
         vm.expectRevert(

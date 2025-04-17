@@ -144,6 +144,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         newStrategy.owner = msg.sender;
         newStrategy.fee = fee;
 
+        s.strategyOwners[msg.sender].push(strategyId);
+
         emit StrategyCreated(strategyId, msg.sender, fee, metadataURI);
     }
 

@@ -11,8 +11,10 @@ library ProtocolStorageLib {
         uint32 withdrawalExpireTime;
         uint32 obligationTimelockPeriod;
         uint32 obligationExpireTime;
-        uint32 maxFeeIncrement;
+        uint32 tokenUpdateTimelockPeriod;
+        uint32 tokenUpdateExpireTime;
         uint256 maxShares;
+        uint32 maxFeeIncrement;
     }
 
     uint256 private constant SSV_STORAGE_POSITION =
