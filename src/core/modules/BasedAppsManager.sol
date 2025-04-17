@@ -60,7 +60,7 @@ contract BasedAppsManager is IBasedAppManager {
         ICore.SharedRiskLevel storage tokenData;
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
 
-        for (uint256 i = 0; i < tokenConfigs.length; i++) {
+        for (uint256 i = 0; i < tokenConfigs.length;) {
             token = tokenConfigs[i].token;
             tokenData = s.bAppTokens[msg.sender][token];
             // Update current value if the previous effect time has passed
@@ -70,6 +70,9 @@ contract BasedAppsManager is IBasedAppManager {
             tokenData.pendingValue = tokenConfigs[i].sharedRiskLevel;
             tokenData.effectTime = requestTime + sp.tokenUpdateTimelockPeriod;
             tokenData.isSet = true;
+            unchecked {
+                i++;
+            }
         }
 
         emit BAppTokensUpdated(msg.sender, tokenConfigs);
@@ -94,26 +97,12 @@ contract BasedAppsManager is IBasedAppManager {
             if (s.bAppTokens[bApp][token].isSet) {
                 revert IBasedAppManager.TokenAlreadyAddedToBApp(token);
             }
-            _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
+                    ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
+       tokenData.currentValue = sharedRiskLevels[i];
+        tokenData.isSet = true;
             unchecked {
                 i++;
             }
         }
-    }
-
-    /// @notice Internal function to set the shared risk level for a token
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    /// @param sharedRiskLevel The shared risk level
-    function _setTokenRiskLevel(
-        address bApp,
-        address token,
-        uint32 sharedRiskLevel
-    ) internal {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-        ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
-
-        tokenData.currentValue = sharedRiskLevel;
-        tokenData.isSet = true;
     }
 }
