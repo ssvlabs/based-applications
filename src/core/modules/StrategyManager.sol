@@ -389,14 +389,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             sp.obligationExpireTime
         );
 
-        if (
-            percentage == 0 &&
-            s.obligations[strategyId][bApp][address(token)].percentage > 0
-        ) {
-            s.usedTokens[strategyId][address(token)] -= 1;
-        }
-
-        _updateObligation(strategyId, bApp, address(token), percentage);
+        s.obligations[strategyId][bApp][address(token)].percentage = percentage;
 
         emit ObligationUpdated(strategyId, bApp, address(token), percentage);
 
@@ -528,7 +521,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
 
         if (obligationPercentage != 0) {
-            s.usedTokens[strategyId][token] += 1;
             s
             .obligations[strategyId][bApp][token]
                 .percentage = obligationPercentage;
@@ -566,28 +558,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (!s.obligations[strategyId][bApp][token].isSet) {
             revert ObligationHasNotBeenCreated();
         }
-    }
-
-    /// @notice Update a single obligation for a bApp
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    function _updateObligation(
-        uint32 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) private {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-
-        if (
-            s.obligations[strategyId][bApp][token].percentage == 0 &&
-            obligationPercentage > 0
-        ) {
-            s.usedTokens[strategyId][token] += 1;
-        }
-        s
-        .obligations[strategyId][bApp][token].percentage = obligationPercentage;
     }
 
     /// @notice Check the timelocks

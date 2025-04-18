@@ -53,12 +53,6 @@ library CoreStorageLib {
          */
         mapping(uint32 strategyId => mapping(address bApp => mapping(address token => ICore.Obligation))) obligations;
         /**
-         * @notice Tracks unallocated tokens in a strategy.
-         * @dev Count the number of bApps that have one obligation set for the token.
-         * If the counter is 0, the token is unused and we can allow fast withdrawal.
-         */
-        mapping(uint32 strategyId => mapping(address token => uint32 bAppsCounter)) usedTokens;
-        /**
          * @notice Tracks all the withdrawal requests divided by token per strategy.
          * @dev User can have only one pending withdrawal request per token.
          *  Submitting a new request will overwrite the previous one and reset the timer.

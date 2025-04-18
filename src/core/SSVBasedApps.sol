@@ -444,14 +444,6 @@ contract SSVBasedApps is
         );
     }
 
-    function usedTokens(
-        uint32 strategyId,
-        address token
-    ) external view returns (uint32) {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return s.usedTokens[strategyId][token];
-    }
-
     function bAppTokens(
         address bApp,
         address token

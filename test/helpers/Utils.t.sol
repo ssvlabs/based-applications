@@ -72,7 +72,6 @@ contract UtilsTest is Setup {
         address token,
         uint32 percentage,
         SSVBasedApps proxiedManager,
-        uint32 expectedTokens,
         bool expectedIsSet
     ) internal view {
         uint32 id = proxiedManager.accountBAppStrategy(owner, bApp);
@@ -84,8 +83,6 @@ contract UtilsTest is Setup {
         );
         assertEq(isSet, expectedIsSet, "Obligation is set");
         assertEq(obligationPercentage, percentage, "Obligation percentage");
-        uint256 usedTokens = proxiedManager.usedTokens(strategyId, token);
-        assertEq(usedTokens, expectedTokens, "Used tokens");
         (address strategyOwner, ) = proxiedManager.strategies(strategyId);
         if (strategyOwner != address(0)) {
             assertEq(owner, strategyOwner, "Strategy owner");
@@ -97,7 +94,6 @@ contract UtilsTest is Setup {
         address bApp,
         address token,
         uint32 expectedPercentage,
-        uint32 expectedUsedTokens,
         bool expectedIsSet,
         SSVBasedApps proxiedManager
     ) internal view {
@@ -108,8 +104,6 @@ contract UtilsTest is Setup {
         );
         assertEq(percentage, expectedPercentage, "Obligation percentage");
         assertEq(isSet, expectedIsSet, "Obligation is set");
-        uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
-        assertEq(usedTokens, expectedUsedTokens, "Used tokens");
     }
 
     function checkSlashableBalance(
@@ -298,19 +292,6 @@ contract UtilsTest is Setup {
             amount,
             expectedAmount,
             "Should match the expected request amount"
-        );
-    }
-
-    function checkUsedTokens(
-        uint32 strategyId,
-        address token,
-        uint32 expectedUsedTokens
-    ) internal view {
-        uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
-        assertEq(
-            usedTokens,
-            expectedUsedTokens,
-            "Should have set the correct used tokens"
         );
     }
 
