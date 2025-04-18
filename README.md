@@ -41,6 +41,26 @@ This `middleware` folder contains the modules for building a bapp:
 
 &nbsp;
 
+## :page_with_curl: _Instructions_
+
+**1)** Fire up your favorite console & clone this repo somewhere:
+
+__`❍ git clone https://github.com/ssvlabs/based-applications.git`__
+
+**2)** After selecting the right branch, enter this directory & install dependencies:
+
+__`❍ forge install`__
+
+**3)** Compile the contracts:
+
+__`❍ forge build`__
+
+**4)** Set the tests going!
+
+__`❍ forge test`__
+
+&nbsp;
+
 ## 🔨 Slashing Mechanism
 
 The `slash` function allows for the reduction of a strategy’s token balance under specific conditions, either as a penalty or to enforce protocol-defined behavior. Slashing can happen in two distinct modes, depending on whether:
@@ -99,26 +119,6 @@ function withdrawETHSlashingFund(uint256 amount) external
 ```
 
 These functions verify balances and authorize the caller to retrieve their accumulated slashed tokens.
-
-&nbsp;
-
-## :page_with_curl: _Instructions_
-
-**1)** Fire up your favorite console & clone this repo somewhere:
-
-__`❍ git clone https://github.com/ssvlabs/based-applications.git`__
-
-**2)** After selecting the right branch, enter this directory & install dependencies:
-
-__`❍ forge install`__
-
-**3)** Compile the contracts:
-
-__`❍ forge build`__
-
-**4)** Set the tests going!
-
-__`❍ forge test`__
 
 &nbsp;
 

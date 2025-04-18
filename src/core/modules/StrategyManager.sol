@@ -521,8 +521,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ValidationLib.validatePercentage(obligationPercentage);
 
-        // if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
-
         if (s.obligations[strategyId][bApp][token].isSet) {
             revert ObligationAlreadySet();
         }
