@@ -144,7 +144,25 @@ __`❍ npm run deploy:holesky`__: verification is done automatically.
 
 __`❍ npm run deploy:hoodi`__: verification needs to be done manually for now.
 
-### Public Testnet
+### How to Update Module Contracts
+
+It is possible to update each one of the three modules: `StrategyManager`, `BasedAppsManager` and `ProtocolManager`.
+
+It is possible to update multiple modules at the same time. 
+
+**1)** Go on the Proxy Contract on Etherscan, under "Write as Proxy" call the function:
+
+__`❍ updateModules`__: specifying the correct module id and the new module address.
+
+### How to Upgrade the Implementation Contract 
+
+**1)** Go on the Proxy Contract on Etherscan, under "Write as Proxy" call the function:
+
+__`❍ upgradeToAndCall`__: specifying the new implementation address. The data field can be left empty in this case.
+
+There is also the `UpgradeProxy.s.sol` script file that can be run easily from the CLI.
+
+### Public Testnet Holesky
 
 | Name | Proxy | Implementation | Notes |
 | -------- | -------- | -------- | -------- | 
