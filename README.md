@@ -61,7 +61,7 @@ __`❍ forge test`__
 
 &nbsp;
 
-## 🔨 Slashing Mechanism
+## 🔨 _Slashing Mechanism_
 
 The `slash` function allows for the reduction of a strategy’s token balance under specific conditions, either as a penalty or to enforce protocol-defined behavior. Slashing can happen in two distinct modes, depending on whether:
 
