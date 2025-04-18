@@ -128,9 +128,9 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 &nbsp;
 
-## :page_facing_up: _More Resources_
+## :books: _More Resources_
 
-[Based Apps Onboarding Guide](./doc/bapp_onboarding.md) 
+[Based Apps Onboarding Guide](./doc/bAppOnBoarding.md) 
 
 &nbsp;
 
@@ -144,7 +144,7 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 &nbsp;
 
-## License
+## :scroll: _License_
 
 2025 SSV Network <https://ssv.network/>
 
