@@ -136,6 +136,14 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 ## :rocket: _Deployments_
 
+### How to Deploy
+
+**1)** Run the deployment script defined in `scripts/`:
+
+__`❍ npm run deploy:holesky`__: verification is done automatically.
+
+__`❍ npm run deploy:hoodi`__: verification needs to be done manually for now.
+
 ### Public Testnet
 
 | Name | Proxy | Implementation | Notes |
