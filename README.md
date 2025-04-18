@@ -138,7 +138,7 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 ### How to Deploy
 
-**1)** Run the deployment script defined in `scripts/`:
+**1)** Run the deployment script `DeployProxy.s.sol` defined in `scripts/`:
 
 __`❍ npm run deploy:holesky`__: verification is done automatically.
 
