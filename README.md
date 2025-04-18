@@ -41,7 +41,27 @@ This `middleware` folder contains the modules for building a bapp:
 
 &nbsp;
 
-## 🔨 Slashing Mechanism
+## :page_with_curl: _Instructions_
+
+**1)** Fire up your favorite console & clone this repo somewhere:
+
+__`❍ git clone https://github.com/ssvlabs/based-applications.git`__
+
+**2)** After selecting the right branch, enter this directory & install dependencies:
+
+__`❍ forge install`__
+
+**3)** Compile the contracts:
+
+__`❍ forge build`__
+
+**4)** Set the tests going!
+
+__`❍ forge test`__
+
+&nbsp;
+
+## 🔨 _Slashing Mechanism_
 
 The `slash` function allows for the reduction of a strategy’s token balance under specific conditions, either as a penalty or to enforce protocol-defined behavior. Slashing can happen in two distinct modes, depending on whether:
 
@@ -102,39 +122,27 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 &nbsp;
 
-## :page_with_curl: _Instructions_
-
-**1)** Fire up your favorite console & clone this repo somewhere:
-
-__`❍ git clone https://github.com/ssvlabs/based-applications.git`__
-
-**2)** After selecting the right branch, enter this directory & install dependencies:
-
-__`❍ forge install`__
-
-**3)** Compile the contracts:
-
-__`❍ forge build`__
-
-**4)** Set the tests going!
-
-__`❍ forge test`__
-
-&nbsp;
-
 ## :page_facing_up: _Whitepaper_
 
 [Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
 
 &nbsp;
 
-## :page_facing_up: _More Resources_
+## :books: _More Resources_
 
-[Based Apps Onboarding Guide](./doc/bapp_onboarding.md) 
+[Based Apps Onboarding Guide](./doc/bAppOnBoarding.md) 
 
 &nbsp;
 
 ## :rocket: _Deployments_
+
+### How to Deploy
+
+**1)** Run the deployment script defined in `scripts/`:
+
+__`❍ npm run deploy:holesky`__: verification is done automatically.
+
+__`❍ npm run deploy:hoodi`__: verification needs to be done manually for now.
 
 ### Public Testnet
 
@@ -144,7 +152,7 @@ __`❍ forge test`__
 
 &nbsp;
 
-## License
+## :scroll: _License_
 
 2025 SSV Network <https://ssv.network/>
 
