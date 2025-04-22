@@ -19,22 +19,29 @@
   ],
   "scripts": {
     "compile": "forge compile",
-    "build": "forge fmt && forge clean && forge build",
-    "deploy:holesky": "npm run build && forge script script/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --verify -vvv --broadcast",
-    "deploy:devnet7": "npm run build && forge script script/DeployProxy.s.sol --chain-id 7032118028 --rpc-url $DEVNET7_RPC_URL --private-key $PRIVATE_KEY --verify --verifier blockscout --verifier-url 'https://explorer-api.pectra-devnet-7.ethpandaops.io/api/' --broadcast",
-    "deploy:hoodi": "npm run build && forge script script/DeployProxy.s.sol --rpc-url $HOODI_RPC_URL --private-key $PRIVATE_KEY --verifier blockscout --verifier-url 'https://hoodi.cloud.blockscout.com/api/' -vvv --broadcast",
+    "build": "npm run lint:fix && forge clean && forge build",
+    "deploy:holesky": "npm run build && forge script scripts/DeployProxy.s.sol --rpc-url $HOLESKY_RPC_URL --private-key $PRIVATE_KEY --verify -vvv --broadcast",
+    "deploy:hoodi": "npm run build && forge script scripts/DeployProxy.s.sol --rpc-url $HOODI_RPC_URL --private-key $PRIVATE_KEY --etherscan-api-key $ETHERSCAN_API_KEY --verify -vvv --broadcast",
     "verify:hoodi": "forge verify-contract --rpc-url https://hoodi.cloud.blockscout.com/api/eth-rpc --verifier blockscout --verifier-url 'https://hoodi.cloud.blockscout.com/api/' $IMPLEMENTATION_ADDRESS src/SSVBasedApps.sol:SSVBasedApps",
-    "format": "forge fmt",
     "gas-report": "forge test --gas-report",
     "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/SSVBasedApps.sol --output-dir ./docs --overwrite",
     "prepare": "husky",
     "lint:solhint": "solhint './src/**/*.sol'",
+    "lint:check": "prettier --check **.sol",
+    "lint:fix": "prettier --write **.sol",
     "test": "forge test",
-    "test-coverage": "forge coverage --no-match-coverage \"(script|test)\"",
-    "test-coverage-report": "forge coverage --no-match-coverage \"(script|test)\" --report debug > test.txt"
+    "test-coverage": "forge coverage --no-match-coverage \"(scripts|test)\"",
+    "test-coverage-report": "forge coverage --no-match-coverage \"(scripts|test)\" --report debug > test.txt"
   },
   "devDependencies": {
-    "@openzeppelin/contracts-upgradeable": "^5.2.0",
-    "husky": "^9.1.7"
+    "@openzeppelin/contracts-upgradeable": "^5.3.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "prettier": "^3.5.3",
+    "prettier-plugin-solidity": "^1.4.2",
+    "solhint": "^5.0.5"
+  },
+  "lint-staged": {
+    "src/**/*.sol": "solhint"
   }
 }

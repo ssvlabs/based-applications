@@ -1,35 +1,71 @@
-# bApp Onboarding Guide
+# The bApp Onboarding Guide
 
-### [Intro](../README.md) | bApp Onboarding Guide 
+This guide outlines the steps for based applications developers looking to build on the Based Applications platform.
 
-This guide outlines the steps for based applications developers looking to build on the bApps platform.
+## 1. :crystal_ball: Creating and Configuring a bApp
 
-## 1. Creating and Configuring a bApp
+**1.1)** **Decide what type of bApp you need**:
 
-1. **Define core attributes**:
-- `bApp`: a unique 20-byte EVM address that uniquely identifies the bApp.
-- `tokens`:  A list of ERC-20 tokens to be used in the bApp's security mechanism. For the native ETH token, use the special address [`0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F1).
+✅ Option 1: **Smart Contract Interface-Compliant bApp**
+
+If you want your bApp to be interoperable with the middleware, you should make it compliant with a specific interface:
+
+*	Interface: IBasedApp.sol
+
+*	This interface defines the required functions your smart contract must implement to interact correctly with the middleware.
+
+🧩 How to Comply Easily:
+
+*	Use predefined modules from: `src/middleware/modules/`
+
+* These modules are designed to simplify the implementation of IBasedApp.
+
+🔧 Benefits:
+
+* Create custom login for opt-in/slashing/tasks
+
+✅ Option 2: EOA (Externally Owned Account)
+
+Instead of writing a smart contract, your bApp can be just an EOA that interacts with the protocol or middleware.
+
+🔧 When to Choose This:
+	•	You’re prototyping or doing quick tests.
+	•	You don’t need to deploy custom logic.
+
+:warning: In the case of a smart contract that is not compliant with the interface, it will be treated like an EOA :warning:
+
+**1.2)** **Define core attributes**:
+   
+- `bApp`: a unique 20-byte EVM address that uniquely identifies the bApp;
+  
+- `tokens`: a list of ERC-20 tokens to be used in the bApp's security mechanism. For the native ETH token, use the special address `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`;
+  
 - `sharedRiskLevels`: a list of $\beta$ values, one for each token, representing the bApp's tolerance for risk (token over-usage). Each $\beta$ value ranges from 0 to 4,294.967295. Since it's encoded in as a `uint32`, its first six digits represent decimal places. For example, a stored value of 1_000_000 corresponds to a real value of 1.0.
-2. **Optional Non-Slashable Validator Balance**: If the bApp uses non-slashable validator balance, it should be configured off-chain, in the bApp's network.
-3. **Register the bApp**: Use the [`registerBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F20) function of the smart contract:
+  
+**1.3)** **(Optional) Non-Slashable Validator Balance**: If the bApp uses non-slashable validator balance, it should be configured off-chain, in the bApp's network;
+   
+**1.4)** **Register the bApp**: Use the `registerBApp` function of the smart contract:
+
 ```solidity
 function registerBApp(
-   address bApp,
    address[] calldata tokens,
    uint32[] calldata sharedRiskLevels,
    string calldata metadataURI
 )
 ```
-- `metadataURI`: A link to a JSON file containing additional details about your bApp, such as its name, description, logo, and website.
-4. **Update Configuration**: After registering, the bApp configuration can be updated only by the `owner` account. Namely, more tokens can be added with [`addTokensToBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F1), the tokens' shared risk levels updated with [`updateBAppTokens`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F24), and the metadata updated with [`updateMetadataURI`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F26).
 
-## 2. Securing the bApp
+- `metadataURI`: A link to a JSON file containing additional details about your bApp, such as its name, description, logo, and website.
+
+**1.5)** **Update Configuration**: After registering, the bApp configuration can be updated only by the `bApp` account. More tokens can be added with [`updateBAppTokens`] by setting a new list of active tokens, that will be effective after a delay time, and the metadata updated with `updateMetadataURI`.
+
+## 2. :closed_lock_with_key: Securing the bApp
 
 Once the bApp is registered, strategies can join it and allocate capital to secure it.
 
-### 2.1 Opting in
+**2.1)** 2.1 Opting in
 
-The strategy opts-in to the bApp by using the [`optInToBApp`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F15) function of the smart contract:
+The strategy opts-in to the bApp by using the `optInToBApp` function of the smart contract:
+
 ```solidity
 function optInToBApp(
    uint256 strategyId,
@@ -39,39 +75,43 @@ function optInToBApp(
    bytes calldata data
 )
 ```
-- `tokens`: List of tokens to obligate to the bApp.
-- `obligationPercentages`: The proportion of each token's balance to commit to the bApp. Though it's encoded as a uint32, its first two digits represent decimal places of a percentage value. For example, a stored value of 5000 corresponds to 50.00%.
+- `tokens`: List of tokens to obligate to the bApp;
+  
+- `obligationPercentages`: The proportion of each token's balance to commit to the bApp. Though it's encoded as a uint32, its first two digits represent decimal places of a percentage value. For example, a stored value of 5000 corresponds to 50.00%;
+  
 - `data`: An extra optional field for off-chain information required by the bApp for participation.
 
 For example, if `tokens = [SSV]` and `obligationPercentages = [50%]`, then 50% of the strategy's `SSV` balance will be obligated to the bApp.
 
-The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation. Obligations can be increased instantly ([`fastUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F7)), but decreasing obligations requires a timelock ([`proposeUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F17) → [`finalizeUpdateObligation`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F11)) to ensure slashable capital can’t be pulled out instantly.
+The strategy’s owner can later update its obligations by modifying existing ones or adding a new token obligation. Changing obligations requires a timelock `proposeUpdateObligation` → `finalizeUpdateObligation` to ensure slashable capital can’t be pulled out instantly.
 
-### 2.2 Strategy's Funds
+**2.2)** Strategy's Funds
 
 To compose their balances, strategies:
-1. receive ERC20 (or ETH) via [**deposits**](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F5) from accounts.
-2. inherit the non-slashable validator balance from its owner account. Accounts [**delegate**](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#writeProxyContract#F4) validator balances between themselves, and the strategy inherits all balances delegated to its owner.
 
-If a token is allocated to a bApp ([`usedTokens[strategyId][token] != 0`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A#readProxyContract#F22)), accounts need to propose a withdrawal and wait a timelock before finalizing it, ensuring the slashable collateral cannot be removed instantly.
+1. receive ERC20 (or ETH) via **deposits** (`depositERC20`, `depositETH`) from accounts;
+   
+2. inherit the non-slashable validator balance from its owner account. Accounts **delegate** (`delegateBalance`) validator balances between themselves, and the strategy inherits all balances delegated to its owner.
 
-## 3. Participant Weight
+Accounts need to propose a withdrawal and wait a timelock before finalizing it, ensuring the slashable collateral cannot be removed instantly.
+
+## 3. :moyai: Participant Weight
 
 bApp clients track the weight of each participant in the bApp. For that, clients will:
 
-1. **Gather Obligated Balances**: First, for each token used by the bApp, it should get the obligated balance from each strategy.
+**3.1)** **Gather Obligated Balances**: First, for each token used by the bApp, it should get the obligated balance from each strategy.
 ```go
 ObligatedBalance mapping(Token -> Strategy -> Amount)
 ```
-2. **Sum Obligations**: From `ObligatedBalance`, it can sum all obligations and compute the total amount obligated to the bApp by all strategies.
+**3.2)** **Sum Obligations**: From `ObligatedBalance`, it can sum all obligations and compute the total amount obligated to the bApp by all strategies.
 ```go
 TotalBAppBalance mapping(Token -> Amount)
 ```
-3. **Calculate Risk**: For each token, it should get the risk (token-over usage) of each strategy.
+**3.3)** **Calculate Risk**: For each token, it should get the risk (token-over usage) of each strategy.
 ```go
 Risk mapping(Token -> Strategy -> Float)
 ```
-4. **Compute Risk-Aware Weights**: With this information, it can compute the weight of a participant for a certain token by
+**3.4)** **Compute Risk-Aware Weights**: With this information, it can compute the weight of a participant for a certain token by
 
 $$W_{\text{strategy, token}} = c_{\text{token}} \times \frac{ObligatedBalance[\text{token}][\text{strategy}]}{TotalBAppBalance[\text{token}]} e^{-\beta_{\text{token}} \times max(1, Risk[\text{token}][\text{strategy}])}$$
 
@@ -85,7 +125,7 @@ $$c_{\text{token}} = \left( \sum_{\text{strategy}} \frac{ObligatedBalance[\text{
 > $$W_{\text{strategy, validator balance}} = \frac{ObligatedBalance[\text{validator balance}][\text{strategy}]}{TotalBAppBalance[\text{validator balance}]}$$
 
 
-5. **Combine into the Final Weight**: With the per-token weights, the final step is to compute a final weight for the participant using a **combination function**. Such function is defined by the bApp and can be tailored to its specific needs. Traditional examples include the arithmetic mean, geometric mean, and harmonic mean.
+**3.5)** **Combine into the Final Weight**: With the per-token weights, the final step is to compute a final weight for the participant using a **combination function**. Such function is defined by the bApp and can be tailored to its specific needs. Traditional examples include the arithmetic mean, geometric mean, and harmonic mean.
 
 
 **Example**: Let's consider a bApp that uses tokens $A$ and $B$, and considers $A$ to be twice as important as $B$. Then, it could use the following weighted harmonic mean as its combination function:
@@ -241,10 +281,12 @@ Consider a bApp with the following configuration:
 | Final weight combination function       | $W_{\text{strategy}}^{\text{final}} = c_{\text{final}} \times \frac{1}{\frac{2/3}{W_{\text{strategy, SSV}}} + \frac{1/3}{W_{\text{strategy, VB}}}}$ |
 
 This setup means:
-- The only slashable token in use is SSV, with $\beta = 2$.
-- Validator balance is included in the model.
-- The combination function is a harmonic mean, where SSV carries twice the weight of validator balance.
 
+- The only slashable token in use is SSV, with $\beta = 2$;
+
+- Validator balance is included in the model;
+  
+- The combination function is a harmonic mean, where SSV carries twice the weight of validator balance.
 
 ### 2. Strategies securing the bApp
 
@@ -252,15 +294,19 @@ The following strategies have opted-in to the bApp:
 
 | Strategy | SSV Balance | SSV Obligation | Risk for SSV token | Validator Balance |
 |----------|-------------|----------------|--------------------|-------------------|
-| 1        | 100         | 50%            | 1.5 (150%)               | 32                |
-| 2        | 200         | 10%            | 1 (100%)                | 96                |
+| 1        | 100         | 50%            | 1.5 (150%)         | 32                |
+| 2        | 200         | 10%            | 1 (100%)           | 96                |
 
 The obligated balances are:
+
 - Strategy 1: $100 * 50\% = 50$ SSV
+  
 - Strategy 2: $200 * 10\% = 20$ SSV
 
 Thus, in total, the bApp has:
+
 - $50 + 20 = 70$ SSV
+  
 - $32 + 96 = 128$ validator balance
 
 ### 3.1 Weight for SSV
@@ -276,7 +322,9 @@ $$W_{1, \text{SSV}} = c_{\text{SSV}} \times \frac{50}{70} \times e^{-\beta_{\tex
 $$W_{2, \text{SSV}} = c_{\text{SSV}} \times \frac{20}{70} \times e^{-\beta_{\text{SSV}} \times max(1, 1)} = 0.521$$
 
 Thus, the weights for the SSV token are:
+
 - Strategy 1: 47.9%
+  
 - Strategy 2: 52.1%
 
 Note that, despite Strategy 1 obligating $50/70 \approx 71\%$ of the total SSV, its weight drops to $47.9\%$ due to its higher risk.
@@ -292,7 +340,9 @@ $$W_{1, \text{VB}} = c_{\text{VB}} \times \frac{32}{128} = 0.25$$
 $$W_{2, \text{VB}} = c_{\text{VB}} \times \frac{96}{128} = 0.75$$
 
 Thus, the validator balance weights are:
+
 - Strategy 1: 25%
+  
 - Strategy 2: 75%
 
 Since validator balance carries no risk, it remains proportional to the amount contributed.
@@ -308,5 +358,7 @@ $$W_1^{\text{final}} = c_{\text{final}} \times \left( \frac{1}{\frac{2/3}{W_{\te
 $$W_2^{\text{final}} = c_{\text{final}} \times \left( \frac{1}{\frac{2/3}{W_{\text{2, SSV}}} + \frac{1/3}{W_{\text{2, VB}}}} \right) = 0.613$$
 
 Thus, the final weights are:
+
 - Strategy 1: 38.7%
+  
 - Strategy 2: 61.3%

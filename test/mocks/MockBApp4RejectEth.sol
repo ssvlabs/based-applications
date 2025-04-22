@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 import { OwnableBasedApp } from "@ssv/src/middleware/modules/core+roles/OwnableBasedApp.sol";
 
-contract BasedAppMock is OwnableBasedApp {
+contract BasedAppMock4 is OwnableBasedApp {
     event OptInToBApp(
         uint32 indexed strategyId,
         address[] tokens,
@@ -30,5 +30,11 @@ contract BasedAppMock is OwnableBasedApp {
         emit OptInToBApp(strategyId, tokens, obligationPercentages, data);
         if (counter % 2 == 0) return false;
         else return true;
+    }
+
+    error NotAcceptingETH();
+
+    receive() external payable virtual override {
+        revert NotAcceptingETH();
     }
 }

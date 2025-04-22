@@ -9,16 +9,36 @@
 
 ## :book: _Description_
 
-This repository contains the core Based Applications Contracts, including UUPS upgradeable contracts for managing delegations, creating strategies, and registering bApps on the SSV Based-Applications Platform. 
+This repository contains the SSV Based Applications Platform Contracts.
 
-### **Main Contracts**
+The contracts are organized under the `src/` directory into two main folders:
 
-- **`SSVBasedApps.sol`** – Core contract managing bApps, delegations, and strategies.
+- **`core/`**: contains the main platform contract: `SSVBasedApps.sol`;
   
-- **`IBasedAppManager.sol`** – Interface for the Based Application Manager.
+- **`middleware/`** contains the module contracts to build a based application. 
+
+### **The Core Platform**
+
+The core contract is build in a diamond-like pattern: 
+
+- **`SSVBasedApps.sol`** – Core contract where all the functions are declared and via an internal proxy it redirects to the right implementation. 
+
+The functions are implemented in 3 different modules:
   
-- **`IStorage.sol`** – Core interface defining key structs for staking and obligation mechanisms.
+- **`StrategyManager.sol`** – Implements functions related to strategies, validator balance delegation, opting-in to bApp, and slashing;
   
+- **`BasedAppsManager.sol`** – Implements functions related to bApps like the registration and update the metadata;
+  
+- **`PlatformManager.sol`** – Implements functions for updating the global variables like timelocks length, max number of shares, etc. The variable update process will be handled by the SSV DAO.
+  
+### **The Middleware**
+
+This `middleware` folder contains the modules for building a bapp: 
+
+- **`modules/core`**: the base layer for a bApp to be compliant and be recognized by the system;
+
+- **`examples`**: contains example of working compliant bApps.
+
 &nbsp;
 
 ## :page_with_curl: _Instructions_
@@ -41,19 +61,88 @@ __`❍ forge test`__
 
 &nbsp;
 
+## 🔨 _Slashing Mechanism_
+
+The `slash` function allows for the reduction of a strategy’s token balance under specific conditions, either as a penalty or to enforce protocol-defined behavior. Slashing can happen in two distinct modes, depending on whether:
+
+**1)** The bApp is a compliant smart contract;
+
+**2)** The bApp is a non-compliant smart contract or an EOA.
+
+### 🧠 Compliant BApp
+
+If the bApp is a compliant contract implementing the required interface `IBasedApp`,
+
+The slash function of the bApp is called: `(success, receiver, exit) = IBasedApp(bApp).slash(...)`
+
+*	`data` parameter is forwarded and may act as a proof or auxiliary input.
+
+*	The bApp decides:
+
+    *	Who receives the slashed funds by setting the `receiver` fund, it can burn by setting the receiver as `address(0)`;
+
+    *	Whether to exit the strategy or adjust obligations;
+
+    *	If `exit == true`, the strategy is exited and the obligation value is set to 0;
+
+    *	Otherwise, obligations are adjusted proportionally based on remaining balances, the new obligated amount is set to the previous one less the slashed amount;
+
+    *	Funds are credited to the receiver in the slashing fund.
+
+### 🔐 Non-compliant bApp (EOA or Non-compliant Contract)
+
+If the bApp is an EOA or does not comply with the required interface:
+
+*	Only the bApp itself can invoke slashing;
+
+*	The receiver of slashed funds is forcibly set to the bApp itself;
+
+*	The strategy is always exited (no obligation adjustment);
+
+*	Funds are added to the bApp’s slashing fund.
+
+### ⏳ Post Slashing
+
+⚠️ Important: After an obligation has been exited, it can be updated again to a value greater than 0, but only after a 14-day obligation timelock.
+
+This acts as a safeguard to prevent immediate re-entry and encourages more deliberate strategy participation.
+
+### 💸 Slashing Fund
+
+Slashed tokens are not immediately transferred. They are deposited into an internal slashing fund.
+
+The `receiver` (set during slashing) can later withdraw them using:
+
+```
+function withdrawSlashingFund(address token, uint256 amount) external
+function withdrawETHSlashingFund(uint256 amount) external
+```
+
+These functions verify balances and authorize the caller to retrieve their accumulated slashed tokens.
+
+&nbsp;
+
 ## :page_facing_up: _Whitepaper_
 
 [Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
 
 &nbsp;
 
-## :page_facing_up: _More Resources_
+## :books: _More Resources_
 
-[Based Apps Onboarding Guide](./doc/bapp_onboarding.md) 
+[Based Apps Onboarding Guide](./doc/bAppOnBoarding.md) 
 
 &nbsp;
 
 ## :rocket: _Deployments_
+
+### How to Deploy
+
+**1)** Run the deployment script defined in `scripts/`:
+
+__`❍ npm run deploy:holesky`__: verification is done automatically.
+
+__`❍ npm run deploy:hoodi`__: verification needs to be done manually for now.
 
 ### Public Testnet
 
@@ -63,7 +152,7 @@ __`❍ forge test`__
 
 &nbsp;
 
-## License
+## :scroll: _License_
 
 2025 SSV Network <https://ssv.network/>
 
