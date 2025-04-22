@@ -79,13 +79,13 @@ The slash function of the bApp is called: `(success, receiver, exit) = IBasedApp
 
 *	The bApp decides:
 
-    *	Who receives the slashed funds by setting the `receiver` fund;
+    *	Who receives the slashed funds by setting the `receiver` fund, it can burn by setting the receiver as `address(0)`;
 
     *	Whether to exit the strategy or adjust obligations;
 
     *	If `exit == true`, the strategy is exited and the obligation value is set to 0;
 
-    *	Otherwise, obligations are updated proportionally based on remaining balances;
+    *	Otherwise, obligations are adjusted proportionally based on remaining balances, the new obligated amount is set to the previous one less the slashed amount;
 
     *	Funds are credited to the receiver in the slashing fund.
 

@@ -103,7 +103,7 @@ contract Setup is Test {
 
         config = ProtocolStorageLib.Data({
             maxFeeIncrement: MAX_FEE_INCREMENT,
-            feeTimelockPeriod: 5 days,
+            feeTimelockPeriod: 7 days,
             feeExpireTime: 1 days,
             withdrawalTimelockPeriod: 14 days,
             withdrawalExpireTime: 3 days,

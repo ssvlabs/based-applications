@@ -157,7 +157,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     function testRevertInitializeWithZeroFee() public {
         ProtocolStorageLib.Data memory configZeroFee = ProtocolStorageLib.Data({
             maxFeeIncrement: 0,
-            feeTimelockPeriod: 5 days,
+            feeTimelockPeriod: 7 days,
             feeExpireTime: 1 days,
             withdrawalTimelockPeriod: 14 days,
             withdrawalExpireTime: 3 days,
@@ -187,7 +187,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
     function testRevertInitializeWithExcessiveFee() public {
         ProtocolStorageLib.Data memory configExcessiveFee = ProtocolStorageLib
             .Data({
-                feeTimelockPeriod: 5 days,
+                feeTimelockPeriod: 7 days,
                 feeExpireTime: 1 days,
                 withdrawalTimelockPeriod: 14 days,
                 maxShares: 1e50,

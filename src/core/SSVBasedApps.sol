@@ -220,7 +220,6 @@ contract SSVBasedApps is
 
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
         uint256 balance = strategyTokenShares.totalTokenBalance;
-        ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
 
         return (balance * percentage) / MAX_PERCENTAGE;
     }
