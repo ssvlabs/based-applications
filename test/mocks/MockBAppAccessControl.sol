@@ -25,13 +25,16 @@ contract BasedAppMock3 is AccessControlBasedApp {
         /*strategyId*/
         address,
         /*token*/
-        uint256,
-        /*amount*/
+        uint32,
+        /*percentage*/
+        address,
+        /*sender*/
         bytes calldata
     )
         external
         view
         override
+        /*data*/
         onlySSVBasedAppManager
         returns (bool, address, bool)
     {

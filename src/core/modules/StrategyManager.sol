@@ -733,16 +733,17 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
     /// @param token The address of the token
-    /// @param amount The amount to slash
+    /// @param percentage The amount to slash
     /// @param data Optional parameter that could be required by the service
     function slash(
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount,
+        uint32 percentage,
         bytes calldata data
     ) external nonReentrant {
-        if (amount == 0) revert InvalidAmount();
+        ValidationLib.validatePercentageAndNonZero(percentage);
+
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (!s.registeredBApps[bApp]) {
@@ -750,7 +751,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
 
         uint256 slashableBalance = getSlashableBalance(strategyId, bApp, token);
-        if (slashableBalance < amount) revert InsufficientBalance();
+        if (slashableBalance == 0) revert InsufficientBalance();
+        uint256 amount = (slashableBalance * percentage) / MAX_PERCENTAGE;
+
+        // if (slashableBalance < amount) revert InsufficientBalance();
 
         address receiver;
         bool exit;
@@ -762,7 +766,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             (success, receiver, exit) = IBasedApp(bApp).slash(
                 strategyId,
                 token,
-                amount,
+                percentage,
+                msg.sender,
                 data
             );
             if (!success) revert IStrategyManager.BAppSlashingFailed();
@@ -789,7 +794,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             strategyId,
             bApp,
             token,
-            amount,
+            percentage,
             receiver
         );
     }

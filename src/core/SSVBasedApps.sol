@@ -278,7 +278,7 @@ contract SSVBasedApps is
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount,
+        uint32 percentage,
         bytes calldata data
     ) external {
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);

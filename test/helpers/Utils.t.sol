@@ -343,4 +343,15 @@ contract UtilsTest is Setup {
             assertEq(isSet, true, "BApp token set");
         }
     }
+
+    function calculateSlashAmount(
+        uint256 depositAmount,
+        uint32 obligationPercentage,
+        uint32 slashingPercentage
+    ) internal view returns (uint256) {
+        uint256 obligatedAmount = (depositAmount * obligationPercentage) /
+            proxiedManager.maxPercentage();
+        return ((obligatedAmount * slashingPercentage) /
+            proxiedManager.maxPercentage());
+    }
 }

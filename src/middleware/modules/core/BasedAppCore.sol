@@ -117,10 +117,18 @@ abstract contract BasedAppCore is IBasedApp {
         /*strategyId*/
         address,
         /*token*/
-        uint256,
-        /*amount*/
+        uint32,
+        /*percentage*/
+        address,
+        /*sender*/
         bytes calldata
-    ) external virtual onlySSVBasedAppManager returns (bool, address, bool) {
+    )
+        external
+        virtual
+        /*data*/
+        onlySSVBasedAppManager
+        returns (bool, address, bool)
+    {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---

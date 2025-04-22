@@ -2293,11 +2293,13 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.startPrank(USER1);
         proxiedManager.depositETH{ value: 1 ether }(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
+        uint32 slashPercentage = 5000;
         proxiedManager.slash(
             STRATEGY1,
             address(bApp1),
             ETH_ADDRESS,
-            0.5 ether,
+            // 0.5 ether,
+            slashPercentage,
             abi.encode("0x00")
         );
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
@@ -2312,11 +2314,12 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.startPrank(USER1);
         proxiedManager.depositETH{ value: 1 ether }(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
+        uint32 slashPercentage = 10000;
         proxiedManager.slash(
             STRATEGY1,
             address(bApp1),
             ETH_ADDRESS,
-            1 ether,
+            slashPercentage,
             abi.encode("0x00")
         );
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());

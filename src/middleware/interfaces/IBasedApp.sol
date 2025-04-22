@@ -19,7 +19,8 @@ interface IBasedApp is IERC165 {
     function slash(
         uint32 strategyId,
         address token,
-        uint256 amount,
+        uint32 percentage,
+        address sender,
         bytes calldata data
     ) external returns (bool success, address receiver, bool exit);
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
