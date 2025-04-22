@@ -6,7 +6,6 @@ interface IProtocolManager {
     event FeeTimelockPeriodUpdated(uint32 feeTimelockPeriod);
     event ObligationExpireTimeUpdated(uint32 obligationExpireTime);
     event ObligationTimelockPeriodUpdated(uint32 obligationTimelockPeriod);
-    event TokenUpdateExpireTimeUpdated(uint32 tokenUpdateExpireTime);
     event TokenUpdateTimelockPeriodUpdated(uint32 tokenUpdateTimelockPeriod);
     event StrategyMaxFeeIncrementUpdated(uint32 maxFeeIncrement);
     event StrategyMaxSharesUpdated(uint256 maxShares);
@@ -19,7 +18,6 @@ interface IProtocolManager {
     function updateMaxShares(uint256 value) external;
     function updateObligationExpireTime(uint32 value) external;
     function updateObligationTimelockPeriod(uint32 value) external;
-    function updateTokenUpdateExpireTime(uint32 value) external;
     function updateTokenUpdateTimelockPeriod(uint32 value) external;
     function updateWithdrawalExpireTime(uint32 value) external;
     function updateWithdrawalTimelockPeriod(uint32 value) external;

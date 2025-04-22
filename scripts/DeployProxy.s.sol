@@ -33,7 +33,6 @@ contract DeployProxy is Script {
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
             tokenUpdateTimelockPeriod: 14 days,
-            tokenUpdateExpireTime: 3 days,
             maxFeeIncrement: 500
         });
 
@@ -82,7 +81,6 @@ contract DeployProxy is Script {
             "Token Update Timelock Period:",
             config.tokenUpdateTimelockPeriod
         );
-        console.log("Token Update Expire Time:", config.tokenUpdateExpireTime);
         console.log("Max Shares:", config.maxShares);
         console.log("Max Fee Increment:", config.maxFeeIncrement);
         vm.stopBroadcast();

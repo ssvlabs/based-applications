@@ -115,7 +115,6 @@ contract SSVBasedApps is
         sp.obligationTimelockPeriod = config.obligationTimelockPeriod;
         sp.obligationExpireTime = config.obligationExpireTime;
         sp.tokenUpdateTimelockPeriod = config.tokenUpdateTimelockPeriod;
-        sp.tokenUpdateExpireTime = config.tokenUpdateExpireTime;
         sp.maxShares = config.maxShares;
 
         emit MaxFeeIncrementSet(sp.maxFeeIncrement);
@@ -332,10 +331,6 @@ contract SSVBasedApps is
     }
 
     function updateTokenUpdateTimelockPeriod(uint32 value) external onlyOwner {
-        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
-    }
-
-    function updateTokenUpdateExpireTime(uint32 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
@@ -561,10 +556,6 @@ contract SSVBasedApps is
 
     function tokenUpdateTimelockPeriod() external view returns (uint32) {
         return ProtocolStorageLib.load().tokenUpdateTimelockPeriod;
-    }
-
-    function tokenUpdateExpireTime() external view returns (uint32) {
-        return ProtocolStorageLib.load().tokenUpdateExpireTime;
     }
 
     function getVersion() external pure returns (string memory) {

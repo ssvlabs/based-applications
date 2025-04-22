@@ -110,7 +110,6 @@ contract Setup is Test {
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
             tokenUpdateTimelockPeriod: 14 days,
-            tokenUpdateExpireTime: 3 days,
             maxShares: 1e50
         });
 
