@@ -555,7 +555,6 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint256 depositAmount = 100_000 * 10 ** 18;
         address token = address(erc20mock);
         uint32 slashPercentage = 100;
-        uint32 percentage = 0;
 
         testStrategyOptInToBAppWithMultipleTokensWithPercentageZero();
         vm.prank(USER2);
