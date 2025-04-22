@@ -58,12 +58,13 @@ interface ICore {
         uint256 totalTokenBalance;
         /// @dev The total share balance
         uint256 totalShareBalance;
-        /// @dev The current generation is used to track full slashing events, since we cannot reset mapping in solidity
-        /// It is incremented when a full slashing event occurs
+        /// @dev The current generation
+        /// A generation (or versioning) system is required due to full slashing events.
+        /// After such an event, the generation counter is bumped so that previous shares become outdated and are no longer able to be withdrawn.
         uint256 currentGeneration;
         /// @dev The account share balance
         mapping(address => uint256) accountShareBalance;
-        /// @dev The account generation
+        /// @dev The account latest generation
         mapping(address => uint256) accountGeneration;
     }
 }

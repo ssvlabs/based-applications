@@ -1,5 +1,3 @@
-npm run lint:fix
-
-npx lint-staged
+npm run lint:check
 
 npm run test-coverage
