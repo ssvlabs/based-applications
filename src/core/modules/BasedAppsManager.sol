@@ -3,7 +3,6 @@ pragma solidity 0.8.29;
 
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { CoreStorageLib } from "@ssv/src/core/libraries/CoreStorageLib.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 
