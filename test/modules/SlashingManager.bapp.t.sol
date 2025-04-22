@@ -275,25 +275,6 @@ contract SlashingManagerTest is StrategyManagerTest {
         proxiedManager.withdrawSlashingFund(ETH_ADDRESS, slashAmount);
     }
 
-    /* 
-    function testRevertWithdrawSlashingFundErc20WithInsufficientBalance()
-        public
-    {
-        uint256 slashAmount = 100;
-        uint32 slashPercentage = 100;
-        testSlashBApp(slashPercentage);
-        vm.prank(address(bApp1));
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IStrategyManager.InsufficientBalance.selector
-            )
-        );
-        proxiedManager.withdrawSlashingFund(
-            address(erc20mock),
-            slashAmount + 1
-        );
-    }*/
-
     function testRevertWithdrawSlashingFundErc20WithZeroAmount() public {
         uint32 slashPercentage = 100;
         testSlashBApp(slashPercentage);
