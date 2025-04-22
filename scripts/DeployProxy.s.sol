@@ -25,7 +25,7 @@ contract DeployProxy is Script {
         ProtocolManager protocolManagerMod = new ProtocolManager();
 
         ProtocolStorageLib.Data memory config = ProtocolStorageLib.Data({
-            feeTimelockPeriod: 5 days,
+            feeTimelockPeriod: 7 days,
             feeExpireTime: 1 days,
             withdrawalTimelockPeriod: 14 days,
             maxShares: 1e50,
