@@ -320,7 +320,6 @@ contract SlashingManagerTest is StrategyManagerTest {
     }
 
     function testRevertWithdrawETHSlashingFundErc20WithZeroAmount() public {
-        uint256 slashAmount = 100;
         uint32 slashPercentage = 100;
         testSlashBApp(slashPercentage);
         vm.prank(USER1);
@@ -555,14 +554,8 @@ contract SlashingManagerTest is StrategyManagerTest {
     function testSlashBAppWhenObligationIsZero() public {
         uint256 depositAmount = 100_000 * 10 ** 18;
         address token = address(erc20mock);
-
         uint32 slashPercentage = 100;
         uint32 percentage = 0;
-        uint256 slashAmount = calculateSlashAmount(
-            depositAmount,
-            percentage,
-            slashPercentage
-        );
 
         testStrategyOptInToBAppWithMultipleTokensWithPercentageZero();
         vm.prank(USER2);
