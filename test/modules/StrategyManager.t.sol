@@ -46,7 +46,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             STRATEGY1_INITIAL_FEE,
             ""
         );
-        uint32[] memory strategies = proxiedManager.strategiesByOwner(USER1);
+        uint32[] memory strategies = proxiedManager.ownedStrategies(USER1);
         assertEq(
             strategies.length,
             1,
@@ -59,7 +59,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         );
         proxiedManager.createStrategy(STRATEGY2_INITIAL_FEE, "");
         proxiedManager.createStrategy(STRATEGY3_INITIAL_FEE, "");
-        strategies = proxiedManager.strategiesByOwner(USER1);
+        strategies = proxiedManager.ownedStrategies(USER1);
         assertEq(strategies.length, 3, "Should have created the strategy");
         assertEq(
             strategies[0],
@@ -82,7 +82,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             "Should have the correct ID for Strategy 1"
         );
         (address owner, uint32 delegationFeeOnRewards) = proxiedManager
-            .strategyById(strategyId1);
+            .strategies(strategyId1);
         assertEq(owner, USER1, "Should have the correct strategy owner");
         assertEq(
             delegationFeeOnRewards,
@@ -97,7 +97,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             STRATEGY4_INITIAL_FEE,
             ""
         );
-        strategies = proxiedManager.strategiesByOwner(USER2);
+        strategies = proxiedManager.ownedStrategies(USER2);
         assertEq(
             strategies.length,
             1,
@@ -113,7 +113,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             STRATEGY4,
             "Should have the correct ID for Strategy 3"
         );
-        (owner, delegationFeeOnRewards) = proxiedManager.strategyById(
+        (owner, delegationFeeOnRewards) = proxiedManager.strategies(
             strategyId4
         );
         assertEq(owner, USER2, "Should have the correct strategy owner");
@@ -141,7 +141,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.expectEmit(true, true, true, true);
         emit IStrategyManager.StrategyCreated(STRATEGY1, USER1, 0, "");
         uint32 strategyId1 = proxiedManager.createStrategy(0, "");
-        (, uint32 delegationFeeOnRewards) = proxiedManager.strategyById(
+        (, uint32 delegationFeeOnRewards) = proxiedManager.strategies(
             strategyId1
         );
         assertEq(
@@ -399,7 +399,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         testRegisterBApp();
         vm.startPrank(USER1);
-        (address owner, ) = proxiedManager.strategyById(STRATEGY1);
+        (address owner, ) = proxiedManager.strategies(STRATEGY1);
         assertEq(owner, USER1, "Should have the correct strategy owner");
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
@@ -443,7 +443,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         testRegisterBApp();
         vm.startPrank(USER1);
-        (address owner, ) = proxiedManager.strategyById(STRATEGY1);
+        (address owner, ) = proxiedManager.strategies(STRATEGY1);
         assertEq(owner, USER1, "Should have set the correct strategy owner");
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
@@ -493,7 +493,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         testRegisterBAppWithEOA();
         vm.startPrank(USER1);
-        (address owner, ) = proxiedManager.strategyById(STRATEGY1);
+        (address owner, ) = proxiedManager.strategies(STRATEGY1);
         assertEq(owner, USER1, "Should have set the correct strategy owner");
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
@@ -533,7 +533,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         testRegisterBAppWithEOAWithEth();
         vm.startPrank(USER1);
-        (address owner, ) = proxiedManager.strategyById(STRATEGY1);
+        (address owner, ) = proxiedManager.strategies(STRATEGY1);
         assertEq(owner, USER1, "Should have set the correct strategy owner");
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = ETH_ADDRESS;
@@ -573,7 +573,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         testRegisterBAppFromNonBAppContract();
         vm.startPrank(USER1);
-        (address owner, ) = proxiedManager.strategyById(STRATEGY1);
+        (address owner, ) = proxiedManager.strategies(STRATEGY1);
         assertEq(owner, USER1, "Should have set the correct strategy owner");
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
@@ -1018,7 +1018,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         );
         testStrategyOptInToBApp(9000);
         vm.startPrank(USER1);
-        (address owner, ) = proxiedManager.strategyById(STRATEGY1);
+        (address owner, ) = proxiedManager.strategies(STRATEGY1);
         assertEq(owner, USER1, "Strategy owner");
         address[] memory tokensInput = new address[](1);
         tokensInput[0] = address(erc20mock);
@@ -1316,7 +1316,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32 proposedFee
     ) public {
         testStrategyOptInToBApp(9000);
-        (, uint32 fee) = proxiedManager.strategyById(STRATEGY1);
+        (, uint32 fee) = proxiedManager.strategies(STRATEGY1);
         vm.assume(
             proposedFee < proxiedManager.maxPercentage() &&
                 proposedFee > fee + proxiedManager.maxFeeIncrement()
@@ -1332,7 +1332,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
 
     function testRevertStrategyFeeUpdateFailsWithSameFeeValue() public {
         testStrategyOptInToBApp(9000);
-        (, uint32 fee) = proxiedManager.strategyById(STRATEGY1);
+        (, uint32 fee) = proxiedManager.strategies(STRATEGY1);
         vm.prank(USER1);
         vm.expectRevert(
             abi.encodeWithSelector(IStrategyManager.FeeAlreadySet.selector)
@@ -2314,7 +2314,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.startPrank(USER1);
         proxiedManager.depositETH{ value: 1 ether }(STRATEGY1);
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
-        uint32 slashPercentage = 10000;
+        uint32 slashPercentage = 10_000;
         proxiedManager.slash(
             STRATEGY1,
             address(bApp1),
