@@ -5,6 +5,11 @@ import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/acc
 import { ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
 
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
+import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
 
 contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     function testUpdateFeeTimelockPeriod() public {
@@ -212,5 +217,121 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
             )
         );
         proxiedManager.updateMaxFeeIncrement(501);
+    }
+
+    /// @notice By default, no features should be disabled
+    function testDefaultDisabledFeaturesIsZero() public {
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            0,
+            "default disabledFeatures should be zero"
+        );
+    }
+
+    /// @notice The initializer should respect `config.disabledFeatures`
+    function testInitializeDisabledFeaturesFromConfig() public {
+        // Override config in Setup
+        config.disabledFeatures = 3; // slashing & withdrawals disabled
+
+        // Re-deploy a fresh proxy with the modified config
+        bytes memory initData = abi.encodeWithSelector(
+            implementation.initialize.selector,
+            address(OWNER),
+            IBasedAppManager(basedAppsManagerMod),
+            IStrategyManager(strategyManagerMod),
+            IProtocolManager(protocolManagerMod),
+            config
+        );
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            initData
+        );
+        SSVBasedApps proxiedManager = SSVBasedApps(payable(address(proxy)));
+
+        // It should read back exactly what we set
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            3,
+            "initializer did not set disabledFeatures from config"
+        );
+    }
+
+    /// @notice Only the owner can update the feature mask
+    function testUpdateFeatureDisabledFlagsAsOwner() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(2);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            2,
+            "owner update of disabledFeatures failed"
+        );
+    }
+
+    /// @notice Updating the flags should emit DisabledFeaturesUpdated
+    function testEmitDisabledFeaturesUpdatedEvent() public {
+        vm.prank(OWNER);
+        vm.expectEmit(true, false, false, true);
+        emit IProtocolManager.DisabledFeaturesUpdated(5);
+        proxiedManager.updateDisabledFeatures(5);
+    }
+
+    function testRevertUpdateDisabledFeaturesWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OwnableUnauthorizedAccount.selector,
+                address(ATTACKER)
+            )
+        );
+        proxiedManager.updateDisabledFeatures(1);
+    }
+
+    function testSetIndividualDisabledFeatureBits() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 0);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            1,
+            "slashingDisabled bit not set correctly"
+        );
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 1);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            2,
+            "withdrawalsDisabled bit not set correctly"
+        );
+    }
+
+    function testClearFlags() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(3);
+        assertEq(proxiedManager.disabledFeatures(), 3, "mask precondition");
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(0);
+        assertEq(proxiedManager.disabledFeatures(), 0, "flags not cleared");
+    }
+
+    function testCombinedFlags() public {
+        uint32 mask = (1 << 0) | (1 << 2) | (1 << 4);
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(mask);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            mask,
+            "combined mask mismatch"
+        );
+    }
+
+    function testOtherParamsUnaffectedByFeatureMask() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(type(uint32).max);
+        vm.prank(OWNER);
+        proxiedManager.updateFeeTimelockPeriod(2 days);
+        assertEq(
+            proxiedManager.feeTimelockPeriod(),
+            2 days,
+            "feeTimelockPeriod should update despite flags"
+        );
     }
 }

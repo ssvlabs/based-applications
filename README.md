@@ -122,6 +122,10 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 &nbsp;
 
+## :gear: _Feature activation_
+
+[Feature activation](./specs/feature_activation.md)
+
 ## :page_facing_up: _Whitepaper_
 
 [Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)

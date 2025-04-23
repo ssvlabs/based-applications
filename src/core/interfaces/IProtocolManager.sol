@@ -11,6 +11,7 @@ interface IProtocolManager {
     event StrategyMaxSharesUpdated(uint256 maxShares);
     event WithdrawalExpireTimeUpdated(uint32 withdrawalExpireTime);
     event WithdrawalTimelockPeriodUpdated(uint32 withdrawalTimelockPeriod);
+    event DisabledFeaturesUpdated(uint32 disabledFeatures);
 
     function updateFeeExpireTime(uint32 value) external;
     function updateFeeTimelockPeriod(uint32 value) external;

@@ -116,6 +116,7 @@ contract SSVBasedApps is
         sp.obligationExpireTime = config.obligationExpireTime;
         sp.tokenUpdateTimelockPeriod = config.tokenUpdateTimelockPeriod;
         sp.maxShares = config.maxShares;
+        sp.disabledFeatures = config.disabledFeatures;
 
         emit MaxFeeIncrementSet(sp.maxFeeIncrement);
     }
@@ -342,6 +343,12 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
+    function updateDisabledFeatures(
+        uint32 disabledFeatures
+    ) external onlyOwner {
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
+    }
+
     // *****************************
     // ** Section: External Views **
     // *****************************
@@ -552,6 +559,10 @@ contract SSVBasedApps is
 
     function obligationExpireTime() external view returns (uint32) {
         return ProtocolStorageLib.load().obligationExpireTime;
+    }
+
+    function disabledFeatures() external view returns (uint32) {
+        return ProtocolStorageLib.load().disabledFeatures;
     }
 
     function tokenUpdateTimelockPeriod() external view returns (uint32) {

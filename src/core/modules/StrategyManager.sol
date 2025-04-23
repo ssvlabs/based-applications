@@ -18,6 +18,9 @@ import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     using SafeERC20 for IERC20;
 
+    uint32 private constant SLASHING_DISABLED = 1 << 0;
+    uint32 private constant WITHDRAWALS_DISABLED = 1 << 1;
+
     /// @notice Checks if the caller is the strategy owner
     /// @param strategyId The ID of the strategy
     /// @param s The CoreStorageLib data
@@ -255,6 +258,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address token,
         uint256 amount
     ) external {
+        _checkWithdrawalsAllowed();
+
         if (token == ETH_ADDRESS) revert InvalidToken();
         _proposeWithdrawal(strategyId, token, amount);
     }
@@ -266,6 +271,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32 strategyId,
         IERC20 token
     ) external nonReentrant {
+        _checkWithdrawalsAllowed();
+
         uint256 amount = _finalizeWithdrawal(strategyId, address(token));
 
         token.safeTransfer(msg.sender, amount);
@@ -283,12 +290,15 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy.
     /// @param amount The amount of ETH to withdraw.
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
+        _checkWithdrawalsAllowed();
         _proposeWithdrawal(strategyId, ETH_ADDRESS, amount);
     }
 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(uint32 strategyId) external nonReentrant {
+        _checkWithdrawalsAllowed();
+
         uint256 amount = _finalizeWithdrawal(strategyId, ETH_ADDRESS);
 
         payable(msg.sender).transfer(amount);
@@ -742,6 +752,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32 percentage,
         bytes calldata data
     ) external nonReentrant {
+        _checkSlashingAllowed();
+
         ValidationLib.validatePercentageAndNonZero(percentage);
 
         CoreStorageLib.Data storage s = CoreStorageLib.load();
@@ -887,5 +899,22 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
 
         s.slashingFund[msg.sender][token] -= amount;
+    }
+
+    function _checkSlashingAllowed() internal view {
+        if (
+            ProtocolStorageLib.load().disabledFeatures & SLASHING_DISABLED != 0
+        ) {
+            revert SlashingDisabled();
+        }
+    }
+
+    function _checkWithdrawalsAllowed() internal view {
+        if (
+            ProtocolStorageLib.load().disabledFeatures & WITHDRAWALS_DISABLED !=
+            0
+        ) {
+            revert WithdrawalsDisabled();
+        }
     }
 }

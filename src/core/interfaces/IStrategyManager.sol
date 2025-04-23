@@ -188,7 +188,9 @@ interface IStrategyManager {
     error ObligationAlreadySet();
     error ObligationHasNotBeenCreated();
     error RequestTimeExpired();
+    error SlashingDisabled();
     error TimelockNotElapsed();
     error TokenNotSupportedByBApp(address token);
     error WithdrawTransferFailed();
+    error WithdrawalsDisabled();
 }
