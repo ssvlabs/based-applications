@@ -163,6 +163,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
+            tokenUpdateTimelockPeriod: 14 days,
             maxShares: 1e50,
             disabledFeatures: 0
         });
@@ -193,6 +194,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
                 withdrawalExpireTime: 3 days,
                 obligationTimelockPeriod: 14 days,
                 obligationExpireTime: 3 days,
+                tokenUpdateTimelockPeriod: 14 days,
                 maxFeeIncrement: 10_001,
                 disabledFeatures: 0
             });
