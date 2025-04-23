@@ -641,6 +641,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             percentage,
             slashPercentage
         );
+        assertEq(slashAmount, 1000, "Slash amount should be 1000");
         testStrategyOptInToBApp(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(
@@ -669,7 +670,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(bApp3),
             token
         );
-        assertEq(adjustedPercentage, 9900, "Obligation percentage");
+        assertEq(adjustedPercentage, 10000, "Adjusted obligation percentage");
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
@@ -678,7 +679,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(bApp3), token, 98010);
+        checkSlashableBalance(STRATEGY1, address(bApp3), token, 99000);
         checkSlashingFund(address(0), token, slashAmount);
     }
 
@@ -834,7 +835,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(bApp3),
             token
         );
-        assertEq(adjustedPercentage, 9900, "Obligation percentage");
+        assertEq(adjustedPercentage, 10000, "Obligation percentage");
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
@@ -843,7 +844,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(bApp3), token, 98.01 ether);
+        checkSlashableBalance(STRATEGY1, address(bApp3), token, 99.00 ether);
         checkSlashingFund(address(0), token, slashAmount);
     }
 
