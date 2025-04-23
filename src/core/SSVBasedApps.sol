@@ -368,14 +368,14 @@ contract SSVBasedApps is
         return s.registeredBApps[bApp];
     }
 
-    function strategies(
+    function strategyById(
         uint32 strategyId
     ) external view returns (address strategyOwner, uint32 fee) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
     }
 
-    function strategyOwners(
+    function strategiesByOwner(
         address owner
     ) external view returns (uint32[] memory strategyIds) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
