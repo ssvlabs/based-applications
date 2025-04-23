@@ -67,6 +67,16 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
         );
     }
 
+    function testUpdateTokenUpdateTimelockPeriod() public {
+        vm.prank(OWNER);
+        proxiedManager.updateTokenUpdateTimelockPeriod(7 days);
+        assertEq(
+            proxiedManager.tokenUpdateTimelockPeriod(),
+            7 days,
+            "TokenUpdate timelock update failed"
+        );
+    }
+
     function testMaxPercentage() public view {
         assertEq(
             proxiedManager.maxPercentage(),
@@ -168,6 +178,17 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
             )
         );
         proxiedManager.updateObligationExpireTime(1 days);
+    }
+
+    function testRevertUpdateTokenUpdateTimelockPeriodWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OwnableUnauthorizedAccount.selector,
+                address(ATTACKER)
+            )
+        );
+        proxiedManager.updateTokenUpdateTimelockPeriod(7 days);
     }
 
     function testRevertUpdateMaxSharesWithNonOwner() public {

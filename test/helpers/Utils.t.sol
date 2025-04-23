@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 contract UtilsTest is Setup {
     function createSingleTokenAndSingleRiskLevel(
@@ -53,10 +54,8 @@ contract UtilsTest is Setup {
         bool isRegistered = proxiedManager.registeredBApps(bApp);
         assertEq(isRegistered, true, "BApp registered");
         for (uint32 i = 0; i < tokensInput.length; i++) {
-            (uint32 sharedRiskLevel, bool isSet) = proxiedManager.bAppTokens(
-                bApp,
-                tokensInput[i]
-            );
+            (uint32 sharedRiskLevel, bool isSet, , ) = proxiedManager
+                .bAppTokens(bApp, tokensInput[i]);
             assertEq(
                 riskLevelInput[i],
                 sharedRiskLevel,
@@ -73,7 +72,6 @@ contract UtilsTest is Setup {
         address token,
         uint32 percentage,
         SSVBasedApps proxiedManager,
-        uint32 expectedTokens,
         bool expectedIsSet
     ) internal view {
         uint32 id = proxiedManager.accountBAppStrategy(owner, bApp);
@@ -85,8 +83,6 @@ contract UtilsTest is Setup {
         );
         assertEq(isSet, expectedIsSet, "Obligation is set");
         assertEq(obligationPercentage, percentage, "Obligation percentage");
-        uint256 usedTokens = proxiedManager.usedTokens(strategyId, token);
-        assertEq(usedTokens, expectedTokens, "Used tokens");
         (address strategyOwner, ) = proxiedManager.strategies(strategyId);
         if (strategyOwner != address(0)) {
             assertEq(owner, strategyOwner, "Strategy owner");
@@ -98,7 +94,6 @@ contract UtilsTest is Setup {
         address bApp,
         address token,
         uint32 expectedPercentage,
-        uint32 expectedUsedTokens,
         bool expectedIsSet,
         SSVBasedApps proxiedManager
     ) internal view {
@@ -109,8 +104,6 @@ contract UtilsTest is Setup {
         );
         assertEq(percentage, expectedPercentage, "Obligation percentage");
         assertEq(isSet, expectedIsSet, "Obligation is set");
-        uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
-        assertEq(usedTokens, expectedUsedTokens, "Used tokens");
     }
 
     function checkSlashableBalance(
@@ -302,19 +295,6 @@ contract UtilsTest is Setup {
         );
     }
 
-    function checkUsedTokens(
-        uint32 strategyId,
-        address token,
-        uint32 expectedUsedTokens
-    ) internal view {
-        uint32 usedTokens = proxiedManager.usedTokens(strategyId, token);
-        assertEq(
-            usedTokens,
-            expectedUsedTokens,
-            "Should have set the correct used tokens"
-        );
-    }
-
     function checkAdjustedPercentage(
         address token,
         uint256 previousBalance,
@@ -339,5 +319,39 @@ contract UtilsTest is Setup {
             "Should match the calculated percentage with the one saved in storage"
         );
         return adjustedPercentage;
+    }
+
+    function checkBAppUpdatedTokens(
+        ICore.TokenConfig[] memory tokenConfigs,
+        address bApp
+    ) internal view {
+        bool isRegistered = proxiedManager.registeredBApps(bApp);
+        assertEq(isRegistered, true, "BApp registered");
+        for (uint32 i = 0; i < tokenConfigs.length; i++) {
+            (
+                ,
+                bool isSet,
+                uint32 pendingValue,
+                uint32 effectiveTime
+            ) = proxiedManager.bAppTokens(bApp, tokenConfigs[i].token);
+            assertEq(
+                tokenConfigs[i].sharedRiskLevel,
+                pendingValue,
+                "BApp risk level percentage"
+            );
+            assertNotEq(effectiveTime, 0);
+            assertEq(isSet, true, "BApp token set");
+        }
+    }
+
+    function calculateSlashAmount(
+        uint256 depositAmount,
+        uint32 obligationPercentage,
+        uint32 slashingPercentage
+    ) internal view returns (uint256) {
+        uint256 obligatedAmount = (depositAmount * obligationPercentage) /
+            proxiedManager.maxPercentage();
+        return ((obligatedAmount * slashingPercentage) /
+            proxiedManager.maxPercentage());
     }
 }

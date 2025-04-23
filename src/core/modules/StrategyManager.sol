@@ -144,6 +144,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         newStrategy.owner = msg.sender;
         newStrategy.fee = fee;
 
+        s.strategyOwners[msg.sender].push(strategyId);
+
         emit StrategyCreated(strategyId, msg.sender, fee, metadataURI);
     }
 
@@ -387,14 +389,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             sp.obligationExpireTime
         );
 
-        if (
-            percentage == 0 &&
-            s.obligations[strategyId][bApp][address(token)].percentage > 0
-        ) {
-            s.usedTokens[strategyId][address(token)] -= 1;
-        }
-
-        _updateObligation(strategyId, bApp, address(token), percentage);
+        s.obligations[strategyId][bApp][address(token)].percentage = percentage;
 
         emit ObligationUpdated(strategyId, bApp, address(token), percentage);
 
@@ -526,7 +521,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
 
         if (obligationPercentage != 0) {
-            s.usedTokens[strategyId][token] += 1;
             s
             .obligations[strategyId][bApp][token]
                 .percentage = obligationPercentage;
@@ -564,28 +558,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (!s.obligations[strategyId][bApp][token].isSet) {
             revert ObligationHasNotBeenCreated();
         }
-    }
-
-    /// @notice Update a single obligation for a bApp
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    function _updateObligation(
-        uint32 strategyId,
-        address bApp,
-        address token,
-        uint32 obligationPercentage
-    ) private {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-
-        if (
-            s.obligations[strategyId][bApp][token].percentage == 0 &&
-            obligationPercentage > 0
-        ) {
-            s.usedTokens[strategyId][token] += 1;
-        }
-        s
-        .obligations[strategyId][bApp][token].percentage = obligationPercentage;
     }
 
     /// @notice Check the timelocks
@@ -761,16 +733,17 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
     /// @param token The address of the token
-    /// @param amount The amount to slash
+    /// @param percentage The amount to slash
     /// @param data Optional parameter that could be required by the service
     function slash(
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount,
+        uint32 percentage,
         bytes calldata data
     ) external nonReentrant {
-        if (amount == 0) revert InvalidAmount();
+        ValidationLib.validatePercentageAndNonZero(percentage);
+
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
         if (!s.registeredBApps[bApp]) {
@@ -778,7 +751,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
 
         uint256 slashableBalance = getSlashableBalance(strategyId, bApp, token);
-        if (slashableBalance < amount) revert InsufficientBalance();
+        if (slashableBalance == 0) revert InsufficientBalance();
+        uint256 amount = (slashableBalance * percentage) / MAX_PERCENTAGE;
+
+        // if (slashableBalance < amount) revert InsufficientBalance();
 
         address receiver;
         bool exit;
@@ -790,7 +766,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             (success, receiver, exit) = IBasedApp(bApp).slash(
                 strategyId,
                 token,
-                amount,
+                percentage,
+                msg.sender,
                 data
             );
             if (!success) revert IStrategyManager.BAppSlashingFailed();
@@ -817,7 +794,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             strategyId,
             bApp,
             token,
-            amount,
+            percentage,
             receiver
         );
     }

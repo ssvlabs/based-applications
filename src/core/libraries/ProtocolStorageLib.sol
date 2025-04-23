@@ -11,6 +11,7 @@ library ProtocolStorageLib {
         uint32 withdrawalExpireTime;
         uint32 obligationTimelockPeriod;
         uint32 obligationExpireTime;
+        uint32 tokenUpdateTimelockPeriod;
         uint32 maxFeeIncrement;
         uint256 maxShares;
     }

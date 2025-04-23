@@ -43,6 +43,15 @@ contract ProtocolManager is IProtocolManager {
         emit ObligationExpireTimeUpdated(obligationExpireTime);
     }
 
+    function updateTokenUpdateTimelockPeriod(
+        uint32 tokenUpdateTimelockPeriod
+    ) external {
+        ProtocolStorageLib
+            .load()
+            .tokenUpdateTimelockPeriod = tokenUpdateTimelockPeriod;
+        emit TokenUpdateTimelockPeriodUpdated(tokenUpdateTimelockPeriod);
+    }
+
     function updateMaxShares(uint256 maxShares) external {
         ProtocolStorageLib.load().maxShares = maxShares;
         emit StrategyMaxSharesUpdated(maxShares);
