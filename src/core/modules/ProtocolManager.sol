@@ -5,6 +5,9 @@ import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol"
 import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 contract ProtocolManager is IProtocolManager {
+    uint32 private constant SLASHING_DISABLED = 1 << 0;
+    uint32 private constant WITHDRAWALS_DISABLED = 1 << 1;
+
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
         ProtocolStorageLib.load().feeTimelockPeriod = feeTimelockPeriod;
         emit FeeTimelockPeriodUpdated(feeTimelockPeriod);
@@ -51,5 +54,10 @@ contract ProtocolManager is IProtocolManager {
     function updateMaxFeeIncrement(uint32 maxFeeIncrement) external {
         ProtocolStorageLib.load().maxFeeIncrement = maxFeeIncrement;
         emit StrategyMaxFeeIncrementUpdated(maxFeeIncrement);
+    }
+
+    function updateDisabledFeatures(uint32 disabledFeatures) external {
+        ProtocolStorageLib.load().disabledFeatures = disabledFeatures;
+        emit DisabledFeaturesUpdated(disabledFeatures);
     }
 }

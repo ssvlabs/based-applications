@@ -1,4 +1,4 @@
-# :construction_worker: :closed_lock_with_key: __Middleware Contracts__ 
+# :construction_worker: :closed_lock_with_key: **Middleware Contracts**
 
 ## Modules & Examples for BApp Development
 
@@ -78,11 +78,10 @@ Ideal for BApps that want to avoid excessive reward costs.
 
 ## :page_facing_up: To Have: Examples
 
-* **BLS Strategy Example**: Demonstrates how to implement and use the BLS verification module securely.
+- **BLS Strategy Example**: Demonstrates how to implement and use the BLS verification module securely.
 
-* **ECDSA Strategy Example**: Showcases a lighter alternative using ECDSA verification.
+- **ECDSA Strategy Example**: Showcases a lighter alternative using ECDSA verification.
 
-* **Capped Strategy Example**: Implements a BApp that limits deposits to 100k SSV.
+- **Capped Strategy Example**: Implements a BApp that limits deposits to 100k SSV.
 
-* **Whitelist Manager Example**: Uses whitelist-based permissions instead of owner-based control.
-
+- **Whitelist Manager Example**: Uses whitelist-based permissions instead of owner-based control.

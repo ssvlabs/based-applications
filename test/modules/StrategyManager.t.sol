@@ -2678,4 +2678,172 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             newWithdrawalAmount
         );
     }
+
+    function testSlashWhenEnabled() public {
+        uint32 pct = proxiedManager.maxPercentage();
+        // register & opt‐in
+        testStrategyOptInToBApp(pct);
+        // deposit 1 token
+        vm.startPrank(USER1);
+        erc20mock.approve(address(proxiedManager), 1);
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, 1);
+        vm.stopPrank();
+        // slash from bApp1
+        vm.prank(address(bApp1));
+        proxiedManager.slash(
+            STRATEGY1,
+            address(bApp1),
+            address(erc20mock),
+            1,
+            ""
+        );
+        // after slash, strategy balance should be zero
+        uint256 bal = proxiedManager.strategyTotalBalance(
+            STRATEGY1,
+            address(erc20mock)
+        );
+        assertEq(bal, 0, "Strategy balance should have decreased by 1");
+    }
+
+    function testSlashRevertsWhenDisabled() public {
+        // disable slashing
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 0);
+        // now any slash call must revert
+        vm.prank(address(bApp1));
+        vm.expectRevert(
+            abi.encodeWithSelector(IStrategyManager.SlashingDisabled.selector)
+        );
+        proxiedManager.slash(
+            STRATEGY1,
+            address(bApp1),
+            address(erc20mock),
+            1,
+            ""
+        );
+    }
+
+    function testSlashSucceedsAfterReenable() public {
+        // re‐enable slashing
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(0);
+        // prepare valid slash (opt-in + deposit)
+        uint32 pct = proxiedManager.maxPercentage();
+        testStrategyOptInToBApp(pct);
+        vm.startPrank(USER1);
+        erc20mock.approve(address(proxiedManager), 1);
+        proxiedManager.depositERC20(STRATEGY1, erc20mock, 1);
+        vm.stopPrank();
+        // should no longer revert
+        vm.prank(address(bApp1));
+        proxiedManager.slash(
+            STRATEGY1,
+            address(bApp1),
+            address(erc20mock),
+            1,
+            ""
+        );
+        // confirm balance dropped
+        uint256 bal = proxiedManager.strategyTotalBalance(
+            STRATEGY1,
+            address(erc20mock)
+        );
+        assertEq(bal, 0, "Slash should succeed once re-enabled");
+    }
+
+    function testProposeAndFinalizeWithdrawalWhenEnabled() public {
+        // set up a deposit
+        testCreateStrategyAndSingleDeposit(100);
+        // propose withdrawal
+        vm.prank(USER1);
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 50);
+        // fast-forward timelock
+        vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
+        // finalize and check balances
+        vm.prank(USER1);
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+        uint256 remaining = proxiedManager.strategyAccountShares(
+            STRATEGY1,
+            USER1,
+            address(erc20mock)
+        );
+        assertEq(
+            remaining,
+            50,
+            "User should have 50 tokens left in the strategy"
+        );
+    }
+
+    function testProposeWithdrawalRevertsWhenDisabled() public {
+        // disable withdrawals (bit 1)
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 1);
+
+        // attempt to propose an ERC20 withdrawal
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.WithdrawalsDisabled.selector
+            )
+        );
+        proxiedManager.proposeWithdrawal(STRATEGY1, address(erc20mock), 1);
+    }
+
+    function testFinalizeWithdrawalRevertsWhenDisabled() public {
+        // first get a pending withdrawal
+        testProposeWithdrawalFromStrategy();
+
+        // disable withdrawals
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 1);
+
+        // now finalize should revert
+        vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.WithdrawalsDisabled.selector
+            )
+        );
+        proxiedManager.finalizeWithdrawal(STRATEGY1, erc20mock);
+    }
+
+    function testProposeWithdrawalETHRevertsWhenDisabled() public {
+        // deposit some ETH first
+        testCreateStrategyETHAndDepositETH();
+
+        // disable withdrawals
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 1);
+
+        // attempt to propose an ETH withdrawal
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.WithdrawalsDisabled.selector
+            )
+        );
+        proxiedManager.proposeWithdrawalETH(STRATEGY1, 1 ether);
+    }
+
+    function testFinalizeWithdrawalETHRevertsWhenDisabled() public {
+        // get a pending ETH withdrawal
+        testProposeWithdrawalETHFromStrategy(0.5 ether);
+
+        // disable withdrawals
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 1);
+
+        // warp past timelock
+        vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
+
+        // now finalize should revert
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.WithdrawalsDisabled.selector
+            )
+        );
+        proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+    }
 }

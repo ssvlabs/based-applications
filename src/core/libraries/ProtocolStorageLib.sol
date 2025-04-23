@@ -12,6 +12,11 @@ library ProtocolStorageLib {
         uint32 obligationTimelockPeriod;
         uint32 obligationExpireTime;
         uint32 maxFeeIncrement;
+        // each bit, starting from the LSB, represents a DISABLED feature
+        // bit 0 = slashingDisabled
+        // bit 1 = withdrawalsDisabled
+        // ...
+        uint32 disabledFeatures;
         uint256 maxShares;
     }
 

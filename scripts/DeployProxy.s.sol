@@ -32,7 +32,8 @@ contract DeployProxy is Script {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxFeeIncrement: 500
+            maxFeeIncrement: 500,
+            disabledFeatures: 0
         });
 
         bytes memory initData = abi.encodeWithSelector(

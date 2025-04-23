@@ -109,7 +109,8 @@ contract Setup is Test {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxShares: 1e50
+            maxShares: 1e50,
+            disabledFeatures: 0
         });
 
         bytes memory data = abi.encodeWithSelector(
