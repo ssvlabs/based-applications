@@ -256,7 +256,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address token,
         uint256 amount
     ) external {
-        checkWithdrawalsAllowed();
+        _checkWithdrawalsAllowed();
 
         if (token == ETH_ADDRESS) revert InvalidToken();
         _proposeWithdrawal(strategyId, token, amount);
@@ -269,7 +269,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32 strategyId,
         IERC20 token
     ) external nonReentrant {
-        checkWithdrawalsAllowed();
+        _checkWithdrawalsAllowed();
 
         uint256 amount = _finalizeWithdrawal(strategyId, address(token));
 
@@ -288,14 +288,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param strategyId The ID of the strategy.
     /// @param amount The amount of ETH to withdraw.
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external {
-        checkWithdrawalsAllowed();
+        _checkWithdrawalsAllowed();
         _proposeWithdrawal(strategyId, ETH_ADDRESS, amount);
     }
 
     /// @notice Finalize the ETH withdrawal after the timelock period has passed.
     /// @param strategyId The ID of the strategy.
     function finalizeWithdrawalETH(uint32 strategyId) external nonReentrant {
-        checkWithdrawalsAllowed();
+        _checkWithdrawalsAllowed();
 
         uint256 amount = _finalizeWithdrawal(strategyId, ETH_ADDRESS);
 
@@ -780,9 +780,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 amount,
         bytes calldata data
     ) external nonReentrant {
+        _checkSlashingAllowed();
         if (amount == 0) revert InvalidAmount();
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        checkSlashingAllowed();
 
         if (!s.registeredBApps[bApp]) {
             revert IBasedAppManager.BAppNotRegistered();
@@ -923,7 +923,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         s.slashingFund[msg.sender][token] -= amount;
     }
 
-    function checkSlashingAllowed() internal view {
+    function _checkSlashingAllowed() internal view {
         if (
             ProtocolStorageLib.load().disabledFeatures & SLASHING_DISABLED != 0
         ) {
@@ -931,7 +931,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
     }
 
-    function checkWithdrawalsAllowed() internal view {
+    function _checkWithdrawalsAllowed() internal view {
         if (
             ProtocolStorageLib.load().disabledFeatures & WITHDRAWALS_DISABLED !=
             0

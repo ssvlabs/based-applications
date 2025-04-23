@@ -18,12 +18,12 @@ Introduce a compact, on‑chain mechanism to enable or disable selected features
 
 - **Checks**: Two internal functions in `StrategyManager`:
   ```solidity
-  function checkSlashingAllowed() internal view {
+  function _checkSlashingAllowed() internal view {
     if (ProtocolStorageLib.load().disabledFeatures & SLASHING_DISABLED != 0)
       revert SlashingDisabled();
   }
 
-  function checkWithdrawalsAllowed() internal view {
+  function _checkWithdrawalsAllowed() internal view {
     if (ProtocolStorageLib.load().disabledFeatures & WITHDRAWALS_DISABLED != 0)
       revert WithdrawalsDisabled();
   }
