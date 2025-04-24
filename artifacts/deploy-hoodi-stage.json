@@ -1,0 +1,13 @@
+{
+  "addresses": {
+    "BAppsModule": "0xF2b0c91b5256aD75585438C2722d5E7119666288",
+    "ProtocolModule": "0x5C08fb73Ba1E8Fd2894e0A3706C1e4CfBEA3F833",
+    "SSVBasedAppsImpl": "0x7E438E9264B431Fb62fbE2BFa350b9860cf7E8AA",
+    "SSVBasedAppsProxy": "0x1F3d4e4aEeA5406e3A7119d8daa31C67Ed3B13de",
+    "StrategyModule": "0x4b4638B067946c395C32CD0DFE5399E0899C7542"
+  },
+  "chainInfo": {
+    "chainId": 560048,
+    "deploymentBlock": 253405
+  }
+}

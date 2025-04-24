@@ -851,7 +851,6 @@ contract SlashingManagerTest is StrategyManagerTest {
     function testSlashBAppAdjustBasicETH() public {
         uint256 depositAmount = 100 ether;
         address token = ETH_ADDRESS;
-        // uint256 slashAmount = 10 ether;
         uint32 slashPercentage = 100;
         uint32 percentage = 10_000;
         uint256 slashAmount = calculateSlashAmount(
