@@ -102,7 +102,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         address token = ETH_ADDRESS;
         vm.assume(
             slashPercentage > 0 &&
-                slashPercentage <= proxiedManager.maxPercentage()
+                slashPercentage < proxiedManager.maxPercentage()
         );
 
         uint256 slashAmount = calculateSlashAmount(
@@ -695,7 +695,7 @@ contract SlashingManagerTest is StrategyManagerTest {
                 percentage > 0 &&
                 percentage <= proxiedManager.maxPercentage() &&
                 slashPercentage > 0 &&
-                slashPercentage <= proxiedManager.maxPercentage()
+                slashPercentage < proxiedManager.maxPercentage()
         );
         uint256 slashAmount = calculateSlashAmount(
             depositAmount,
