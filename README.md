@@ -164,13 +164,12 @@ __`❍ updateModules`__: specifying the correct module id and the new module add
 
 __`❍ upgradeToAndCall`__: specifying the new implementation address. The data field can be left empty in this case.
 
-There is also the `UpgradeProxy.s.sol` script file that can be run easily from the CLI.
 
-### Public Testnet Holesky
+### Public Testnet Hoodi
 
 | Name | Proxy | Implementation | Notes |
 | -------- | -------- | -------- | -------- | 
-| [`BasedApplications`](https://github.com/ssvlabs/based-applications/blob/main/src/BasedAppManager.sol) | [`0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A) | [`0x9a09A49870353867b0ce9901B44E84C32B2A47AC`](https://holesky.etherscan.io/address/0x9a09A49870353867b0ce9901B44E84C32B2A47AC) | Proxy: [`UUPS@5.1.0`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.1.0/contracts/proxy/utils/UUPSUpgradeable.sol) |
+| [`SSVBasedApps`](https://github.com/ssvlabs/based-applications/blob/main/src/BasedAppManager.sol) | [`<pending>`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A) | [`<pending>`](https://holesky.etherscan.io/address/0x9a09A49870353867b0ce9901B44E84C32B2A47AC) | Proxy: [`UUPS@5.1.0`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.1.0/contracts/proxy/utils/UUPSUpgradeable.sol) |
 
 &nbsp;
 
