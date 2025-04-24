@@ -142,11 +142,11 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 ### How to Deploy
 
-**1)** Run the deployment script `DeployProxy.s.sol` defined in `scripts/`:
+**2)** Set the environment variables in the `.env` file.
 
-__`❍ npm run deploy:holesky`__: verification is done automatically.
+**1)** Run the deployment script `DeployAllHoodi.s.sol` defined in `script/`:
 
-__`❍ npm run deploy:hoodi`__: verification needs to be done manually for now.
+__`❍ npm run deploy:hoodi-stage`__: verification is done automatically.
 
 ### How to Update Module Contracts
 
