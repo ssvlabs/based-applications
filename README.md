@@ -61,76 +61,18 @@ __`❍ forge test`__
 
 &nbsp;
 
-## 🔨 _Slashing Mechanism_
+## 🔨 _Slashing & Withdrawals Mechanisms_
 
-The `slash` function allows for the reduction of a strategy’s token balance under specific conditions, either as a penalty or to enforce protocol-defined behavior. Slashing can happen in two distinct modes, depending on whether:
+[Slashing & Withdrawals](./guides/slashing_and_withdrawals.md)
 
-**1)** The bApp is a compliant smart contract;
+## :gear: _Feature Activation_
 
-**2)** The bApp is a non-compliant smart contract or an EOA.
-
-### 🧠 Compliant BApp
-
-If the bApp is a compliant contract implementing the required interface `IBasedApp`,
-
-The slash function of the bApp is called: `(success, receiver, exit) = IBasedApp(bApp).slash(...)`
-
-*	`data` parameter is forwarded and may act as a proof or auxiliary input.
-
-*	The bApp decides:
-
-    *	Who receives the slashed funds by setting the `receiver` fund, it can burn by setting the receiver as `address(0)`;
-
-    *	Whether to exit the strategy or adjust obligations;
-
-    *	If `exit == true`, the strategy is exited and the obligation value is set to 0;
-
-    *	Otherwise, obligations are adjusted proportionally based on remaining balances, the new obligated amount is set to the previous one less the slashed amount;
-
-    *	Funds are credited to the receiver in the slashing fund.
-
-### 🔐 Non-compliant bApp (EOA or Non-compliant Contract)
-
-If the bApp is an EOA or does not comply with the required interface:
-
-*	Only the bApp itself can invoke slashing;
-
-*	The receiver of slashed funds is forcibly set to the bApp itself;
-
-*	The strategy is always exited (no obligation adjustment);
-
-*	Funds are added to the bApp’s slashing fund.
-
-### ⏳ Post Slashing
-
-⚠️ Important: After an obligation has been exited, it can be updated again to a value greater than 0, but only after a 14-day obligation timelock.
-
-This acts as a safeguard to prevent immediate re-entry and encourages more deliberate strategy participation.
-
-### 💸 Slashing Fund
-
-Slashed tokens are not immediately transferred. They are deposited into an internal slashing fund.
-
-The `receiver` (set during slashing) can later withdraw them using:
-
-```
-function withdrawSlashingFund(address token, uint256 amount) external
-function withdrawETHSlashingFund(uint256 amount) external
-```
-
-These functions verify balances and authorize the caller to retrieve their accumulated slashed tokens.
-
-&nbsp;
-
-## :gear: _Feature activation_
-
-[Feature activation](./guides/feature_activation.md)
+[Feature Activation](./guides/feature_activation.md)
 
 ## :page_facing_up: _Whitepaper_
 
 [Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
 
-&nbsp;
 
 ## :books: _More Resources_
 
