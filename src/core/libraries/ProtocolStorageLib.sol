@@ -13,12 +13,12 @@ library ProtocolStorageLib {
         uint32 obligationExpireTime;
         uint32 tokenUpdateTimelockPeriod;
         uint32 maxFeeIncrement;
+        uint256 maxShares;
         // each bit, starting from the LSB, represents a DISABLED feature
         // bit 0 = slashingDisabled
         // bit 1 = withdrawalsDisabled
         // ...
         uint32 disabledFeatures;
-        uint256 maxShares;
     }
 
     uint256 private constant SSV_STORAGE_POSITION =

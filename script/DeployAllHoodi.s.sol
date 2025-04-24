@@ -13,10 +13,10 @@ contract DeployAllHoodi is Script, DeployAll {
         string memory cfgPath;
         string memory outPath;
         if (isProd) {
-            cfgPath = "script/config/hoodi_prod.json";
+            cfgPath = "script/config/hoodi-prod.json";
             outPath = "artifacts/deploy-hoodi-prod.json";
         } else {
-            cfgPath = "script/config/hoodi_stage.json";
+            cfgPath = "script/config/hoodi-stage.json";
             outPath = "artifacts/deploy-hoodi-stage.json";
         }
 
