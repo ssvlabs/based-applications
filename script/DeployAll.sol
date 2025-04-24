@@ -15,7 +15,7 @@ contract DeployAll is Script {
     using stdJson for string;
 
     function _deployAll(string memory raw) internal returns (string memory) {
-        vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
+        vm.startBroadcast();
 
         SSVBasedApps impl = new SSVBasedApps();
         StrategyManager strategyMod = new StrategyManager();
