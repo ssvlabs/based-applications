@@ -124,7 +124,7 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 ## :gear: _Feature activation_
 
-[Feature activation](./guides/feature_activation.md)
+[Feature activation](./specs/feature_activation.md)
 
 ## :page_facing_up: _Whitepaper_
 
@@ -134,7 +134,7 @@ These functions verify balances and authorize the caller to retrieve their accum
 
 ## :books: _More Resources_
 
-[Based Apps Onboarding Guide](./guides/bAppOnBoarding.md) 
+[Based Apps Onboarding Guide](./doc/bAppOnBoarding.md) 
 
 &nbsp;
 
