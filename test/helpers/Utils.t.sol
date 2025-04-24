@@ -304,9 +304,10 @@ contract UtilsTest is Setup {
         uint256 previousObligatedBalance = (previousPercentage *
             previousBalance) / proxiedManager.maxPercentage();
         uint256 newObligatedBalance = previousObligatedBalance - slashAmount;
+        uint256 newTotalBalance = previousBalance - slashAmount;
         uint32 expectedAdjustedPercentage = uint32(
             (newObligatedBalance * proxiedManager.maxPercentage()) /
-                previousBalance
+                newTotalBalance
         );
         (uint32 adjustedPercentage, ) = proxiedManager.obligations(
             STRATEGY1,

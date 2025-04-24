@@ -723,16 +723,12 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     /// @param token The address of the token
     /// @return slashableBalance The slashable balance
     function getSlashableBalance(
+        CoreStorageLib.Data storage s,
         uint32 strategyId,
         address bApp,
-        address token
+        address token,
+        ICore.Shares storage strategyTokenShares
     ) internal view returns (uint256 slashableBalance) {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
-            strategyId
-        ][token];
-
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
         uint256 balance = strategyTokenShares.totalTokenBalance;
 
@@ -762,18 +758,23 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             revert IBasedAppManager.BAppNotRegistered();
         }
 
-        uint256 slashableBalance = getSlashableBalance(strategyId, bApp, token);
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
+            strategyId
+        ][token];
+        uint256 slashableBalance = getSlashableBalance(
+            s,
+            strategyId,
+            bApp,
+            token,
+            strategyTokenShares
+        );
         if (slashableBalance == 0) revert InsufficientBalance();
         uint256 amount = (slashableBalance * percentage) / MAX_PERCENTAGE;
-
-        // if (slashableBalance < amount) revert InsufficientBalance();
 
         address receiver;
         bool exit;
         bool success;
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
-            strategyId
-        ][token];
+
         if (_isBApp(bApp)) {
             (success, receiver, exit) = IBasedApp(bApp).slash(
                 strategyId,
@@ -784,22 +785,30 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             );
             if (!success) revert IStrategyManager.BAppSlashingFailed();
 
-            if (exit) _exitStrategy(strategyId, bApp, token);
-            else _adjustObligation(strategyId, bApp, token, amount);
+            if (exit) _exitStrategy(s, strategyId, bApp, token);
+            else
+                _adjustObligation(
+                    s,
+                    strategyId,
+                    bApp,
+                    token,
+                    amount,
+                    strategyTokenShares
+                );
         } else {
             // Only the bApp EOA or non-compliant bapp owner can slash
             if (msg.sender != bApp) revert InvalidBAppOwner(msg.sender, bApp);
             receiver = bApp;
-            _exitStrategy(strategyId, bApp, token);
+            _exitStrategy(s, strategyId, bApp, token);
         }
 
         strategyTokenShares.totalTokenBalance -= amount;
         s.slashingFund[receiver][token] += amount;
 
         if (strategyTokenShares.totalTokenBalance == 0) {
-            delete s.strategyTokenShares[strategyId][token].totalTokenBalance;
-            delete s.strategyTokenShares[strategyId][token].totalShareBalance;
-            s.strategyTokenShares[strategyId][token].currentGeneration += 1;
+            delete strategyTokenShares.totalTokenBalance;
+            delete strategyTokenShares.totalShareBalance;
+            strategyTokenShares.currentGeneration += 1;
         }
 
         emit IStrategyManager.StrategySlashed(
@@ -812,50 +821,46 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     }
 
     function _exitStrategy(
+        CoreStorageLib.Data storage s,
         uint32 strategyId,
         address bApp,
         address token
     ) private {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
         s.obligations[strategyId][bApp][token].percentage = 0;
 
         emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
     }
 
     function _adjustObligation(
+        CoreStorageLib.Data storage s,
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount
+        uint256 amount,
+        ICore.Shares storage strategyTokenShares
     ) internal {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.Obligation storage obligation = s.obligations[strategyId][bApp][
             token
         ];
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
-            strategyId
-        ][token];
         uint256 currentStrategyBalance = strategyTokenShares.totalTokenBalance;
         uint256 currentObligatedBalance = (obligation.percentage *
             currentStrategyBalance) / MAX_PERCENTAGE;
         uint256 postSlashStrategyBalance = currentStrategyBalance - amount;
         uint256 postSlashObligatedBalance = currentObligatedBalance - amount;
         if (postSlashStrategyBalance == 0) {
-            s.obligations[strategyId][bApp][token].percentage = 0;
+            obligation.percentage = 0;
             emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
         } else {
-            uint32 postSlashPercentage = uint32(
-                (postSlashObligatedBalance * MAX_PERCENTAGE) /
-                    currentStrategyBalance
+            uint32 postSlashObligationPercentage = uint32(
+                (postSlashObligatedBalance / postSlashStrategyBalance) *
+                    MAX_PERCENTAGE
             );
-            s
-            .obligations[strategyId][bApp][token]
-                .percentage = postSlashPercentage;
+            obligation.percentage = postSlashObligationPercentage;
             emit IStrategyManager.ObligationUpdated(
                 strategyId,
                 bApp,
                 token,
-                postSlashPercentage
+                postSlashObligationPercentage
             );
         }
     }
