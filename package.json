@@ -20,10 +20,9 @@
   "scripts": {
     "compile": "forge compile",
     "build": "npm run lint:fix && forge clean && forge build",
-    "deploy:hoodi-stage": "source .env && forge script --chain hoodi script/DeployAllHoodi.s.sol false --sig 'run(bool)' --rpc-url $HOODI_RPC_URL --verify -vvv --broadcast",
-    "deploy:hoodi-testnet": "source .env && forge script --chain hoodi script/DeployAllHoodi.s.sol true --sig 'run(bool)' --rpc-url $HOODI_RPC_URL --verify -vvv --broadcast",
-    "deploy:mainnet": "source .env && forge script --chain mainnet script/DeployAllMainnet.s.sol --rpc-url $MAINNET_RPC_URL --verify -vvv --broadcast",
-    "verify:hoodi": "forge verify-contract --rpc-url https://hoodi.cloud.blockscout.com/api/eth-rpc --verifier blockscout --verifier-url 'https://hoodi.cloud.blockscout.com/api/' $IMPLEMENTATION_ADDRESS src/SSVBasedApps.sol:SSVBasedApps",
+    "deploy:hoodi-stage": "source .env && forge script script/DeployAllHoodi.s.sol false --sig 'run(bool)' --rpc-url $HOODI_RPC_URL --verify -vvv --broadcast",
+    "deploy:hoodi-testnet": "source .env && forge script script/DeployAllHoodi.s.sol true --sig 'run(bool)' --rpc-url $HOODI_RPC_URL --verify -vvv --broadcast",
+    "deploy:mainnet": "source .env && forge script script/DeployAllMainnet.s.sol --rpc-url $MAINNET_RPC_URL --verify -vvv --broadcast",
     "gas-report": "forge test --gas-report",
     "generate-docs": "solc --include-path node_modules --base-path . --combined-json userdoc,devdoc src/SSVBasedApps.sol --output-dir ./docs --overwrite",
     "prepare": "husky",
@@ -31,8 +30,8 @@
     "lint:check": "prettier --check **.sol",
     "lint:fix": "prettier --write **.sol",
     "test": "forge test",
-    "test-coverage": "forge coverage --no-match-coverage \"(scripts|test)\"",
-    "test-coverage-report": "forge coverage --no-match-coverage \"(scripts|test)\" --report debug > test.txt"
+    "test-coverage": "forge coverage --no-match-coverage \"(script|test)\"",
+    "test-coverage-report": "forge coverage --no-match-coverage \"(script|test)\" --report debug > test.txt"
   },
   "devDependencies": {
     "@openzeppelin/contracts-upgradeable": "^5.3.0",
