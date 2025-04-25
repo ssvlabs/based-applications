@@ -1,5 +1,5 @@
 # IBasedAppWhitelisted
-[Git Source](https://github.com/ssvlabs/based-applications/blob/506ac6ae02f84ad3df44eadfe12c8fc0cb108f44/src/middleware/interfaces/IBasedAppWhitelisted.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/middleware/interfaces/IBasedAppWhitelisted.sol)
 
 
 ## Functions

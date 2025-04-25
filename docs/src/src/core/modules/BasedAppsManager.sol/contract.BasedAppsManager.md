@@ -1,5 +1,5 @@
 # BasedAppsManager
-[Git Source](https://github.com/ssvlabs/based-applications/blob/506ac6ae02f84ad3df44eadfe12c8fc0cb108f44/src/core/modules/BasedAppsManager.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/core/modules/BasedAppsManager.sol)
 
 **Inherits:**
 [IBasedAppManager](/src/core/interfaces/IBasedAppManager.sol/interface.IBasedAppManager.md)
@@ -53,7 +53,7 @@ function updateBAppMetadataURI(string calldata metadataURI) external;
 
 
 ```solidity
-function updateBAppsTokens(ICore.TokenConfig[] memory tokenConfigs) external;
+function updateBAppsTokens(ICore.TokenConfig[] calldata tokenConfigs) external;
 ```
 
 ### _addNewTokens

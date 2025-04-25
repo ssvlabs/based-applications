@@ -1,5 +1,5 @@
 # ProtocolStorageLib
-[Git Source](https://github.com/ssvlabs/based-applications/blob/506ac6ae02f84ad3df44eadfe12c8fc0cb108f44/src/core/libraries/ProtocolStorageLib.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/core/libraries/ProtocolStorageLib.sol)
 
 
 ## State Variables
@@ -25,6 +25,7 @@ Represents the operational settings and parameters required by the SSV Based App
 
 ```solidity
 struct Data {
+    uint256 maxShares;
     uint32 feeTimelockPeriod;
     uint32 feeExpireTime;
     uint32 withdrawalTimelockPeriod;
@@ -33,7 +34,6 @@ struct Data {
     uint32 obligationExpireTime;
     uint32 tokenUpdateTimelockPeriod;
     uint32 maxFeeIncrement;
-    uint256 maxShares;
     uint32 disabledFeatures;
 }
 ```

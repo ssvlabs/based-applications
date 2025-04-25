@@ -63,11 +63,11 @@ __`❍ forge test`__
 
 ## 🔨 _Slashing & Withdrawals Mechanisms_
 
-[Slashing & Withdrawals](./guides/slashing_and_withdrawals.md)
+[Slashing & Withdrawals](./guides/slashing-and-withdrawals.md)
 
 ## :gear: _Feature Activation_
 
-[Feature Activation](./guides/feature_activation.md)
+[Feature Activation](./guides/feature-activation.md)
 
 ## :page_facing_up: _Whitepaper_
 
@@ -76,7 +76,7 @@ __`❍ forge test`__
 
 ## :books: _More Resources_
 
-[Based Apps Onboarding Guide](./guides/bAppOnBoarding.md) 
+[Based Apps Onboarding Guide](./guides/bApp-onboarding.md) 
 
 &nbsp;
 

@@ -1,5 +1,5 @@
 # StrategyManager
-[Git Source](https://github.com/ssvlabs/based-applications/blob/506ac6ae02f84ad3df44eadfe12c8fc0cb108f44/src/core/modules/StrategyManager.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/core/modules/StrategyManager.sol)
 
 **Inherits:**
 ReentrancyGuardTransient, [IStrategyManager](/src/core/interfaces/IStrategyManager.sol/interface.IStrategyManager.md)
