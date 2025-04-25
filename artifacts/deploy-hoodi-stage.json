@@ -9,5 +9,17 @@
   "chainInfo": {
     "chainId": 560048,
     "deploymentBlock": 259312
+  },
+  "parameters": {
+    "disabledFeatures": 0,
+    "feeExpireTime": 3600,
+    "feeTimelockPeriod": 300,
+    "maxFeeIncrement": 500,
+    "maxShares": 100000000000000000000000000000000000000000000000000,
+    "obligationExpireTime": 3600,
+    "obligationTimelockPeriod": 300,
+    "tokenUpdateTimelockPeriod": 300,
+    "withdrawalExpireTime": 3600,
+    "withdrawalTimelockPeriod": 300
   }
 }

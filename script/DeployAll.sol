@@ -38,7 +38,7 @@ contract DeployAll is Script {
         console.log("ProtocolModule:     ", address(protocolMod));
         console.log("SSVBasedApps Proxy: ", address(proxy));
 
-        return saveToJson(impl, proxy, strategyMod, bAppsMod, protocolMod);
+        return saveToJson(impl, proxy, strategyMod, bAppsMod, protocolMod, raw);
     }
 
     function saveToJson(
@@ -46,7 +46,8 @@ contract DeployAll is Script {
         ERC1967Proxy proxy,
         StrategyManager strategyMod,
         BasedAppsManager bAppsMod,
-        ProtocolManager protocolMod
+        ProtocolManager protocolMod,
+        string memory raw
     ) internal returns (string memory) {
         string memory parent = "parent";
 
@@ -78,6 +79,54 @@ contract DeployAll is Script {
             address(protocolMod)
         );
 
+        string memory parameters = "parameters";
+        vm.serializeUint(
+            parameters,
+            "feeTimelockPeriod",
+            raw.readUint(".feeTimelockPeriod")
+        );
+        vm.serializeUint(
+            parameters,
+            "feeExpireTime",
+            raw.readUint(".feeExpireTime")
+        );
+        vm.serializeUint(
+            parameters,
+            "withdrawalTimelockPeriod",
+            raw.readUint(".withdrawalTimelockPeriod")
+        );
+        vm.serializeUint(
+            parameters,
+            "withdrawalExpireTime",
+            raw.readUint(".withdrawalExpireTime")
+        );
+        vm.serializeUint(
+            parameters,
+            "obligationTimelockPeriod",
+            raw.readUint(".obligationTimelockPeriod")
+        );
+        vm.serializeUint(
+            parameters,
+            "obligationExpireTime",
+            raw.readUint(".obligationExpireTime")
+        );
+        vm.serializeUint(
+            parameters,
+            "tokenUpdateTimelockPeriod",
+            raw.readUint(".tokenUpdateTimelockPeriod")
+        );
+        vm.serializeUint(parameters, "maxShares", raw.readUint(".maxShares"));
+        vm.serializeUint(
+            parameters,
+            "maxFeeIncrement",
+            raw.readUint(".maxFeeIncrement")
+        );
+        string memory parameters_output = vm.serializeUint(
+            parameters,
+            "disabledFeatures",
+            raw.readUint(".disabledFeatures")
+        );
+
         string memory chain_info = "chainInfo";
         vm.serializeUint(chain_info, "deploymentBlock", block.number);
         string memory chain_info_output = vm.serializeUint(
@@ -92,8 +141,8 @@ contract DeployAll is Script {
             deployed_addresses,
             deployed_addresses_output
         );
-
-        return vm.serializeString(parent, chain_info, chain_info_output);
+        vm.serializeString(parent, chain_info, chain_info_output);
+        return vm.serializeString(parent, parameters, parameters_output);
     }
 
     function deployProxy(
