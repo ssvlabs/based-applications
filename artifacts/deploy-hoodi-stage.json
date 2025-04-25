@@ -1,13 +1,13 @@
 {
   "addresses": {
-    "BAppsModule": "0xF2b0c91b5256aD75585438C2722d5E7119666288",
-    "ProtocolModule": "0x5C08fb73Ba1E8Fd2894e0A3706C1e4CfBEA3F833",
-    "SSVBasedAppsImpl": "0x7E438E9264B431Fb62fbE2BFa350b9860cf7E8AA",
-    "SSVBasedAppsProxy": "0x1F3d4e4aEeA5406e3A7119d8daa31C67Ed3B13de",
-    "StrategyModule": "0x4b4638B067946c395C32CD0DFE5399E0899C7542"
+    "BAppsModule": "0xdC97f7935Ed6FDcA407dDdE95EB26f7807E52Dc9",
+    "ProtocolModule": "0x7AadaE0f159eECCe6a4Faad78FFF94e1eab4C540",
+    "SSVBasedAppsImpl": "0xfCD7243D8fBb441497fEd67e19B7681C27BB20aD",
+    "SSVBasedAppsProxy": "0x40d959B95e7c56962D6d388d87921c03734b9C2C",
+    "StrategyModule": "0x7cF08Af55c6939BB748D4c4D2d219791EDe9dBC1"
   },
   "chainInfo": {
     "chainId": 560048,
-    "deploymentBlock": 253405
+    "deploymentBlock": 259312
   }
 }
