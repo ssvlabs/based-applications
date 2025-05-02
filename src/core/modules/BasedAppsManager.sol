@@ -47,7 +47,7 @@ contract BasedAppsManager is IBasedAppManager {
     }
 
     function updateBAppsTokens(
-        ICore.TokenConfig[] memory tokenConfigs
+        ICore.TokenConfig[] calldata tokenConfigs
     ) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
