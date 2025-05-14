@@ -163,7 +163,9 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxShares: 1e50
+            tokenUpdateTimelockPeriod: 14 days,
+            maxShares: 1e50,
+            disabledFeatures: 0
         });
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -192,7 +194,9 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
                 withdrawalExpireTime: 3 days,
                 obligationTimelockPeriod: 14 days,
                 obligationExpireTime: 3 days,
-                maxFeeIncrement: 10_001
+                tokenUpdateTimelockPeriod: 14 days,
+                maxFeeIncrement: 10_001,
+                disabledFeatures: 0
             });
         vm.expectRevert(
             abi.encodeWithSelector(

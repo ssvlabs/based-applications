@@ -109,7 +109,9 @@ contract Setup is Test {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxShares: 1e50
+            tokenUpdateTimelockPeriod: 14 days,
+            maxShares: 1e50,
+            disabledFeatures: 0
         });
 
         bytes memory data = abi.encodeWithSelector(
@@ -122,7 +124,7 @@ contract Setup is Test {
         );
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
-        assertEq(proxiedManager.getVersion(), "0.0.1", "Version mismatch");
+        assertEq(proxiedManager.getVersion(), "0.1.0", "Version mismatch");
         assertEq(
             proxiedManager.maxFeeIncrement(),
             500,

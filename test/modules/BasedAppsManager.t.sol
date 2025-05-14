@@ -10,6 +10,7 @@ import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { IBasedAppManager, IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
 import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 contract BasedAppsManagerTest is UtilsTest {
     string public metadataURI = "http://metadata.com";
@@ -456,5 +457,32 @@ contract BasedAppsManagerTest is UtilsTest {
             assertEq(success2, true, "does supportsInterface of IERC165");
         }
         vm.stopPrank();
+    }
+
+    function testUpdateBAppTokens() public {
+        testRegisterBApp();
+        (
+            address[] memory tokensInput,
+            uint32[] memory sharedRiskLevelInput
+        ) = createTwoTokenAndRiskInputs();
+        ICore.TokenConfig[] memory tokenConfigs = new ICore.TokenConfig[](
+            tokensInput.length
+        );
+        for (uint256 i = 0; i < tokensInput.length; i++) {
+            tokenConfigs[i] = ICore.TokenConfig({
+                token: tokensInput[i],
+                sharedRiskLevel: sharedRiskLevelInput[i] + 1000
+            });
+        }
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.prank(USER1);
+            vm.expectEmit(true, true, false, false);
+            emit IBasedAppManager.BAppTokensUpdated(
+                address(bApps[i]),
+                tokenConfigs
+            );
+            bApps[i].updateBAppTokens(tokenConfigs);
+            checkBAppUpdatedTokens(tokenConfigs, address(bApps[i]));
+        }
     }
 }
