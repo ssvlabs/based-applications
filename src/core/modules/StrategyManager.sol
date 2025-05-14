@@ -556,7 +556,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             revert BAppNotOptedIn();
         }
 
-        //if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         ValidationLib.validatePercentage(obligationPercentage);
 
         if (
@@ -774,7 +773,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address receiver;
         bool exit;
         bool success;
-
+        uint32 obligationPercentage;
         if (_isBApp(bApp)) {
             (success, receiver, exit) = IBasedApp(bApp).slash(
                 strategyId,
@@ -785,9 +784,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             );
             if (!success) revert IStrategyManager.BAppSlashingFailed();
 
-            if (exit) _exitStrategy(s, strategyId, bApp, token);
-            else
-                _adjustObligation(
+            if (exit) {
+                _exitStrategy(s, strategyId, bApp, token);
+                obligationPercentage = 0;
+            } else
+                obligationPercentage = _adjustObligation(
                     s,
                     strategyId,
                     bApp,
@@ -818,6 +819,13 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             percentage,
             receiver
         );
+
+        emit IStrategyManager.ObligationUpdated(
+            strategyId,
+            bApp,
+            token,
+            obligationPercentage
+        );
     }
 
     function _exitStrategy(
@@ -827,8 +835,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address token
     ) private {
         s.obligations[strategyId][bApp][token].percentage = 0;
-
-        emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
     }
 
     function _adjustObligation(
@@ -838,7 +844,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address token,
         uint256 amount,
         ICore.Shares storage strategyTokenShares
-    ) internal {
+    ) internal returns (uint32 obligationPercentage) {
         ICore.Obligation storage obligation = s.obligations[strategyId][bApp][
             token
         ];
@@ -849,19 +855,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 postSlashObligatedBalance = currentObligatedBalance - amount;
         if (postSlashStrategyBalance == 0) {
             obligation.percentage = 0;
-            emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
+            return 0;
         } else {
             uint32 postSlashObligationPercentage = uint32(
                 (postSlashObligatedBalance / postSlashStrategyBalance) *
                     MAX_PERCENTAGE
             );
             obligation.percentage = postSlashObligationPercentage;
-            emit IStrategyManager.ObligationUpdated(
-                strategyId,
-                bApp,
-                token,
-                postSlashObligationPercentage
-            );
+            return postSlashObligationPercentage;
         }
     }
 
