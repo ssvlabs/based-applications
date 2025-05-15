@@ -27,5 +27,14 @@ interface ISSVBasedApps {
     ) external;
 
     error InvalidMaxFeeIncrement();
+    error InvalidMaxShares();
+    error InvalidFeeTimelockPeriod();
+    error InvalidFeeExpireTime();
+    error InvalidWithdrawalTimelockPeriod();
+    error InvalidWithdrawalExpireTime();
+    error InvalidObligationTimelockPeriod();
+    error InvalidObligationExpireTime();
+    error InvalidTokenUpdateTimelockPeriod();
+    error InvalidDisabledFeatures();
     error TargetModuleDoesNotExist(uint8 moduleId);
 }

@@ -107,6 +107,42 @@ contract SSVBasedApps is
             revert InvalidMaxFeeIncrement();
         }
 
+        if (config.maxShares == 0 || config.maxShares < 1e50) {
+            revert InvalidMaxShares();
+        }
+
+        if (config.feeTimelockPeriod < 1 days) {
+            revert InvalidFeeTimelockPeriod();
+        }
+
+        if (config.feeExpireTime < 1 hours) {
+            revert InvalidFeeExpireTime();
+        }
+
+        if (config.withdrawalTimelockPeriod < 1 days) {
+            revert InvalidWithdrawalTimelockPeriod();
+        }
+
+        if (config.withdrawalExpireTime < 1 hours) {
+            revert InvalidWithdrawalExpireTime();
+        }
+
+        if (config.obligationTimelockPeriod < 1 days) {
+            revert InvalidObligationTimelockPeriod();
+        }
+
+        if (config.obligationExpireTime < 1 hours) {
+            revert InvalidObligationExpireTime();
+        }
+
+        if (config.tokenUpdateTimelockPeriod < 1 hours) {
+            revert InvalidTokenUpdateTimelockPeriod();
+        }
+
+        if (config.disabledFeatures > 3) {
+            revert InvalidDisabledFeatures();
+        }
+
         sp.maxFeeIncrement = config.maxFeeIncrement;
         sp.feeTimelockPeriod = config.feeTimelockPeriod;
         sp.feeExpireTime = config.feeExpireTime;

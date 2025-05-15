@@ -62,10 +62,10 @@ contract Setup is Test {
     uint32 public constant STRATEGY3 = 3;
     uint32 public constant STRATEGY4 = 4;
     // Fees
-    uint32 public constant STRATEGY1_INITIAL_FEE = 5;
-    uint32 public constant STRATEGY2_INITIAL_FEE = 0;
-    uint32 public constant STRATEGY3_INITIAL_FEE = 1000;
-    uint32 public constant STRATEGY4_INITIAL_FEE = 900;
+    uint32 public constant STRATEGY1_INITIAL_FEE = 5; // %0.05
+    uint32 public constant STRATEGY2_INITIAL_FEE = 0; // %0.00
+    uint32 public constant STRATEGY3_INITIAL_FEE = 1000; // %10.00
+    uint32 public constant STRATEGY4_INITIAL_FEE = 900; // %9.00
     uint32 public constant STRATEGY1_UPDATE_FEE = 10;
     // Initial Balances
     uint256 public constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
@@ -82,7 +82,7 @@ contract Setup is Test {
     // Constants
     address public constant ETH_ADDRESS =
         0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint32 public constant MAX_FEE_INCREMENT = 500;
+    uint32 public constant MAX_FEE_INCREMENT = 500; // 5%
     // Array containing all the BApps created
     IBasedApp[] public bApps;
     ProtocolStorageLib.Data public config;
