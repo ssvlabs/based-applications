@@ -103,8 +103,43 @@ contract SSVBasedApps is
             protocolManager_
         );
 
-        if (config.maxFeeIncrement == 0 || config.maxFeeIncrement > 10_000) {
+        if (
+            config.maxFeeIncrement == 0 ||
+            config.maxFeeIncrement > MAX_PERCENTAGE
+        ) {
             revert InvalidMaxFeeIncrement();
+        }
+
+        if (config.maxShares == 0 || config.maxShares < 1e38) {
+            revert InvalidMaxShares();
+        }
+
+        if (config.feeTimelockPeriod == 0) {
+            revert InvalidFeeTimelockPeriod();
+        }
+
+        if (config.feeExpireTime == 0) {
+            revert InvalidFeeExpireTime();
+        }
+
+        if (config.withdrawalTimelockPeriod == 0) {
+            revert InvalidWithdrawalTimelockPeriod();
+        }
+
+        if (config.withdrawalExpireTime == 0) {
+            revert InvalidWithdrawalExpireTime();
+        }
+
+        if (config.obligationTimelockPeriod == 0) {
+            revert InvalidObligationTimelockPeriod();
+        }
+
+        if (config.obligationExpireTime == 0) {
+            revert InvalidObligationExpireTime();
+        }
+
+        if (config.tokenUpdateTimelockPeriod == 0) {
+            revert InvalidTokenUpdateTimelockPeriod();
         }
 
         sp.maxFeeIncrement = config.maxFeeIncrement;
@@ -343,9 +378,7 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
-    function updateDisabledFeatures(
-        uint32 disabledFeatures
-    ) external onlyOwner {
+    function updateDisabledFeatures(uint32 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 

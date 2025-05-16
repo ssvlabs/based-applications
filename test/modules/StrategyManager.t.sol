@@ -1345,7 +1345,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         returns (uint32 proposedFee)
     {
         testStrategyOptInToBApp(9000);
-        proposedFee = 20;
+        proposedFee = 505;
         vm.prank(USER1);
         vm.expectEmit(true, true, true, true);
         emit IStrategyManager.StrategyFeeUpdateProposed(

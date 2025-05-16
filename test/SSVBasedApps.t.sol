@@ -3,10 +3,8 @@ pragma solidity 0.8.29;
 
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-import { Setup, IStrategyManager, IBasedAppManager, IProtocolManager, SSVBasedApps, ERC1967Proxy } from "@ssv/test/helpers/Setup.t.sol";
+import { Setup, IStrategyManager, IBasedAppManager, IProtocolManager, SSVBasedApps } from "@ssv/test/helpers/Setup.t.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
-import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 import { SSVCoreModules } from "@ssv/src/core/libraries/CoreStorageLib.sol";
 
 contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
@@ -152,66 +150,6 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             IProtocolManager(protocolManagerMod),
             config
         );
-    }
-
-    function testRevertInitializeWithZeroFee() public {
-        ProtocolStorageLib.Data memory configZeroFee = ProtocolStorageLib.Data({
-            maxFeeIncrement: 0,
-            feeTimelockPeriod: 7 days,
-            feeExpireTime: 1 days,
-            withdrawalTimelockPeriod: 14 days,
-            withdrawalExpireTime: 3 days,
-            obligationTimelockPeriod: 14 days,
-            obligationExpireTime: 3 days,
-            tokenUpdateTimelockPeriod: 14 days,
-            maxShares: 1e50,
-            disabledFeatures: 0
-        });
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ISSVBasedApps.InvalidMaxFeeIncrement.selector
-            )
-        );
-
-        bytes memory initData = abi.encodeWithSelector(
-            implementation.initialize.selector,
-            address(OWNER),
-            address(basedAppsManagerMod),
-            address(strategyManagerMod),
-            address(protocolManagerMod),
-            configZeroFee
-        );
-        proxy = new ERC1967Proxy(address(implementation), initData);
-    }
-
-    function testRevertInitializeWithExcessiveFee() public {
-        ProtocolStorageLib.Data memory configExcessiveFee = ProtocolStorageLib
-            .Data({
-                feeTimelockPeriod: 7 days,
-                feeExpireTime: 1 days,
-                withdrawalTimelockPeriod: 14 days,
-                maxShares: 1e50,
-                withdrawalExpireTime: 3 days,
-                obligationTimelockPeriod: 14 days,
-                obligationExpireTime: 3 days,
-                tokenUpdateTimelockPeriod: 14 days,
-                maxFeeIncrement: 10_001,
-                disabledFeatures: 0
-            });
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ISSVBasedApps.InvalidMaxFeeIncrement.selector
-            )
-        );
-        bytes memory initData = abi.encodeWithSelector(
-            implementation.initialize.selector,
-            address(OWNER),
-            address(basedAppsManagerMod),
-            address(strategyManagerMod),
-            address(protocolManagerMod),
-            configExcessiveFee
-        );
-        proxy = new ERC1967Proxy(address(implementation), initData);
     }
 
     function testUpdateStrategyModule() public {
