@@ -37,9 +37,8 @@ abstract contract BasedAppCore is IBasedApp {
         SSV_BASED_APPS_NETWORK = _ssvBasedAppsNetwork;
     }
 
-    /// @notice Registers a BApp calling the SSV SSVBasedApps
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
+    /// @notice Registers a BApp calling the SSVBasedApps
+    /// @param tokenConfigs array of token configs (address, shared risk level)
     /// @param metadataURI URI of the metadata
     /// @dev metadata should point to a json that respect template:
     ///    {
@@ -50,13 +49,11 @@ abstract contract BasedAppCore is IBasedApp {
     ///        "social": "https://x.com/ssv_network"
     ///    }
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external virtual {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(
-            tokens,
-            sharedRiskLevels,
+            tokenConfigs,
             metadataURI
         );
     }

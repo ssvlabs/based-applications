@@ -178,8 +178,7 @@ contract SSVBasedApps is
     }
 
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external {
         _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
@@ -379,9 +378,7 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
-    function updateDisabledFeatures(
-        uint32 disabledFeatures
-    ) external onlyOwner {
+    function updateDisabledFeatures(uint32 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 

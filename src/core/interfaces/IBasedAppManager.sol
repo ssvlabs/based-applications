@@ -7,8 +7,7 @@ interface IBasedAppManager {
     event BAppMetadataURIUpdated(address indexed bApp, string metadataURI);
     event BAppRegistered(
         address indexed bApp,
-        address[] tokens,
-        uint32[] sharedRiskLevel,
+        ICore.TokenConfig[] tokenConfigs,
         string metadataURI
     );
     event BAppTokensUpdated(
@@ -17,8 +16,7 @@ interface IBasedAppManager {
     );
 
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external;
     function updateBAppMetadataURI(string calldata metadataURI) external;

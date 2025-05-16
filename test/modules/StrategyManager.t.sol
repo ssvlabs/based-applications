@@ -7,6 +7,7 @@ import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol"
 import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function updateObligation(
@@ -665,8 +666,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 abi.encodePacked("0x00")
             );
             checkBAppInfo(
-                new address[](0),
-                new uint32[](0),
+                new ICore.TokenConfig[](0),
                 address(bApps[i]),
                 proxiedManager
             );
