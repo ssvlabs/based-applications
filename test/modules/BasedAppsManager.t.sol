@@ -27,77 +27,50 @@ contract BasedAppsManagerTest is UtilsTest {
     function createTwoTokenAndRiskInputs()
         private
         view
-        returns (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        )
+        returns (ICore.TokenConfig[] memory tokenConfigsInput)
     {
-        tokensInput = new address[](2);
-        sharedRiskLevelInput = new uint32[](2);
+        address[] memory tokensInput = new address[](2);
+        uint32[] memory sharedRiskLevelInput = new uint32[](2);
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(erc20mock2);
         sharedRiskLevelInput[0] = 102;
         sharedRiskLevelInput[1] = 103;
+        tokenConfigsInput = new ICore.TokenConfig[](2);
+        for (uint256 i = 0; i < tokensInput.length; i++) {
+            tokenConfigsInput[i] = ICore.TokenConfig({
+                token: tokensInput[i],
+                sharedRiskLevel: sharedRiskLevelInput[i]
+            });
+        }
     }
 
     function createTwoTokenAndRiskInputsWithTheSameToken()
         private
         view
-        returns (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        )
+        returns (ICore.TokenConfig[] memory tokenConfigsInput)
     {
-        tokensInput = new address[](2);
-        sharedRiskLevelInput = new uint32[](2);
+        tokenConfigsInput = new ICore.TokenConfig[](2);
+        address[] memory tokensInput = new address[](2);
+        uint32[] memory sharedRiskLevelInput = new uint32[](2);
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(erc20mock);
         sharedRiskLevelInput[0] = 102;
         sharedRiskLevelInput[1] = 103;
-    }
-
-    function createTwoTokenAndMoreRiskInputs()
-        private
-        view
-        returns (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        )
-    {
-        tokensInput = new address[](2);
-        sharedRiskLevelInput = new uint32[](3);
-        tokensInput[0] = address(erc20mock);
-        tokensInput[1] = address(erc20mock2);
-        sharedRiskLevelInput[0] = 102;
-        sharedRiskLevelInput[1] = 103;
-        sharedRiskLevelInput[1] = 104;
-    }
-
-    function createTwoTokenAndLessRiskInputs()
-        private
-        view
-        returns (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        )
-    {
-        tokensInput = new address[](2);
-        sharedRiskLevelInput = new uint32[](1);
-        tokensInput[0] = address(erc20mock);
-        tokensInput[1] = address(erc20mock2);
-        sharedRiskLevelInput[0] = 102;
+        for (uint256 i = 0; i < tokensInput.length; i++) {
+            tokenConfigsInput[i] = ICore.TokenConfig({
+                token: tokensInput[i],
+                sharedRiskLevel: sharedRiskLevelInput[i]
+            });
+        }
     }
 
     function createFiveTokenAndRiskInputs()
         private
         view
-        returns (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        )
+        returns (ICore.TokenConfig[] memory tokenConfigsInput)
     {
-        tokensInput = new address[](5);
-        sharedRiskLevelInput = new uint32[](5);
+        address[] memory tokensInput = new address[](5);
+        uint32[] memory sharedRiskLevelInput = new uint32[](5);
         tokensInput[0] = address(erc20mock);
         tokensInput[1] = address(erc20mock2);
         tokensInput[2] = address(erc20mock3);
@@ -108,127 +81,93 @@ contract BasedAppsManagerTest is UtilsTest {
         sharedRiskLevelInput[2] = 104;
         sharedRiskLevelInput[3] = 105;
         sharedRiskLevelInput[4] = 106;
+        tokenConfigsInput = new ICore.TokenConfig[](5);
+        for (uint256 i = 0; i < tokensInput.length; i++) {
+            tokenConfigsInput[i] = ICore.TokenConfig({
+                token: tokensInput[i],
+                sharedRiskLevel: sharedRiskLevelInput[i]
+            });
+        }
     }
 
     function testRegisterBApp() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            address(erc20mock),
+            102
+        );
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, true, true);
             emit IBasedAppManager.BAppRegistered(
                 address(bApps[i]),
-                tokensInput,
-                sharedRiskLevelInput,
+                tokenConfigsInput,
                 metadataURIs[i]
             );
-            bApps[i].registerBApp(
-                tokensInput,
-                sharedRiskLevelInput,
-                metadataURIs[i]
-            );
-            checkBAppInfo(
-                tokensInput,
-                sharedRiskLevelInput,
-                address(bApps[i]),
-                proxiedManager
-            );
+            bApps[i].registerBApp(tokenConfigsInput, metadataURIs[i]);
+            checkBAppInfo(tokenConfigsInput, address(bApps[i]), proxiedManager);
         }
     }
 
     function testRegisterBAppWithEOA() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
-        vm.prank(USER1);
-        proxiedManager.registerBApp(
-            tokensInput,
-            sharedRiskLevelInput,
-            metadataURIs[0]
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            address(erc20mock),
+            102
         );
-        checkBAppInfo(tokensInput, sharedRiskLevelInput, USER1, proxiedManager);
+        vm.prank(USER1);
+        proxiedManager.registerBApp(tokenConfigsInput, metadataURIs[0]);
+        checkBAppInfo(tokenConfigsInput, USER1, proxiedManager);
     }
 
     function testRegisterBAppWithEOAWithEth() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 102);
-        vm.prank(USER1);
-        proxiedManager.registerBApp(
-            tokensInput,
-            sharedRiskLevelInput,
-            metadataURIs[0]
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            ETH_ADDRESS,
+            102
         );
-        checkBAppInfo(tokensInput, sharedRiskLevelInput, USER1, proxiedManager);
+        vm.prank(USER1);
+        proxiedManager.registerBApp(tokenConfigsInput, metadataURIs[0]);
+        checkBAppInfo(tokenConfigsInput, USER1, proxiedManager);
     }
 
     function testRegisterBAppWith2Tokens() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createTwoTokenAndRiskInputs();
+        ICore.TokenConfig[]
+            memory tokenConfigsInput = createTwoTokenAndRiskInputs();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
-            checkBAppInfo(
-                tokensInput,
-                sharedRiskLevelInput,
-                address(bApps[i]),
-                proxiedManager
-            );
+            bApps[i].registerBApp(tokenConfigsInput, "");
+            checkBAppInfo(tokenConfigsInput, address(bApps[i]), proxiedManager);
         }
     }
 
     function testRegisterBAppWithETH() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createSingleTokenAndSingleRiskLevel(ETH_ADDRESS, 100);
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            ETH_ADDRESS,
+            100
+        );
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
-            checkBAppInfo(
-                tokensInput,
-                sharedRiskLevelInput,
-                address(bApps[i]),
-                proxiedManager
-            );
+            bApps[i].registerBApp(tokenConfigsInput, "");
+            checkBAppInfo(tokenConfigsInput, address(bApps[i]), proxiedManager);
         }
     }
 
     function testRegisterBAppWithNoTokens() public {
-        address[] memory tokensInput = new address[](0);
-        uint32[] memory sharedRiskLevelInput = new uint32[](0);
+        ICore.TokenConfig[] memory tokenConfigsInput = new ICore.TokenConfig[](
+            0
+        );
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
-            checkBAppInfo(
-                tokensInput,
-                sharedRiskLevelInput,
-                address(bApps[i]),
-                proxiedManager
-            );
+            bApps[i].registerBApp(tokenConfigsInput, "");
+            checkBAppInfo(tokenConfigsInput, address(bApps[i]), proxiedManager);
         }
     }
 
     function testRegisterBAppWithFiveTokens() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createFiveTokenAndRiskInputs();
+        ICore.TokenConfig[]
+            memory tokenConfigsInput = createFiveTokenAndRiskInputs();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
-            checkBAppInfo(
-                tokensInput,
-                sharedRiskLevelInput,
-                address(bApps[i]),
-                proxiedManager
-            );
+            bApps[i].registerBApp(tokenConfigsInput, "");
+            checkBAppInfo(tokenConfigsInput, address(bApps[i]), proxiedManager);
         }
     }
 
@@ -239,40 +178,42 @@ contract BasedAppsManagerTest is UtilsTest {
         uint32[] memory sharedRiskLevelInput = new uint32[](2);
         sharedRiskLevelInput[0] = 102;
         sharedRiskLevelInput[1] = 102;
+        ICore.TokenConfig[] memory tokenConfigsInput = new ICore.TokenConfig[](
+            tokensInput.length
+        );
+        for (uint256 i = 0; i < tokensInput.length; i++) {
+            tokenConfigsInput[i] = ICore.TokenConfig({
+                token: tokensInput[i],
+                sharedRiskLevel: sharedRiskLevelInput[i]
+            });
+        }
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
-            checkBAppInfo(
-                tokensInput,
-                sharedRiskLevelInput,
-                address(bApps[i]),
-                proxiedManager
-            );
+            bApps[i].registerBApp(tokenConfigsInput, "");
+            checkBAppInfo(tokenConfigsInput, address(bApps[i]), proxiedManager);
         }
     }
 
     function testRevertRegisterBAppWithSameTokens() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createTwoTokenAndRiskInputsWithTheSameToken();
+        ICore.TokenConfig[]
+            memory tokenConfigsInput = createTwoTokenAndRiskInputsWithTheSameToken();
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IBasedAppManager.TokenAlreadyAddedToBApp.selector,
-                    tokensInput[0]
+                    tokenConfigsInput[0].token
                 )
             );
-            bApps[i].registerBApp(tokensInput, sharedRiskLevelInput, "");
+            bApps[i].registerBApp(tokenConfigsInput, "");
         }
     }
 
     function testRevertRegisterBAppWithTokenZero() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createSingleTokenAndSingleRiskLevel(address(0), 102);
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            address(0),
+            102
+        );
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectRevert(
@@ -280,98 +221,53 @@ contract BasedAppsManagerTest is UtilsTest {
                     ValidationLib.ZeroAddressNotAllowed.selector
                 )
             );
-            bApps[i].registerBApp(
-                tokensInput,
-                sharedRiskLevelInput,
-                metadataURIs[i]
-            );
+            bApps[i].registerBApp(tokenConfigsInput, metadataURIs[i]);
         }
     }
 
     function testRevertRegisterBAppTwice() public {
         vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32[] memory sharedRiskLevelInput = new uint32[](1);
-        sharedRiskLevelInput[0] = 102;
-        bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            address(erc20mock),
+            102
+        );
+        bApp1.registerBApp(tokenConfigsInput, "");
         vm.expectRevert(
             abi.encodeWithSelector(
                 IBasedAppManager.BAppAlreadyRegistered.selector
             )
         );
-        bApp1.registerBApp(tokensInput, sharedRiskLevelInput, "");
-        bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp1.registerBApp(tokenConfigsInput, "");
+        bApp2.registerBApp(tokenConfigsInput, "");
         vm.expectRevert(
             abi.encodeWithSelector(
                 IBasedAppManager.BAppAlreadyRegistered.selector
             )
         );
-        bApp2.registerBApp(tokensInput, sharedRiskLevelInput, "");
-        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp2.registerBApp(tokenConfigsInput, "");
+        bApp3.registerBApp(tokenConfigsInput, "");
         vm.expectRevert(
             abi.encodeWithSelector(
                 IBasedAppManager.BAppAlreadyRegistered.selector
             )
         );
-        bApp3.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        bApp3.registerBApp(tokenConfigsInput, "");
         vm.stopPrank();
     }
 
     function testRegisterBAppFromNonBAppContract() public {
         vm.startPrank(USER1);
-        address[] memory tokensInput = new address[](1);
-        tokensInput[0] = address(erc20mock);
-        uint32[] memory sharedRiskLevelInput = new uint32[](1);
-        sharedRiskLevelInput[0] = 102;
-        nonCompliantBApp.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            address(erc20mock),
+            102
+        );
+        nonCompliantBApp.registerBApp(tokenConfigsInput, "");
         checkBAppInfo(
-            tokensInput,
-            sharedRiskLevelInput,
+            tokenConfigsInput,
             address(nonCompliantBApp),
             proxiedManager
         );
         vm.stopPrank();
-    }
-
-    function testRevertRegisterBAppWithMismatchTokenRiskLengthOne() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createTwoTokenAndMoreRiskInputs();
-        for (uint256 i = 0; i < bApps.length; i++) {
-            vm.prank(USER1);
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    ValidationLib.LengthsNotMatching.selector
-                )
-            );
-            bApps[i].registerBApp(
-                tokensInput,
-                sharedRiskLevelInput,
-                metadataURIs[i]
-            );
-        }
-    }
-
-    function testRevertRegisterBAppWithMismatchTokenRiskLengthTwo() public {
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createTwoTokenAndLessRiskInputs();
-        for (uint256 i = 0; i < bApps.length; i++) {
-            vm.prank(USER1);
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    ValidationLib.LengthsNotMatching.selector
-                )
-            );
-            bApps[i].registerBApp(
-                tokensInput,
-                sharedRiskLevelInput,
-                metadataURIs[i]
-            );
-        }
     }
 
     function testUpdateBAppMetadata() public {
@@ -461,28 +357,26 @@ contract BasedAppsManagerTest is UtilsTest {
 
     function testUpdateBAppTokens() public {
         testRegisterBApp();
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createTwoTokenAndRiskInputs();
-        ICore.TokenConfig[] memory tokenConfigs = new ICore.TokenConfig[](
-            tokensInput.length
-        );
-        for (uint256 i = 0; i < tokensInput.length; i++) {
-            tokenConfigs[i] = ICore.TokenConfig({
-                token: tokensInput[i],
-                sharedRiskLevel: sharedRiskLevelInput[i] + 1000
-            });
-        }
+        ICore.TokenConfig[]
+            memory tokenConfigsInput = createTwoTokenAndRiskInputs();
+        // ICore.TokenConfig[] memory tokenConfigs = new ICore.TokenConfig[](
+        //     tokensInput.length
+        // );
+        // for (uint256 i = 0; i < tokensInput.length; i++) {
+        //     tokenConfigs[i] = ICore.TokenConfig({
+        //         token: tokensInput[i],
+        //         sharedRiskLevel: sharedRiskLevelInput[i] + 1000
+        //     });
+        // }
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, false, false);
             emit IBasedAppManager.BAppTokensUpdated(
                 address(bApps[i]),
-                tokenConfigs
+                tokenConfigsInput
             );
-            bApps[i].updateBAppTokens(tokenConfigs);
-            checkBAppUpdatedTokens(tokenConfigs, address(bApps[i]));
+            bApps[i].updateBAppTokens(tokenConfigsInput);
+            checkBAppUpdatedTokens(tokenConfigsInput, address(bApps[i]));
         }
     }
 }
