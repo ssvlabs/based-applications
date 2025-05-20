@@ -10,6 +10,7 @@ import { BasedAppsManager } from "src/core/modules/BasedAppsManager.sol";
 import { ProtocolManager } from "src/core/modules/ProtocolManager.sol";
 import { SSVBasedApps } from "src/core/SSVBasedApps.sol";
 import { ProtocolStorageLib } from "src/core/libraries/ProtocolStorageLib.sol";
+import { Vault } from "src/core/Vault.sol";
 
 contract DeployAll is Script {
     using stdJson for string;
@@ -21,6 +22,7 @@ contract DeployAll is Script {
         StrategyManager strategyMod = new StrategyManager();
         BasedAppsManager bAppsMod = new BasedAppsManager();
         ProtocolManager protocolMod = new ProtocolManager();
+        Vault stEthVault = new Vault(raw.readAddress(".stEth"));
 
         ERC1967Proxy proxy = deployProxy(
             impl,
@@ -37,8 +39,18 @@ contract DeployAll is Script {
         console.log("BAppsModule:        ", address(bAppsMod));
         console.log("ProtocolModule:     ", address(protocolMod));
         console.log("SSVBasedApps Proxy: ", address(proxy));
+        console.log("stETH Vault:       ", address(stEthVault));
 
-        return saveToJson(impl, proxy, strategyMod, bAppsMod, protocolMod, raw);
+        return
+            saveToJson(
+                impl,
+                proxy,
+                strategyMod,
+                bAppsMod,
+                protocolMod,
+                stEthVault,
+                raw
+            );
     }
 
     function saveToJson(
@@ -47,6 +59,7 @@ contract DeployAll is Script {
         StrategyManager strategyMod,
         BasedAppsManager bAppsMod,
         ProtocolManager protocolMod,
+        Vault stEthVault,
         string memory raw
     ) internal returns (string memory) {
         string memory parent = "parent";
@@ -71,6 +84,11 @@ contract DeployAll is Script {
             deployed_addresses,
             "BAppsModule",
             address(bAppsMod)
+        );
+        vm.serializeAddress(
+            deployed_addresses,
+            "stEthVault",
+            address(stEthVault)
         );
 
         string memory deployed_addresses_output = vm.serializeAddress(

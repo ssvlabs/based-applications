@@ -8,5 +8,7 @@
   "tokenUpdateTimelockPeriod": 1209600,
   "maxShares": "1e50",
   "maxFeeIncrement": 500,
-  "disabledFeatures": 3
+  "disabledFeatures": 3,
+    "stEth": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+
 }
