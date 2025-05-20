@@ -59,10 +59,7 @@ import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.s
 contract SSVBasedApps is
     ISSVBasedApps,
     UUPSUpgradeable,
-    Ownable2StepUpgradeable,
-    IBasedAppManager,
-    IStrategyManager,
-    IProtocolManager
+    Ownable2StepUpgradeable
 {
     // ***************************
     // ** Section: Initializers **
@@ -343,9 +340,7 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
-    function updateDisabledFeatures(
-        uint32 disabledFeatures
-    ) external onlyOwner {
+    function updateDisabledFeatures(uint32 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
