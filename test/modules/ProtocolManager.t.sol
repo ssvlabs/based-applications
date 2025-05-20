@@ -220,7 +220,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     }
 
     /// @notice By default, no features should be disabled
-    function testDefaultDisabledFeaturesIsZero() public {
+    function testDefaultDisabledFeaturesIsZero() public view {
         assertEq(
             proxiedManager.disabledFeatures(),
             0,
