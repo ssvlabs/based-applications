@@ -183,6 +183,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ValidationLib.validateArrayLengths(tokens, obligationPercentages);
 
+        if (!s.registeredBApps[bApp]) {
+            revert IBasedAppManager.BAppNotRegistered();
+        }
+
         // Check if a strategy exists for the given bApp.
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (s.accountBAppStrategy[msg.sender][bApp] != 0) {

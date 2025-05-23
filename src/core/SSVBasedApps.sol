@@ -343,9 +343,7 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
-    function updateDisabledFeatures(
-        uint32 disabledFeatures
-    ) external onlyOwner {
+    function updateDisabledFeatures(uint32 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
