@@ -2,7 +2,6 @@
 pragma solidity 0.8.29;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import { BasedAppCore } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
@@ -47,16 +46,5 @@ abstract contract OwnableBasedApp is Ownable, BasedAppCore {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(
             metadataURI
         );
-    }
-
-    /// @notice Checks if the contract supports the interface
-    /// @param interfaceId interface id
-    /// @return isSupported if the contract supports the interface
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public pure override(BasedAppCore) returns (bool isSupported) {
-        return
-            interfaceId == type(IBasedApp).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
     }
 }
