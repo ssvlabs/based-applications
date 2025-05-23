@@ -216,9 +216,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         );
     }
 
-    /// @notice Function to check if an address uses the correct bApp interface
+    /// @notice Function to check if an address is a contract
     /// @param bApp The address of the bApp
-    /// @return True if the address uses the correct bApp interface
+    /// @return True if the address is a contract
     function _isContract(address bApp) private view returns (bool) {
         return bApp.code.length > 0;
     }
