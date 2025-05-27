@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { BasedAppCore } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
+import {
+    BasedAppCore
+} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
 contract BasedAppMock2 is BasedAppCore {
     event OptInToBApp(
