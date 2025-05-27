@@ -340,6 +340,35 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         );
     }
 
+    function testRevertSlashStrategyNotOptedInToEOA() public {
+        uint256 depositAmount = 100_000;
+        uint32 slashPercentage = 100;
+
+        testCreateStrategies();
+        testRegisterBAppWithEOA();
+
+        vm.prank(USER2);
+        proxiedManager.depositERC20(
+            STRATEGY1,
+            IERC20(erc20mock),
+            depositAmount
+        );
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.BAppNotOptedIn.selector,
+                STRATEGY1
+            )
+        );
+        proxiedManager.slash(
+            STRATEGY1,
+            USER1,
+            address(erc20mock),
+            slashPercentage,
+            abi.encodePacked("0x00")
+        );
+    }
+
     function testRevertWithdrawSlashingFundErc20WithEthEOA() public {
         uint256 slashAmount = 100;
         uint32 slashPercentage = 100;
