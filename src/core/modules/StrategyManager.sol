@@ -734,6 +734,18 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         return (balance * percentage) / MAX_PERCENTAGE;
     }
 
+    function _checkStrategyOptedIn(
+        CoreStorageLib.Data storage s,
+        uint32 strategyId,
+        address bApp
+    ) internal view {
+        // It is possible to slash only if the strategy owner has opted-in to the bApp
+        address strategyOwner = s.strategies[strategyId].owner; // Load the strategy to check if it exists
+        if (s.accountBAppStrategy[strategyOwner][bApp] != strategyId) {
+            revert BAppNotOptedIn();
+        }
+    }
+
     /// @notice Slash a strategy
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
@@ -756,6 +768,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (!s.registeredBApps[bApp]) {
             revert IBasedAppManager.BAppNotRegistered();
         }
+
+        _checkStrategyOptedIn(s, strategyId, bApp);
 
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
             strategyId
