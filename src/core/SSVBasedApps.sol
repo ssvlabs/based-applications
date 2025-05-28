@@ -59,10 +59,7 @@ import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.s
 contract SSVBasedApps is
     ISSVBasedApps,
     UUPSUpgradeable,
-    Ownable2StepUpgradeable,
-    IBasedAppManager,
-    IStrategyManager,
-    IProtocolManager
+    Ownable2StepUpgradeable
 {
     // ***************************
     // ** Section: Initializers **
