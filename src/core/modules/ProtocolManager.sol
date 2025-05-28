@@ -9,15 +9,18 @@ contract ProtocolManager is IProtocolManager {
     uint32 private constant SLASHING_DISABLED = 1 << 0;
     uint32 private constant WITHDRAWALS_DISABLED = 1 << 1;
 
+    uint32 private constant MIN_TIME_LOCK_PERIOD = 1 days;
+    uint32 private constant MIN_EXPIRE_TIME = 1 hours;
+
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
-        if (feeTimelockPeriod < 1 days)
+        if (feeTimelockPeriod < MIN_TIME_LOCK_PERIOD)
             revert ISSVBasedApps.InvalidFeeTimelockPeriod();
         ProtocolStorageLib.load().feeTimelockPeriod = feeTimelockPeriod;
         emit FeeTimelockPeriodUpdated(feeTimelockPeriod);
     }
 
     function updateFeeExpireTime(uint32 feeExpireTime) external {
-        if (feeExpireTime < 1 hours)
+        if (feeExpireTime < MIN_EXPIRE_TIME)
             revert ISSVBasedApps.InvalidFeeExpireTime();
         ProtocolStorageLib.load().feeExpireTime = feeExpireTime;
         emit FeeExpireTimeUpdated(feeExpireTime);
@@ -26,7 +29,7 @@ contract ProtocolManager is IProtocolManager {
     function updateWithdrawalTimelockPeriod(
         uint32 withdrawalTimelockPeriod
     ) external {
-        if (withdrawalTimelockPeriod < 1 days)
+        if (withdrawalTimelockPeriod < MIN_TIME_LOCK_PERIOD)
             revert ISSVBasedApps.InvalidWithdrawalTimelockPeriod();
         ProtocolStorageLib
             .load()
@@ -35,7 +38,7 @@ contract ProtocolManager is IProtocolManager {
     }
 
     function updateWithdrawalExpireTime(uint32 withdrawalExpireTime) external {
-        if (withdrawalExpireTime < 1 hours)
+        if (withdrawalExpireTime < MIN_EXPIRE_TIME)
             revert ISSVBasedApps.InvalidWithdrawalExpireTime();
         ProtocolStorageLib.load().withdrawalExpireTime = withdrawalExpireTime;
         emit WithdrawalExpireTimeUpdated(withdrawalExpireTime);
@@ -44,7 +47,7 @@ contract ProtocolManager is IProtocolManager {
     function updateObligationTimelockPeriod(
         uint32 obligationTimelockPeriod
     ) external {
-        if (obligationTimelockPeriod < 1 days)
+        if (obligationTimelockPeriod < MIN_TIME_LOCK_PERIOD)
             revert ISSVBasedApps.InvalidObligationTimelockPeriod();
         ProtocolStorageLib
             .load()
@@ -53,7 +56,7 @@ contract ProtocolManager is IProtocolManager {
     }
 
     function updateObligationExpireTime(uint32 obligationExpireTime) external {
-        if (obligationExpireTime < 1 hours)
+        if (obligationExpireTime < MIN_EXPIRE_TIME)
             revert ISSVBasedApps.InvalidObligationExpireTime();
         ProtocolStorageLib.load().obligationExpireTime = obligationExpireTime;
         emit ObligationExpireTimeUpdated(obligationExpireTime);
@@ -62,7 +65,7 @@ contract ProtocolManager is IProtocolManager {
     function updateTokenUpdateTimelockPeriod(
         uint32 tokenUpdateTimelockPeriod
     ) external {
-        if (tokenUpdateTimelockPeriod < 1 days)
+        if (tokenUpdateTimelockPeriod < MIN_TIME_LOCK_PERIOD)
             revert ISSVBasedApps.InvalidTokenUpdateTimelockPeriod();
         ProtocolStorageLib
             .load()
