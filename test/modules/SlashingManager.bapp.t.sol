@@ -1,10 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { IERC20, IStrategyManager, IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
+import {
+    IERC20,
+    IStrategyManager,
+    IBasedApp
+} from "@ssv/test/helpers/Setup.t.sol";
 import { StrategyManagerTest } from "@ssv/test/modules/StrategyManager.t.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
 contract SlashingManagerTest is StrategyManagerTest {
     function testGetSlashableBalanceBasic() public {
