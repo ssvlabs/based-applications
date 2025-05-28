@@ -3,16 +3,26 @@ pragma solidity 0.8.29;
 
 import { Test } from "forge-std/Test.sol";
 
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {
+    ERC1967Proxy
+} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { BasedAppsManager } from "@ssv/src/core/modules/BasedAppsManager.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
 import { ProtocolManager } from "@ssv/src/core/modules/ProtocolManager.sol";
 import { StrategyManager } from "@ssv/src/core/modules/StrategyManager.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 
 contract Config is Test {

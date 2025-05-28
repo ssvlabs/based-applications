@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
-import { MIN_EXPIRE_TIME, MIN_TIME_LOCK_PERIOD } from "@ssv/src/core/libraries/ValidationLib.sol";
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    MIN_EXPIRE_TIME,
+    MIN_TIME_LOCK_PERIOD
+} from "@ssv/src/core/libraries/ValidationLib.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 
 contract ProtocolManager is IProtocolManager {
