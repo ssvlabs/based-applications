@@ -5,7 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import { MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
+import { MIN_EXPIRE_TIME, MIN_TIME_LOCK_PERIOD, MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
@@ -107,36 +107,40 @@ contract SSVBasedApps is
             revert InvalidMaxFeeIncrement();
         }
 
-        if (config.maxShares == 0 || config.maxShares < 1e38) {
+        if (config.maxShares == 0 || config.maxShares < 1e50) {
             revert InvalidMaxShares();
         }
 
-        if (config.feeTimelockPeriod == 0) {
+        if (config.feeTimelockPeriod < MIN_TIME_LOCK_PERIOD) {
             revert InvalidFeeTimelockPeriod();
         }
 
-        if (config.feeExpireTime == 0) {
+        if (config.feeExpireTime < MIN_EXPIRE_TIME) {
             revert InvalidFeeExpireTime();
         }
 
-        if (config.withdrawalTimelockPeriod == 0) {
+        if (config.withdrawalTimelockPeriod < MIN_TIME_LOCK_PERIOD) {
             revert InvalidWithdrawalTimelockPeriod();
         }
 
-        if (config.withdrawalExpireTime == 0) {
+        if (config.withdrawalExpireTime < MIN_EXPIRE_TIME) {
             revert InvalidWithdrawalExpireTime();
         }
 
-        if (config.obligationTimelockPeriod == 0) {
+        if (config.obligationTimelockPeriod < MIN_TIME_LOCK_PERIOD) {
             revert InvalidObligationTimelockPeriod();
         }
 
-        if (config.obligationExpireTime == 0) {
+        if (config.obligationExpireTime < MIN_EXPIRE_TIME) {
             revert InvalidObligationExpireTime();
         }
 
-        if (config.tokenUpdateTimelockPeriod == 0) {
+        if (config.tokenUpdateTimelockPeriod < MIN_EXPIRE_TIME) {
             revert InvalidTokenUpdateTimelockPeriod();
+        }
+
+        if (config.disabledFeatures > 3) {
+            revert InvalidDisabledFeatures();
         }
 
         sp.maxFeeIncrement = config.maxFeeIncrement;
@@ -174,8 +178,7 @@ contract SSVBasedApps is
     }
 
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external {
         _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);

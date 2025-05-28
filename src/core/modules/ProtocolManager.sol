@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
+import { MIN_EXPIRE_TIME, MIN_TIME_LOCK_PERIOD } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
 import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
@@ -8,9 +9,6 @@ import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 contract ProtocolManager is IProtocolManager {
     uint32 private constant SLASHING_DISABLED = 1 << 0;
     uint32 private constant WITHDRAWALS_DISABLED = 1 << 1;
-
-    uint32 private constant MIN_TIME_LOCK_PERIOD = 1 days;
-    uint32 private constant MIN_EXPIRE_TIME = 1 hours;
 
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
         if (feeTimelockPeriod < MIN_TIME_LOCK_PERIOD)

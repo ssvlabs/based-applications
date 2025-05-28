@@ -11,8 +11,7 @@ interface IBasedApp {
         bytes calldata data
     ) external returns (bool);
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external;
     function slash(

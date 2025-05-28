@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
+
 interface ICustomBasedAppManager {
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external;
     function slash(
@@ -33,13 +34,11 @@ contract NonCompliantBApp {
     }
 
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external {
         ICustomBasedAppManager(BASED_APP_MANAGER).registerBApp(
-            tokens,
-            sharedRiskLevels,
+            tokenConfigs,
             metadataURI
         );
     }

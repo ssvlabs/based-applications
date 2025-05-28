@@ -40,5 +40,6 @@ interface ISSVBasedApps is
     error InvalidObligationTimelockPeriod();
     error InvalidObligationExpireTime();
     error InvalidTokenUpdateTimelockPeriod();
+    error InvalidDisabledFeatures();
     error TargetModuleDoesNotExist(uint8 moduleId);
 }

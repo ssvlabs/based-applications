@@ -141,7 +141,7 @@ contract Config is Test {
         config = ProtocolStorageLib.Data({
             maxFeeIncrement: MAX_FEE_INCREMENT,
             feeTimelockPeriod: 1 days,
-            feeExpireTime: 0 minutes,
+            feeExpireTime: 59 minutes,
             withdrawalTimelockPeriod: 14 days,
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
@@ -232,7 +232,7 @@ contract Config is Test {
             feeExpireTime: 1 hours,
             withdrawalTimelockPeriod: 1 days,
             withdrawalExpireTime: 1 hours,
-            obligationTimelockPeriod: 0 hours,
+            obligationTimelockPeriod: 23 hours,
             obligationExpireTime: 3 days,
             tokenUpdateTimelockPeriod: 14 days,
             maxShares: 1e50,
@@ -325,7 +325,7 @@ contract Config is Test {
             obligationTimelockPeriod: 1 days,
             obligationExpireTime: 1 hours,
             tokenUpdateTimelockPeriod: 1 days,
-            maxShares: 1e37,
+            maxShares: 1e49,
             disabledFeatures: 0
         });
 
@@ -339,6 +339,35 @@ contract Config is Test {
         );
         vm.expectRevert(
             abi.encodeWithSelector(ISSVBasedApps.InvalidMaxShares.selector)
+        );
+        proxy = new ERC1967Proxy(address(implementation), data);
+    }
+    function testRevertInvalidDisabledFeatures() public virtual {
+        config = ProtocolStorageLib.Data({
+            maxFeeIncrement: MAX_FEE_INCREMENT,
+            feeTimelockPeriod: 1 days,
+            feeExpireTime: 1 hours,
+            withdrawalTimelockPeriod: 1 days,
+            withdrawalExpireTime: 3 days,
+            obligationTimelockPeriod: 14 days,
+            obligationExpireTime: 3 days,
+            tokenUpdateTimelockPeriod: 14 days,
+            maxShares: 1e50,
+            disabledFeatures: 4
+        });
+
+        bytes memory data = abi.encodeWithSelector(
+            implementation.initialize.selector,
+            address(OWNER),
+            IBasedAppManager(basedAppsManagerMod),
+            IStrategyManager(strategyManagerMod),
+            IProtocolManager(protocolManagerMod),
+            config
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidDisabledFeatures.selector
+            )
         );
         proxy = new ERC1967Proxy(address(implementation), data);
     }

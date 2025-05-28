@@ -22,6 +22,16 @@ contract UtilsTest is Setup {
         sharedRiskLevelInput = new uint32[](1);
         sharedRiskLevelInput[0] = sharedRiskLevel;
     }
+    function createSingleTokenConfig(
+        address token,
+        uint32 sharedRiskLevel
+    ) internal pure returns (ICore.TokenConfig[] memory tokenConfigs) {
+        tokenConfigs = new ICore.TokenConfig[](1);
+        tokenConfigs[0] = ICore.TokenConfig({
+            token: token,
+            sharedRiskLevel: sharedRiskLevel
+        });
+    }
 
     function createSingleTokenAndSingleObligationPercentage(
         address token,
@@ -41,23 +51,17 @@ contract UtilsTest is Setup {
     }
 
     function checkBAppInfo(
-        address[] memory tokensInput,
-        uint32[] memory riskLevelInput,
+        ICore.TokenConfig[] memory tokenConfigsInput,
         address bApp,
         SSVBasedApps proxiedManager
     ) internal view {
-        assertEq(
-            tokensInput.length,
-            riskLevelInput.length,
-            "BApp tokens and sharedRiskLevel length"
-        );
         bool isRegistered = proxiedManager.registeredBApps(bApp);
         assertEq(isRegistered, true, "BApp registered");
-        for (uint32 i = 0; i < tokensInput.length; i++) {
+        for (uint32 i = 0; i < tokenConfigsInput.length; i++) {
             (uint32 sharedRiskLevel, bool isSet, , ) = proxiedManager
-                .bAppTokens(bApp, tokensInput[i]);
+                .bAppTokens(bApp, tokenConfigsInput[i].token);
             assertEq(
-                riskLevelInput[i],
+                tokenConfigsInput[i].sharedRiskLevel,
                 sharedRiskLevel,
                 "BApp risk level percentage"
             );
