@@ -1,5 +1,5 @@
 # StrategyManager
-[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/core/modules/StrategyManager.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/3ee95af731e4fce61ac2b03f418aa4e9fb5f64bd/src/core/modules/StrategyManager.sol)
 
 **Inherits:**
 ReentrancyGuardTransient, [IStrategyManager](/src/core/interfaces/IStrategyManager.sol/interface.IStrategyManager.md)
@@ -162,13 +162,13 @@ function optInToBApp(uint32 strategyId, address bApp, address[] calldata tokens,
 |`data`|`bytes`|Optional parameter that could be required by the service|
 
 
-### _isBApp
+### _isContract
 
-Function to check if an address uses the correct bApp interface
+Function to check if an address is a contract
 
 
 ```solidity
-function _isBApp(address bApp) private view returns (bool);
+function _isContract(address bApp) private view returns (bool);
 ```
 **Parameters**
 
@@ -180,7 +180,7 @@ function _isBApp(address bApp) private view returns (bool);
 
 |Name|Type|Description|
 |----|----|-----------|
-|`<none>`|`bool`|True if the address uses the correct bApp interface|
+|`<none>`|`bool`|True if the address is a contract|
 
 
 ### depositERC20
@@ -501,6 +501,13 @@ function getSlashableBalance(CoreStorageLib.Data storage s, uint32 strategyId, a
 |`slashableBalance`|`uint256`|The slashable balance|
 
 
+### _checkStrategyOptedIn
+
+
+```solidity
+function _checkStrategyOptedIn(CoreStorageLib.Data storage s, uint32 strategyId, address bApp) internal view;
+```
+
 ### slash
 
 Slash a strategy
@@ -538,7 +545,7 @@ function _adjustObligation(
     address token,
     uint256 amount,
     ICore.Shares storage strategyTokenShares
-) internal;
+) internal returns (uint32 obligationPercentage);
 ```
 
 ### withdrawSlashingFund

@@ -1,5 +1,5 @@
 # AccessControlBasedApp
-[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/middleware/modules/core+roles/AccessControlBasedApp.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/3ee95af731e4fce61ac2b03f418aa4e9fb5f64bd/src/middleware/modules/core+roles/AccessControlBasedApp.sol)
 
 **Inherits:**
 [BasedAppCore](/src/middleware/modules/core/BasedAppCore.sol/abstract.BasedAppCore.md), AccessControl
@@ -57,14 +57,13 @@ Registers a BApp calling the SSV SSVBasedApps
 
 
 ```solidity
-function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external override onlyRole(MANAGER_ROLE);
+function registerBApp(ICore.TokenConfig[] calldata tokenConfigs, string calldata metadataURI) external override onlyRole(MANAGER_ROLE);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`tokens`|`address[]`|array of token addresses|
-|`sharedRiskLevels`|`uint32[]`|array of shared risk levels|
+|`tokenConfigs`|`ICore.TokenConfig[]`|array of token addresses and shared risk levels|
 |`metadataURI`|`string`|URI of the metadata|
 
 
@@ -81,26 +80,5 @@ function updateBAppMetadataURI(string calldata metadataURI) external override on
 |Name|Type|Description|
 |----|----|-----------|
 |`metadataURI`|`string`|new metadata URI|
-
-
-### supportsInterface
-
-Checks if the contract supports the interface
-
-
-```solidity
-function supportsInterface(bytes4 interfaceId) public pure override(AccessControl, BasedAppCore) returns (bool isSupported);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`interfaceId`|`bytes4`|interface id|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`isSupported`|`bool`|if the contract supports the interface|
 
 

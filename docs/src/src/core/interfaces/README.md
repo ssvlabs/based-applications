@@ -6,3 +6,4 @@
 - [IProtocolManager](IProtocolManager.sol/interface.IProtocolManager.md)
 - [ISSVBasedApps](ISSVBasedApps.sol/interface.ISSVBasedApps.md)
 - [IStrategyManager](IStrategyManager.sol/interface.IStrategyManager.md)
+- [IViews](IViews.sol/interface.IViews.md)
