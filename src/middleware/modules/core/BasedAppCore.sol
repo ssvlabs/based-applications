@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 // =====================================================================================
 // ⚠️ WARNING: IMPLEMENT OWNER OR ACCESS ROLES ⚠️
@@ -35,9 +39,8 @@ abstract contract BasedAppCore is IBasedApp {
         SSV_BASED_APPS_NETWORK = _ssvBasedAppsNetwork;
     }
 
-    /// @notice Registers a BApp calling the SSV SSVBasedApps
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
+    /// @notice Registers a BApp calling the SSVBasedApps
+    /// @param tokenConfigs array of token configs (address, shared risk level)
     /// @param metadataURI URI of the metadata
     /// @dev metadata should point to a json that respect template:
     ///    {
@@ -48,13 +51,11 @@ abstract contract BasedAppCore is IBasedApp {
     ///        "social": "https://x.com/ssv_network"
     ///    }
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external virtual {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(
-            tokens,
-            sharedRiskLevels,
+            tokenConfigs,
             metadataURI
         );
     }
@@ -66,6 +67,16 @@ abstract contract BasedAppCore is IBasedApp {
     ) external virtual {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(
             metadataURI
+        );
+    }
+
+    /// @notice Updates the tokens of a BApp
+    /// @param tokenConfigs new list of tokens and their shared risk levels
+    function updateBAppTokens(
+        ICore.TokenConfig[] calldata tokenConfigs
+    ) external virtual {
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppsTokens(
+            tokenConfigs
         );
     }
 
@@ -105,25 +116,22 @@ abstract contract BasedAppCore is IBasedApp {
         /*strategyId*/
         address,
         /*token*/
-        uint256,
-        /*amount*/
+        uint32,
+        /*percentage*/
+        address,
+        /*sender*/
         bytes calldata
-    ) external virtual onlySSVBasedAppManager returns (bool, address, bool) {
+    )
+        external
+        virtual
+        /*data*/
+        onlySSVBasedAppManager
+        returns (bool, address, bool)
+    {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
         return (true, address(this), true);
-    }
-
-    /// @notice Checks if the contract supports the interface
-    /// @param interfaceId interface id
-    /// @return true if the contract supports the interface
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public pure virtual returns (bool) {
-        return
-            interfaceId == type(IBasedApp).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
     }
 
     // Receive function to accept plain Ether transfers

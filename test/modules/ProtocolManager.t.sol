@@ -1,10 +1,26 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {
+    Ownable2StepUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
 
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    ERC1967Proxy
+} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
+import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 
 contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     function testUpdateFeeTimelockPeriod() public {
@@ -67,6 +83,16 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
         );
     }
 
+    function testUpdateTokenUpdateTimelockPeriod() public {
+        vm.prank(OWNER);
+        proxiedManager.updateTokenUpdateTimelockPeriod(7 days);
+        assertEq(
+            proxiedManager.tokenUpdateTimelockPeriod(),
+            7 days,
+            "TokenUpdate timelock update failed"
+        );
+    }
+
     function testMaxPercentage() public view {
         assertEq(
             proxiedManager.maxPercentage(),
@@ -85,7 +111,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
 
     function testUpdateMaxShares() public {
         vm.prank(OWNER);
-        uint256 newValue = 1e18;
+        uint256 newValue = 1e38;
         proxiedManager.updateMaxShares(newValue);
         assertEq(
             proxiedManager.maxShares(),
@@ -167,7 +193,18 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
                 address(ATTACKER)
             )
         );
-        proxiedManager.updateObligationExpireTime(1 days);
+        proxiedManager.updateObligationExpireTime(59 minutes);
+    }
+
+    function testRevertUpdateTokenUpdateTimelockPeriodWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OwnableUnauthorizedAccount.selector,
+                address(ATTACKER)
+            )
+        );
+        proxiedManager.updateTokenUpdateTimelockPeriod(7 days);
     }
 
     function testRevertUpdateMaxSharesWithNonOwner() public {
@@ -191,5 +228,208 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
             )
         );
         proxiedManager.updateMaxFeeIncrement(501);
+    }
+
+    /// @notice By default, no features should be disabled
+    function testDefaultDisabledFeaturesIsZero() public view {
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            0,
+            "default disabledFeatures should be zero"
+        );
+    }
+
+    /// @notice The initializer should respect `config.disabledFeatures`
+    function testInitializeDisabledFeaturesFromConfig() public {
+        // Override config in Setup
+        config.disabledFeatures = 3; // slashing & withdrawals disabled
+
+        // Re-deploy a fresh proxy with the modified config
+        bytes memory initData = abi.encodeWithSelector(
+            implementation.initialize.selector,
+            address(OWNER),
+            IBasedAppManager(basedAppsManagerMod),
+            IStrategyManager(strategyManagerMod),
+            IProtocolManager(protocolManagerMod),
+            config
+        );
+        ERC1967Proxy proxy = new ERC1967Proxy(
+            address(implementation),
+            initData
+        );
+        SSVBasedApps proxiedManager = SSVBasedApps(payable(address(proxy)));
+
+        // It should read back exactly what we set
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            3,
+            "initializer did not set disabledFeatures from config"
+        );
+    }
+
+    /// @notice Only the owner can update the feature mask
+    function testUpdateFeatureDisabledFlagsAsOwner() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(2);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            2,
+            "owner update of disabledFeatures failed"
+        );
+    }
+
+    /// @notice Updating the flags should emit DisabledFeaturesUpdated
+    function testEmitDisabledFeaturesUpdatedEvent() public {
+        vm.prank(OWNER);
+        vm.expectEmit(true, false, false, true);
+        emit IProtocolManager.DisabledFeaturesUpdated(5);
+        proxiedManager.updateDisabledFeatures(5);
+    }
+
+    function testRevertUpdateDisabledFeaturesWithNonOwner() public {
+        vm.prank(ATTACKER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                OwnableUnauthorizedAccount.selector,
+                address(ATTACKER)
+            )
+        );
+        proxiedManager.updateDisabledFeatures(1);
+    }
+
+    function testSetIndividualDisabledFeatureBits() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 0);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            1,
+            "slashingDisabled bit not set correctly"
+        );
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(1 << 1);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            2,
+            "withdrawalsDisabled bit not set correctly"
+        );
+    }
+
+    function testClearFlags() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(3);
+        assertEq(proxiedManager.disabledFeatures(), 3, "mask precondition");
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(0);
+        assertEq(proxiedManager.disabledFeatures(), 0, "flags not cleared");
+    }
+
+    function testCombinedFlags() public {
+        uint32 mask = (1 << 0) | (1 << 2) | (1 << 4);
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(mask);
+        assertEq(
+            proxiedManager.disabledFeatures(),
+            mask,
+            "combined mask mismatch"
+        );
+    }
+
+    function testOtherParamsUnaffectedByFeatureMask() public {
+        vm.prank(OWNER);
+        proxiedManager.updateDisabledFeatures(type(uint32).max);
+        vm.prank(OWNER);
+        proxiedManager.updateFeeTimelockPeriod(2 days);
+        assertEq(
+            proxiedManager.feeTimelockPeriod(),
+            2 days,
+            "feeTimelockPeriod should update despite flags"
+        );
+    }
+
+    function testRevertUpdateFeeTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidFeeTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateFeeTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateFeeExpireTime() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(ISSVBasedApps.InvalidFeeExpireTime.selector)
+        );
+        proxiedManager.updateFeeExpireTime(59 minutes);
+    }
+
+    function testRevertUpdateWithdrawalTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidWithdrawalTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateWithdrawalTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateWithdrawalExpireTime() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidWithdrawalExpireTime.selector
+            )
+        );
+        proxiedManager.updateWithdrawalExpireTime(59 minutes);
+    }
+
+    function testRevertUpdateObligationTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidObligationTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateObligationTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateObligationExpireTime() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidObligationExpireTime.selector
+            )
+        );
+        proxiedManager.updateObligationExpireTime(59 minutes);
+    }
+
+    function testRevertUpdateTokenUpdateTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidTokenUpdateTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateTokenUpdateTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateMaxShares() public {
+        vm.prank(OWNER);
+        uint256 newValue = 1e37;
+        vm.expectRevert(
+            abi.encodeWithSelector(ISSVBasedApps.InvalidMaxShares.selector)
+        );
+        proxiedManager.updateMaxShares(newValue);
+    }
+
+    function testRevertUpdateMaxFeeIncrement() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidMaxFeeIncrement.selector
+            )
+        );
+        proxiedManager.updateMaxFeeIncrement(49);
     }
 }

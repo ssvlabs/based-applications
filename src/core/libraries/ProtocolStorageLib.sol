@@ -5,14 +5,20 @@ library ProtocolStorageLib {
     /// @title SSV Based Apps Storage Protocol
     /// @notice Represents the operational settings and parameters required by the SSV Based Application Platform
     struct Data {
+        uint256 maxShares;
         uint32 feeTimelockPeriod;
         uint32 feeExpireTime;
         uint32 withdrawalTimelockPeriod;
         uint32 withdrawalExpireTime;
         uint32 obligationTimelockPeriod;
         uint32 obligationExpireTime;
+        uint32 tokenUpdateTimelockPeriod;
         uint32 maxFeeIncrement;
-        uint256 maxShares;
+        // each bit, starting from the LSB, represents a DISABLED feature
+        // bit 0 = slashingDisabled
+        // bit 1 = withdrawalsDisabled
+        // ...
+        uint32 disabledFeatures;
     }
 
     uint256 private constant SSV_STORAGE_POSITION =
