@@ -4,7 +4,6 @@ pragma solidity 0.8.29;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 import { ValidationLib, MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
@@ -198,7 +197,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         s.accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        if (_isBApp(bApp)) {
+        if (_isContract(bApp)) {
             bool success = IBasedApp(bApp).optInToBApp(
                 strategyId,
                 tokens,
@@ -217,12 +216,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         );
     }
 
-    /// @notice Function to check if an address uses the correct bApp interface
+    /// @notice Function to check if an address is a contract
     /// @param bApp The address of the bApp
-    /// @return True if the address uses the correct bApp interface
-    function _isBApp(address bApp) private view returns (bool) {
-        return
-            ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
+    /// @return True if the address is a contract
+    function _isContract(address bApp) private view returns (bool) {
+        return bApp.code.length > 0;
     }
 
     /// @notice Deposit ERC20 tokens into the strategy
@@ -788,7 +786,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         bool exit;
         bool success;
         uint32 obligationPercentage;
-        if (_isBApp(bApp)) {
+        if (_isContract(bApp)) {
             (success, receiver, exit) = IBasedApp(bApp).slash(
                 strategyId,
                 token,
@@ -811,7 +809,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
                     strategyTokenShares
                 );
         } else {
-            // Only the bApp EOA or non-compliant bapp owner can slash
+            // Only the bApp EOA can slash
             if (msg.sender != bApp) revert InvalidBAppOwner(msg.sender, bApp);
             receiver = bApp;
             _exitStrategy(s, strategyId, bApp, token);
