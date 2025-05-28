@@ -1,19 +1,32 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import { IViews } from "@ssv/src/core/interfaces/IViews.sol";
 import { SSVCoreModules } from "@ssv/src/core/libraries/CoreStorageLib.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
-interface ISSVBasedApps {
+interface ISSVBasedApps is
+    IStrategyManager,
+    IBasedAppManager,
+    IProtocolManager,
+    IViews
+{
     event ModuleUpdated(SSVCoreModules indexed moduleId, address moduleAddress);
 
     function getModuleAddress(
         SSVCoreModules moduleId
     ) external view returns (address);
-    function getVersion() external pure returns (string memory version);
     function initialize(
         address owner_,
         IBasedAppManager ssvBasedAppManger_,
@@ -27,5 +40,14 @@ interface ISSVBasedApps {
     ) external;
 
     error InvalidMaxFeeIncrement();
+    error InvalidMaxShares();
+    error InvalidFeeTimelockPeriod();
+    error InvalidFeeExpireTime();
+    error InvalidWithdrawalTimelockPeriod();
+    error InvalidWithdrawalExpireTime();
+    error InvalidObligationTimelockPeriod();
+    error InvalidObligationExpireTime();
+    error InvalidTokenUpdateTimelockPeriod();
+    error InvalidDisabledFeatures();
     error TargetModuleDoesNotExist(uint8 moduleId);
 }
