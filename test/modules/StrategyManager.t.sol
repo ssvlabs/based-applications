@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import { IERC20, BasedAppMock } from "@ssv/test/helpers/Setup.t.sol";
 import { BasedAppsManagerTest } from "@ssv/test/modules/BasedAppsManager.t.sol";
 import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
@@ -1028,6 +1028,34 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IStrategyManager.BAppAlreadyOptedIn.selector
+                )
+            );
+            proxiedManager.optInToBApp(
+                STRATEGY1,
+                address(bApps[i]),
+                tokensInput,
+                obligationPercentagesInput,
+                abi.encodePacked("0x00")
+            );
+        }
+        vm.stopPrank();
+    }
+
+    function testRevertStrategyOptingInToNonExistingBApp(
+        uint32 percentage
+    ) public {
+        vm.assume(
+            percentage > 0 && percentage <= proxiedManager.maxPercentage()
+        );
+        testCreateStrategies();
+        vm.startPrank(USER1);
+        address[] memory tokensInput = new address[](0);
+        uint32[] memory obligationPercentagesInput = new uint32[](0);
+        for (uint256 i = 0; i < bApps.length; i++) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IBasedAppManager.BAppNotRegistered.selector,
+                    address(erc20mock2)
                 )
             );
             proxiedManager.optInToBApp(

@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
@@ -130,17 +128,6 @@ abstract contract BasedAppCore is IBasedApp {
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
         return (true, address(this), true);
-    }
-
-    /// @notice Checks if the contract supports the interface
-    /// @param interfaceId interface id
-    /// @return true if the contract supports the interface
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public pure virtual returns (bool) {
-        return
-            interfaceId == type(IBasedApp).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
     }
 
     // Receive function to accept plain Ether transfers

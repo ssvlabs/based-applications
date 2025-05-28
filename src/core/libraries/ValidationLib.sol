@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
+uint32 constant MIN_TIME_LOCK_PERIOD = 1 days;
+uint32 constant MIN_EXPIRE_TIME = 1 hours;
+
 uint32 constant MAX_PERCENTAGE = 1e4; // 100% in basis points
 address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
 
 library ValidationLib {
     error InvalidPercentage();

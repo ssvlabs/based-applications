@@ -10,6 +10,7 @@ import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol"
 import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
+import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 
 contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     function testUpdateFeeTimelockPeriod() public {
@@ -100,7 +101,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
 
     function testUpdateMaxShares() public {
         vm.prank(OWNER);
-        uint256 newValue = 1e18;
+        uint256 newValue = 1e38;
         proxiedManager.updateMaxShares(newValue);
         assertEq(
             proxiedManager.maxShares(),
@@ -182,7 +183,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
                 address(ATTACKER)
             )
         );
-        proxiedManager.updateObligationExpireTime(1 days);
+        proxiedManager.updateObligationExpireTime(59 minutes);
     }
 
     function testRevertUpdateTokenUpdateTimelockPeriodWithNonOwner() public {
@@ -333,5 +334,92 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
             2 days,
             "feeTimelockPeriod should update despite flags"
         );
+    }
+
+    function testRevertUpdateFeeTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidFeeTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateFeeTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateFeeExpireTime() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(ISSVBasedApps.InvalidFeeExpireTime.selector)
+        );
+        proxiedManager.updateFeeExpireTime(59 minutes);
+    }
+
+    function testRevertUpdateWithdrawalTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidWithdrawalTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateWithdrawalTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateWithdrawalExpireTime() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidWithdrawalExpireTime.selector
+            )
+        );
+        proxiedManager.updateWithdrawalExpireTime(59 minutes);
+    }
+
+    function testRevertUpdateObligationTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidObligationTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateObligationTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateObligationExpireTime() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidObligationExpireTime.selector
+            )
+        );
+        proxiedManager.updateObligationExpireTime(59 minutes);
+    }
+
+    function testRevertUpdateTokenUpdateTimelockPeriod() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidTokenUpdateTimelockPeriod.selector
+            )
+        );
+        proxiedManager.updateTokenUpdateTimelockPeriod(23 hours);
+    }
+
+    function testRevertUpdateMaxShares() public {
+        vm.prank(OWNER);
+        uint256 newValue = 1e37;
+        vm.expectRevert(
+            abi.encodeWithSelector(ISSVBasedApps.InvalidMaxShares.selector)
+        );
+        proxiedManager.updateMaxShares(newValue);
+    }
+
+    function testRevertUpdateMaxFeeIncrement() public {
+        vm.prank(OWNER);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ISSVBasedApps.InvalidMaxFeeIncrement.selector
+            )
+        );
+        proxiedManager.updateMaxFeeIncrement(49);
     }
 }

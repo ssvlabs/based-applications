@@ -5,7 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import { MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
+import { MIN_EXPIRE_TIME, MIN_TIME_LOCK_PERIOD, MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
@@ -59,10 +59,7 @@ import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.s
 contract SSVBasedApps is
     ISSVBasedApps,
     UUPSUpgradeable,
-    Ownable2StepUpgradeable,
-    IBasedAppManager,
-    IStrategyManager,
-    IProtocolManager
+    Ownable2StepUpgradeable
 {
     // ***************************
     // ** Section: Initializers **
@@ -103,7 +100,10 @@ contract SSVBasedApps is
             protocolManager_
         );
 
-        if (config.maxFeeIncrement == 0 || config.maxFeeIncrement > 10_000) {
+        if (
+            config.maxFeeIncrement == 0 ||
+            config.maxFeeIncrement > MAX_PERCENTAGE
+        ) {
             revert InvalidMaxFeeIncrement();
         }
 
@@ -111,31 +111,31 @@ contract SSVBasedApps is
             revert InvalidMaxShares();
         }
 
-        if (config.feeTimelockPeriod < 1 days) {
+        if (config.feeTimelockPeriod < MIN_TIME_LOCK_PERIOD) {
             revert InvalidFeeTimelockPeriod();
         }
 
-        if (config.feeExpireTime < 1 hours) {
+        if (config.feeExpireTime < MIN_EXPIRE_TIME) {
             revert InvalidFeeExpireTime();
         }
 
-        if (config.withdrawalTimelockPeriod < 1 days) {
+        if (config.withdrawalTimelockPeriod < MIN_TIME_LOCK_PERIOD) {
             revert InvalidWithdrawalTimelockPeriod();
         }
 
-        if (config.withdrawalExpireTime < 1 hours) {
+        if (config.withdrawalExpireTime < MIN_EXPIRE_TIME) {
             revert InvalidWithdrawalExpireTime();
         }
 
-        if (config.obligationTimelockPeriod < 1 days) {
+        if (config.obligationTimelockPeriod < MIN_TIME_LOCK_PERIOD) {
             revert InvalidObligationTimelockPeriod();
         }
 
-        if (config.obligationExpireTime < 1 hours) {
+        if (config.obligationExpireTime < MIN_EXPIRE_TIME) {
             revert InvalidObligationExpireTime();
         }
 
-        if (config.tokenUpdateTimelockPeriod < 1 hours) {
+        if (config.tokenUpdateTimelockPeriod < MIN_EXPIRE_TIME) {
             revert InvalidTokenUpdateTimelockPeriod();
         }
 

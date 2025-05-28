@@ -4,7 +4,6 @@ pragma solidity 0.8.29;
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
 import { ValidationLib, MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
@@ -183,6 +182,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ValidationLib.validateArrayLengths(tokens, obligationPercentages);
 
+        if (!s.registeredBApps[bApp]) {
+            revert IBasedAppManager.BAppNotRegistered();
+        }
+
         // Check if a strategy exists for the given bApp.
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
         if (s.accountBAppStrategy[msg.sender][bApp] != 0) {
@@ -198,7 +201,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         s.accountBAppStrategy[msg.sender][bApp] = strategyId;
 
-        if (_isBApp(bApp)) {
+        if (_isContract(bApp)) {
             bool success = IBasedApp(bApp).optInToBApp(
                 strategyId,
                 tokens,
@@ -217,12 +220,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         );
     }
 
-    /// @notice Function to check if an address uses the correct bApp interface
+    /// @notice Function to check if an address is a contract
     /// @param bApp The address of the bApp
-    /// @return True if the address uses the correct bApp interface
-    function _isBApp(address bApp) private view returns (bool) {
-        return
-            ERC165Checker.supportsInterface(bApp, type(IBasedApp).interfaceId);
+    /// @return True if the address is a contract
+    function _isContract(address bApp) private view returns (bool) {
+        return bApp.code.length > 0;
     }
 
     /// @notice Deposit ERC20 tokens into the strategy
@@ -556,7 +558,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             revert BAppNotOptedIn();
         }
 
-        //if (obligationPercentage > MAX_PERCENTAGE) revert ICore.InvalidPercentage();
         ValidationLib.validatePercentage(obligationPercentage);
 
         if (
@@ -735,6 +736,18 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         return (balance * percentage) / MAX_PERCENTAGE;
     }
 
+    function _checkStrategyOptedIn(
+        CoreStorageLib.Data storage s,
+        uint32 strategyId,
+        address bApp
+    ) internal view {
+        // It is possible to slash only if the strategy owner has opted-in to the bApp
+        address strategyOwner = s.strategies[strategyId].owner; // Load the strategy to check if it exists
+        if (s.accountBAppStrategy[strategyOwner][bApp] != strategyId) {
+            revert BAppNotOptedIn();
+        }
+    }
+
     /// @notice Slash a strategy
     /// @param strategyId The ID of the strategy
     /// @param bApp The address of the bApp
@@ -758,6 +771,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             revert IBasedAppManager.BAppNotRegistered();
         }
 
+        _checkStrategyOptedIn(s, strategyId, bApp);
+
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
             strategyId
         ][token];
@@ -774,8 +789,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address receiver;
         bool exit;
         bool success;
-
-        if (_isBApp(bApp)) {
+        uint32 obligationPercentage;
+        if (_isContract(bApp)) {
             (success, receiver, exit) = IBasedApp(bApp).slash(
                 strategyId,
                 token,
@@ -785,9 +800,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             );
             if (!success) revert IStrategyManager.BAppSlashingFailed();
 
-            if (exit) _exitStrategy(s, strategyId, bApp, token);
-            else
-                _adjustObligation(
+            if (exit) {
+                _exitStrategy(s, strategyId, bApp, token);
+                obligationPercentage = 0;
+            } else
+                obligationPercentage = _adjustObligation(
                     s,
                     strategyId,
                     bApp,
@@ -796,7 +813,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
                     strategyTokenShares
                 );
         } else {
-            // Only the bApp EOA or non-compliant bapp owner can slash
+            // Only the bApp EOA can slash
             if (msg.sender != bApp) revert InvalidBAppOwner(msg.sender, bApp);
             receiver = bApp;
             _exitStrategy(s, strategyId, bApp, token);
@@ -818,6 +835,13 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             percentage,
             receiver
         );
+
+        emit IStrategyManager.ObligationUpdated(
+            strategyId,
+            bApp,
+            token,
+            obligationPercentage
+        );
     }
 
     function _exitStrategy(
@@ -827,8 +851,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address token
     ) private {
         s.obligations[strategyId][bApp][token].percentage = 0;
-
-        emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
     }
 
     function _adjustObligation(
@@ -838,7 +860,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         address token,
         uint256 amount,
         ICore.Shares storage strategyTokenShares
-    ) internal {
+    ) internal returns (uint32 obligationPercentage) {
         ICore.Obligation storage obligation = s.obligations[strategyId][bApp][
             token
         ];
@@ -849,19 +871,14 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 postSlashObligatedBalance = currentObligatedBalance - amount;
         if (postSlashStrategyBalance == 0) {
             obligation.percentage = 0;
-            emit IStrategyManager.ObligationUpdated(strategyId, bApp, token, 0);
+            return 0;
         } else {
             uint32 postSlashObligationPercentage = uint32(
                 (postSlashObligatedBalance / postSlashStrategyBalance) *
                     MAX_PERCENTAGE
             );
             obligation.percentage = postSlashObligationPercentage;
-            emit IStrategyManager.ObligationUpdated(
-                strategyId,
-                bApp,
-                token,
-                postSlashObligationPercentage
-            );
+            return postSlashObligationPercentage;
         }
     }
 

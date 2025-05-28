@@ -3,8 +3,6 @@ pragma solidity 0.8.29;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { IBasedAppManager, IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
@@ -328,31 +326,6 @@ contract BasedAppsManagerTest is UtilsTest {
             );
             bApps[i].optInToBApp(0, tokensInput, sharedRiskLevelInput, "");
         }
-    }
-
-    function testSupportInterface() public {
-        vm.startPrank(USER1);
-        for (uint256 i = 0; i < bApps.length; i++) {
-            bool success = bApps[i].supportsInterface(
-                type(IBasedApp).interfaceId
-            );
-            assertEq(success, true, "supportsInterface based app");
-            bool failed = bApps[i].supportsInterface(
-                type(IBasedAppManager).interfaceId
-            );
-            assertEq(
-                failed,
-                false,
-                "does not supportsInterface based app manager"
-            );
-            bool failed2 = bApps[i].supportsInterface(type(IERC20).interfaceId);
-            assertEq(failed2, false, "does not supportsInterface");
-            bool success2 = bApps[i].supportsInterface(
-                type(IERC165).interfaceId
-            );
-            assertEq(success2, true, "does supportsInterface of IERC165");
-        }
-        vm.stopPrank();
     }
 
     function testUpdateBAppTokens() public {
