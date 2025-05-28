@@ -1,0 +1,12 @@
+{
+  "feeTimelockPeriod": 86400,
+  "feeExpireTime": 3600,
+  "withdrawalTimelockPeriod": 172800,
+  "withdrawalExpireTime": 86400,
+  "obligationTimelockPeriod": 172800,
+  "obligationExpireTime": 86400,
+  "tokenUpdateTimelockPeriod": 3600,
+  "maxShares": "1e50",
+  "maxFeeIncrement": 500,
+  "disabledFeatures": 0
+}

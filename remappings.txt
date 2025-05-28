@@ -3,10 +3,8 @@
 @ssv/src/middleware=src/middleware
 @ssv/lib/=lib/
 @ssv/test/=test/
-@ssv/scripts/=scripts/
-@ssv/forge-std/=lib/forge-std/src/
+@ssv/script/=script/
 @ssv/src/core=src/core
 @ssv/src/core/interfaces=src/core/interfaces
 @ssv/src/core/libraries=src/core/libraries
 @ssv/src/core/modules=src/core/modules
-
