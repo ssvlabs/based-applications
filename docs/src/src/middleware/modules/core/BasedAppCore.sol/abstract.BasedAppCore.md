@@ -1,5 +1,5 @@
 # BasedAppCore
-[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/middleware/modules/core/BasedAppCore.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/3ee95af731e4fce61ac2b03f418aa4e9fb5f64bd/src/middleware/modules/core/BasedAppCore.sol)
 
 **Inherits:**
 [IBasedApp](/src/middleware/interfaces/IBasedApp.sol/interface.IBasedApp.md)
@@ -43,7 +43,7 @@ constructor(address _ssvBasedAppsNetwork);
 
 ### registerBApp
 
-Registers a BApp calling the SSV SSVBasedApps
+Registers a BApp calling the SSVBasedApps
 
 *metadata should point to a json that respect template:
 {
@@ -56,14 +56,13 @@ Registers a BApp calling the SSV SSVBasedApps
 
 
 ```solidity
-function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external virtual;
+function registerBApp(ICore.TokenConfig[] calldata tokenConfigs, string calldata metadataURI) external virtual;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`tokens`|`address[]`|array of token addresses|
-|`sharedRiskLevels`|`uint32[]`|array of shared risk levels|
+|`tokenConfigs`|`ICore.TokenConfig[]`|array of token configs (address, shared risk level)|
 |`metadataURI`|`string`|URI of the metadata|
 
 
@@ -131,34 +130,13 @@ function optInToBApp(uint32, address[] calldata, uint32[] calldata, bytes callda
 function slash(uint32, address, uint32, address, bytes calldata) external virtual onlySSVBasedAppManager returns (bool, address, bool);
 ```
 
-### supportsInterface
-
-Checks if the contract supports the interface
+### receive
 
 *--- CORE LOGIC (TO BE IMPLEMENTED) ---*
 
 *--- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---*
 
 *--- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---*
-
-
-```solidity
-function supportsInterface(bytes4 interfaceId) public pure virtual returns (bool);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`interfaceId`|`bytes4`|interface id|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`<none>`|`bool`|true if the contract supports the interface|
-
-
-### receive
 
 
 ```solidity

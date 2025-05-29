@@ -65,6 +65,8 @@ __`❍ forge test`__
 
 [Slashing & Withdrawals](./guides/slashing-and-withdrawals.md)
 
+[Generation pattern](./guides/generations.md)
+
 ## :gear: _Feature Activation_
 
 [Feature Activation](./guides/feature-activation.md)
@@ -78,7 +80,6 @@ __`❍ forge test`__
 
 [Based Apps Onboarding Guide](./guides/bApp-onboarding.md) 
 
-&nbsp;
 
 ## :rocket: _Deployments_
 

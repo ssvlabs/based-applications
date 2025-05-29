@@ -8,6 +8,7 @@
       - [IProtocolManager](src/core/interfaces/IProtocolManager.sol/interface.IProtocolManager.md)
       - [ISSVBasedApps](src/core/interfaces/ISSVBasedApps.sol/interface.ISSVBasedApps.md)
       - [IStrategyManager](src/core/interfaces/IStrategyManager.sol/interface.IStrategyManager.md)
+      - [IViews](src/core/interfaces/IViews.sol/interface.IViews.md)
     - [❱ libraries](src/core/libraries/README.md)
       - [SSVCoreModules](src/core/libraries/CoreStorageLib.sol/enum.SSVCoreModules.md)
       - [CoreStorageLib](src/core/libraries/CoreStorageLib.sol/library.CoreStorageLib.md)
