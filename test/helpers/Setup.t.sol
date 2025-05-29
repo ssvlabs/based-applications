@@ -3,24 +3,36 @@ pragma solidity 0.8.29;
 
 import { Test } from "forge-std/Test.sol";
 
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {
+    ERC1967Proxy
+} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { BasedAppMock } from "@ssv/test/mocks/MockBApp.sol";
 import { BasedAppMock2 } from "@ssv/test/mocks/MockBApp2.sol";
 import { BasedAppMock3 } from "@ssv/test/mocks/MockBAppAccessControl.sol";
 import { BasedAppMock4 } from "@ssv/test/mocks/MockBApp4RejectEth.sol";
 import { BasedAppsManager } from "@ssv/src/core/modules/BasedAppsManager.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { IERC20, ERC20Mock } from "@ssv/test/mocks/MockERC20.sol";
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { NonCompliantBApp } from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
 import { ProtocolManager } from "@ssv/src/core/modules/ProtocolManager.sol";
 import { StrategyManager } from "@ssv/src/core/modules/StrategyManager.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
-import { WhitelistExample } from "@ssv/src/middleware/examples/WhitelistExample.sol";
+import {
+    WhitelistExample
+} from "@ssv/src/middleware/examples/WhitelistExample.sol";
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 contract Setup is Test {
@@ -62,10 +74,10 @@ contract Setup is Test {
     uint32 public constant STRATEGY3 = 3;
     uint32 public constant STRATEGY4 = 4;
     // Fees
-    uint32 public constant STRATEGY1_INITIAL_FEE = 5;
-    uint32 public constant STRATEGY2_INITIAL_FEE = 0;
-    uint32 public constant STRATEGY3_INITIAL_FEE = 1000;
-    uint32 public constant STRATEGY4_INITIAL_FEE = 900;
+    uint32 public constant STRATEGY1_INITIAL_FEE = 5; // %0.05
+    uint32 public constant STRATEGY2_INITIAL_FEE = 0; // %0.00
+    uint32 public constant STRATEGY3_INITIAL_FEE = 1000; // %10.00
+    uint32 public constant STRATEGY4_INITIAL_FEE = 900; // %9.00
     uint32 public constant STRATEGY1_UPDATE_FEE = 10;
     // Initial Balances
     uint256 public constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
@@ -82,7 +94,7 @@ contract Setup is Test {
     // Constants
     address public constant ETH_ADDRESS =
         0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint32 public constant MAX_FEE_INCREMENT = 500;
+    uint32 public constant MAX_FEE_INCREMENT = 500; // 5%
     // Array containing all the BApps created
     IBasedApp[] public bApps;
     ProtocolStorageLib.Data public config;
@@ -109,7 +121,9 @@ contract Setup is Test {
             withdrawalExpireTime: 3 days,
             obligationTimelockPeriod: 14 days,
             obligationExpireTime: 3 days,
-            maxShares: 1e50
+            tokenUpdateTimelockPeriod: 14 days,
+            maxShares: 1e50,
+            disabledFeatures: 0
         });
 
         bytes memory data = abi.encodeWithSelector(
@@ -122,7 +136,7 @@ contract Setup is Test {
         );
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
-        assertEq(proxiedManager.getVersion(), "0.0.1", "Version mismatch");
+        assertEq(proxiedManager.getVersion(), "0.1.0", "Version mismatch");
         assertEq(
             proxiedManager.maxFeeIncrement(),
             500,
