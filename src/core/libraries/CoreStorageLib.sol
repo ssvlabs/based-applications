@@ -22,6 +22,11 @@ library CoreStorageLib {
          */
         mapping(uint32 strategyId => ICore.Strategy) strategies;
         /**
+         * @notice Tracks the owners of the strategies
+         * @dev The strategy ID is incremental and unique
+         */
+        mapping(address owner => uint32[] strategyId) strategyOwners;
+        /**
          * @notice Links an account to a single strategy for a specific bApp
          * @dev Guarantees that an account cannot have more than one strategy for a given bApp
          */
@@ -47,12 +52,6 @@ library CoreStorageLib {
          * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
          */
         mapping(uint32 strategyId => mapping(address bApp => mapping(address token => ICore.Obligation))) obligations;
-        /**
-         * @notice Tracks unallocated tokens in a strategy.
-         * @dev Count the number of bApps that have one obligation set for the token.
-         * If the counter is 0, the token is unused and we can allow fast withdrawal.
-         */
-        mapping(uint32 strategyId => mapping(address token => uint32 bAppsCounter)) usedTokens;
         /**
          * @notice Tracks all the withdrawal requests divided by token per strategy.
          * @dev User can have only one pending withdrawal request per token.
@@ -87,6 +86,12 @@ library CoreStorageLib {
          * @dev The bApp is identified with its address
          */
         mapping(address bApp => mapping(address token => ICore.SharedRiskLevel)) bAppTokens;
+        /**
+         * @notice Tracks the token update requests for a bApp
+         * @dev Only the bApp owner can submit one.
+         * Submitting a new request will overwrite the previous one and reset the timer.
+         */
+        mapping(address bApp => ICore.TokenUpdateRequest) tokenUpdateRequests;
     }
 
     uint256 private constant SSV_BASED_APPS_STORAGE_POSITION =
