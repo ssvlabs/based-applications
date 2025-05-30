@@ -202,7 +202,12 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         // Check if a strategy exists for the given bApp.
         // It is not possible opt-in to the same bApp twice with the same strategy owner.
-        if (s.accountBAppStrategy[msg.sender][bApp] != 0) {
+        // use the effectiveTime to check if the strategy is not opted-in and opted-out
+        if (
+            (s.accountBAppStrategy[msg.sender][bApp].strategyId != 0 &&
+                s.accountBAppStrategy[msg.sender][bApp].optOutEffectiveTime ==
+                0)
+        ) {
             revert BAppAlreadyOptedIn();
         }
 
@@ -213,7 +218,12 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             obligationPercentages
         );
 
-        s.accountBAppStrategy[msg.sender][bApp] = strategyId;
+        // todo, save in one struct to save gas
+        s.accountBAppStrategy[msg.sender][bApp].strategyId = strategyId;
+        s.accountBAppStrategy[msg.sender][bApp].requestTime = uint32(
+            block.timestamp
+        );
+        s.accountBAppStrategy[msg.sender][bApp].optOutEffectiveTime = 0;
 
         if (_isContract(bApp)) {
             bool success = IBasedApp(bApp).optInToBApp(
@@ -235,6 +245,29 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     }
 
     /// @notice Function to check if an address is a contract
+    function optOutFromBApp(uint32 strategyId, address bApp) external {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        _onlyStrategyOwner(strategyId, s);
+
+        if (s.accountBAppStrategy[msg.sender][bApp].strategyId != strategyId) {
+            revert BAppNotOptedIn();
+        }
+
+        if (
+            s.accountBAppStrategy[msg.sender][bApp].optOutEffectiveTime <
+            block.timestamp
+        ) {
+            revert BAppAlreadyOptedOut();
+        }
+
+        s.accountBAppStrategy[msg.sender][bApp].optOutEffectiveTime =
+            uint32(block.timestamp) +
+            1; //ProtocolStorageLib.load().bAppOptOutDelay;
+
+        emit IStrategyManager.BAppOptedOutByStrategy(strategyId, bApp);
+    }
+
+    /// @notice Function to check if an address uses the correct bApp interface
     /// @param bApp The address of the bApp
     /// @return True if the address is a contract
     function _isContract(address bApp) private view returns (bool) {
@@ -342,7 +375,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         _onlyStrategyOwner(strategyId, s);
 
-        if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) {
+        if (s.accountBAppStrategy[msg.sender][bApp].strategyId != strategyId) {
             revert BAppNotOptedIn();
         }
 
@@ -568,7 +601,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     ) private view {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
-        if (s.accountBAppStrategy[msg.sender][bApp] != strategyId) {
+        if (s.accountBAppStrategy[msg.sender][bApp].strategyId != strategyId) {
             revert BAppNotOptedIn();
         }
 
@@ -757,7 +790,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     ) internal view {
         // It is possible to slash only if the strategy owner has opted-in to the bApp
         address strategyOwner = s.strategies[strategyId].owner; // Load the strategy to check if it exists
-        if (s.accountBAppStrategy[strategyOwner][bApp] != strategyId) {
+        if (
+            s.accountBAppStrategy[strategyOwner][bApp].strategyId != strategyId
+        ) {
             revert BAppNotOptedIn();
         }
     }
@@ -786,6 +821,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
 
         _checkStrategyOptedIn(s, strategyId, bApp);
+
+        // TODO _checkIfDeregistred(); use delay?
 
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
             strategyId
