@@ -32,6 +32,15 @@ interface ICore {
         uint32 fee;
     }
 
+    struct StrategyOptIn {
+        /// @dev The strategy ID
+        uint32 strategyId;
+        /// @dev The block time when the opt-in was sent
+        uint32 requestTime;
+        /// @dev The opt-out time
+        uint32 optOutEffectiveTime;
+    }
+
     /// @notice Represents a FeeUpdateRequest
     struct FeeUpdateRequest {
         /// @dev The new fee percentage

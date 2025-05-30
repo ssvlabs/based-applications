@@ -30,7 +30,7 @@ library CoreStorageLib {
          * @notice Links an account to a single strategy for a specific bApp
          * @dev Guarantees that an account cannot have more than one strategy for a given bApp
          */
-        mapping(address account => mapping(address bApp => uint32 strategyId)) accountBAppStrategy;
+        mapping(address account => mapping(address bApp => ICore.StrategyOptIn strategyOptIn)) accountBAppStrategy;
         /**
          * @notice Tracks the percentage of validator balance a delegator has delegated to a specific receiver account
          * @dev Each delegator can allocate a portion of their validator balance to multiple accounts including itself
