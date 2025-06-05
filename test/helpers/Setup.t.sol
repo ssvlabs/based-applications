@@ -21,6 +21,8 @@ import { StrategyManager } from "@ssv/src/core/modules/StrategyManager.sol";
 import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 import { WhitelistExample } from "@ssv/src/middleware/examples/WhitelistExample.sol";
+import { EthPriceOracle } from "@ssv/src/middleware/examples/EthPriceOracle.sol";
+
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 contract Setup is Test {
@@ -41,6 +43,7 @@ contract Setup is Test {
     BasedAppMock4 public bApp4;
     NonCompliantBApp public nonCompliantBApp;
     WhitelistExample public whitelistExample;
+    EthPriceOracle public ethPriceOracle;
     // Tokens
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
@@ -143,6 +146,8 @@ contract Setup is Test {
 
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
         whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
+        vm.prank(USER1);
+        ethPriceOracle = new EthPriceOracle(address(proxiedManager));
 
         bApps.push(bApp1);
         bApps.push(bApp2);
@@ -156,6 +161,7 @@ contract Setup is Test {
         vm.label(address(bApp4), "BasedApp4");
         vm.label(address(nonCompliantBApp), "NonCompliantBApp");
         vm.label(address(whitelistExample), "WhitelistExample");
+        vm.label(address(ethPriceOracle), "EthPriceOracle");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);
