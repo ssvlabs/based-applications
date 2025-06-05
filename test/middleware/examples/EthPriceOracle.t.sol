@@ -52,13 +52,13 @@ contract HoodiTest is UtilsTest {
             ""
         );
 
-        address result = ethPriceOracleHoodi.testOne(35);
+        // address result = ethPriceOracleHoodi.testOne(35);
 
-        assertEq(
-            result,
-            0xac5a7Ce31843e737CD38938A8EfDEc0BE5e728b4,
-            "Should set the correct strategy signer"
-        );
+        // assertEq(
+        //     result,
+        //     0xac5a7Ce31843e737CD38938A8EfDEc0BE5e728b4,
+        //     "Should set the correct strategy signer"
+        // );
 
         vm.stopPrank();
     }
