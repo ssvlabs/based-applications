@@ -8,8 +8,11 @@ import {
 import {
     SignatureChecker
 } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "forge-std/Test.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract ECDSAVerifier is OwnableBasedApp {
+contract ECDSAVerifier is OwnableBasedApp, Test {
+    mapping(address => bool) public hasOptedIn;
     constructor(
         address _basedAppManager,
         address _initOwner
@@ -20,19 +23,26 @@ contract ECDSAVerifier is OwnableBasedApp {
         address[] calldata,
         uint32[] calldata,
         bytes calldata data
-    ) external view override onlySSVBasedAppManager returns (bool success) {
-        // (address signer) = abi
-        //     .decode(data, (address));
-        //     if (signer != 0x4CC366443d8B5846d56B57F29F0944Fa623906B4) {
-        //         return false;
-        //     }
-        // (address signer, bytes32 messageHash, bytes memory signature) = abi
-        //     .decode(data, (address, bytes32, bytes));
-        // success = SignatureChecker.isValidSignatureNow(
-        //     signer,
-        //     messageHash,
-        //     signature
-        // );
-        return true;
+    ) external override onlySSVBasedAppManager returns (bool success) {
+        (address signer, bytes32 messageHash, bytes memory signature) = abi
+            .decode(data, (address, bytes32, bytes));
+        success = SignatureChecker.isValidSignatureNow(
+            signer,
+            messageHash,
+            signature
+        );
+
+        require(!hasOptedIn[signer], "Replay signature is not allowed");
+
+        // Validate signature
+        success = SignatureChecker.isValidSignatureNow(
+            signer,
+            messageHash,
+            signature
+        );
+        require(success, "Invalid signature");
+
+        // Prevent replay
+        hasOptedIn[signer] = true; // mark as completed
     }
 }

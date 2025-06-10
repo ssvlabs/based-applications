@@ -7,8 +7,9 @@ import {
 import { IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
+import { console, Script } from "forge-std/Script.sol";
 
-contract WhitelistExampleTest is UtilsTest {
+contract WhitelistExampleTest is UtilsTest, Script {
     function testCreateStrategies() public {
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
@@ -30,6 +31,11 @@ contract WhitelistExampleTest is UtilsTest {
             "Should set the correct strategy fee"
         );
         vm.stopPrank();
+        vm.prank(USER2);
+        uint32 strategyId2 = proxiedManager.createStrategy(
+            STRATEGY1_INITIAL_FEE,
+            ""
+        );
     }
 
     function testRegisterECDSAVerifierExampleBApp() public {
@@ -67,17 +73,46 @@ contract WhitelistExampleTest is UtilsTest {
     function testOptInToBApp() public {
         testCreateStrategies();
         testRegisterECDSAVerifierExampleBApp();
-        vm.prank(USER1);
         (
             address[] memory tokensInput,
             uint32[] memory riskLevelInput
         ) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
+        address signer = 0x763569566a3CE4f8D73f96c4996aBdf297f74ADE;
+        bytes32 messageHash = 0x5b001f2ad81fe86899545b51f8ecd1ca08674437d5c4748e1b70ba5dcf85ed86;
+        bytes
+            memory signature = hex"ddc30e871857b9a4d2dce47f49aec426404e69c98e05abc345df2f096e47fcb33d3e061da2435584d92df8731522d35ae485447311eb4a3c0bfdb09150cbad081b";
+
+        bytes memory data = abi.encode(signer, messageHash, signature);
+        vm.prank(USER1);
         proxiedManager.optInToBApp(
             STRATEGY1,
             address(ecdsaVerifierExample),
             tokensInput,
             riskLevelInput,
-            "0x000000000000000000000000beb1bcdb71315d5900817ba831bdb0bfff957d795b001f2ad81fe86899545b51f8ecd1ca08674437d5c4748e1b70ba5dcf85ed8600000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000041182ef41c205e2a4a97c002670ea99231f32f8acb5f29284e2eac5874bf781e372e7789fc29e106481746f982e522456a6f80aef0806dbf2a69c1fe8cd2282aee1b00000000000000000000000000000000000000000000000000000000000000"
+            data
+        );
+    }
+
+    function testReplayAttack() public {
+        testOptInToBApp();
+        (
+            address[] memory tokensInput,
+            uint32[] memory riskLevelInput
+        ) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
+        address signer = 0x763569566a3CE4f8D73f96c4996aBdf297f74ADE;
+        bytes32 messageHash = 0x5b001f2ad81fe86899545b51f8ecd1ca08674437d5c4748e1b70ba5dcf85ed86;
+        bytes
+            memory signature = hex"ddc30e871857b9a4d2dce47f49aec426404e69c98e05abc345df2f096e47fcb33d3e061da2435584d92df8731522d35ae485447311eb4a3c0bfdb09150cbad081b";
+
+        bytes memory data = abi.encode(signer, messageHash, signature);
+        vm.prank(USER2);
+        vm.expectRevert();
+        proxiedManager.optInToBApp(
+            STRATEGY2,
+            address(ecdsaVerifierExample),
+            tokensInput,
+            riskLevelInput,
+            data
         );
     }
 }
