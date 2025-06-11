@@ -33,6 +33,7 @@ import {
 import {
     WhitelistExample
 } from "@ssv/src/middleware/examples/WhitelistExample.sol";
+import { ECDSAVerifier } from "@ssv/src/middleware/examples/ECDSAVerifier.sol";
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 contract Setup is Test {
@@ -53,6 +54,7 @@ contract Setup is Test {
     BasedAppMock4 public bApp4;
     NonCompliantBApp public nonCompliantBApp;
     WhitelistExample public whitelistExample;
+    ECDSAVerifier public ecdsaVerifierExample;
     // Tokens
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
@@ -157,6 +159,10 @@ contract Setup is Test {
 
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
         whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
+        ecdsaVerifierExample = new ECDSAVerifier(
+            address(proxiedManager),
+            USER1
+        );
 
         bApps.push(bApp1);
         bApps.push(bApp2);
@@ -170,6 +176,7 @@ contract Setup is Test {
         vm.label(address(bApp4), "BasedApp4");
         vm.label(address(nonCompliantBApp), "NonCompliantBApp");
         vm.label(address(whitelistExample), "WhitelistExample");
+        vm.label(address(ecdsaVerifierExample), "ECDSAVerifierExample");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);

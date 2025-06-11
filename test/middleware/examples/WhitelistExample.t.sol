@@ -117,7 +117,7 @@ contract WhitelistExampleTest is UtilsTest {
         assertEq(whitelistExample.isWhitelisted(STRATEGY1), false);
     }
 
-    function testRevertOddWhitelistedAccount() public {
+    function testRevertAddWhitelistedAccount() public {
         testAddWhitelistedAccount();
         vm.prank(USER1);
         vm.expectRevert(
@@ -136,7 +136,7 @@ contract WhitelistExampleTest is UtilsTest {
         whitelistExample.removeWhitelisted(STRATEGY1);
     }
 
-    function testRevertOddWhitelistedZeroID() public {
+    function testRevertAddWhitelistedZeroID() public {
         vm.prank(USER1);
         vm.expectRevert(
             abi.encodeWithSelector(IBasedAppWhitelisted.ZeroID.selector)
