@@ -250,7 +250,7 @@ contract UtilsTest is Setup {
         bool expectedIsSet
     ) internal view {
         (uint32 proposedPercentage, uint256 requestTime) = proxiedManager
-            .obligationRequests(strategyId, bApp, token);
+            .obligationRequests(strategyId, token, bApp);
         (uint32 oldPercentage, bool isSet) = proxiedManager.obligations(
             strategyId,
             bApp,

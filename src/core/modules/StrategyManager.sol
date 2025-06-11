@@ -358,7 +358,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ICore.ObligationRequest storage request = s.obligationRequests[
             strategyId
-        ][bApp][token];
+        ][token][bApp];
 
         request.percentage = obligationPercentage;
         request.requestTime = uint32(block.timestamp);
@@ -386,7 +386,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ICore.ObligationRequest storage request = s.obligationRequests[
             strategyId
-        ][bApp][address(token)];
+        ][address(token)][bApp];
         uint256 requestTime = request.requestTime;
         uint32 percentage = request.percentage;
 
@@ -403,7 +403,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         emit ObligationUpdated(strategyId, bApp, address(token), percentage);
 
-        delete s.obligationRequests[strategyId][bApp][address(token)];
+        delete s.obligationRequests[strategyId][address(token)][bApp];
     }
 
     /// @notice Instantly lowers the fee for a strategy
