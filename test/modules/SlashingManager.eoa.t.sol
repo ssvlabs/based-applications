@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { IERC20, IStrategyManager, IBasedAppManager } from "@ssv/test/helpers/Setup.t.sol";
+import {
+    IERC20,
+    IStrategyManager,
+    IBasedAppManager
+} from "@ssv/test/helpers/Setup.t.sol";
 import { StrategyManagerTest } from "@ssv/test/modules/StrategyManager.t.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 

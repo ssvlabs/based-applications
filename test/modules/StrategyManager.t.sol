@@ -3,8 +3,12 @@ pragma solidity 0.8.29;
 
 import { IERC20, BasedAppMock } from "@ssv/test/helpers/Setup.t.sol";
 import { BasedAppsManagerTest } from "@ssv/test/modules/BasedAppsManager.t.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 
