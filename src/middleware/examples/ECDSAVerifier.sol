@@ -8,11 +8,13 @@ import {
 import {
     SignatureChecker
 } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import "forge-std/Test.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract ECDSAVerifier is OwnableBasedApp, Test {
+contract ECDSAVerifier is OwnableBasedApp {
     mapping(address => bool) public hasOptedIn;
+
+    error InvalidSignature();
+    error SignerAlreadyOptedIn();
+
     constructor(
         address _basedAppManager,
         address _initOwner
@@ -26,23 +28,18 @@ contract ECDSAVerifier is OwnableBasedApp, Test {
     ) external override onlySSVBasedAppManager returns (bool success) {
         (address signer, bytes32 messageHash, bytes memory signature) = abi
             .decode(data, (address, bytes32, bytes));
+
+        if (hasOptedIn[signer]) {
+            revert SignerAlreadyOptedIn();
+        }
+
         success = SignatureChecker.isValidSignatureNow(
             signer,
             messageHash,
             signature
         );
 
-        require(!hasOptedIn[signer], "Replay signature is not allowed");
-
-        // Validate signature
-        success = SignatureChecker.isValidSignatureNow(
-            signer,
-            messageHash,
-            signature
-        );
-        require(success, "Invalid signature");
-
-        // Prevent replay
-        hasOptedIn[signer] = true; // mark as completed
+        if (success) hasOptedIn[signer] = true;
+        else revert InvalidSignature();
     }
 }

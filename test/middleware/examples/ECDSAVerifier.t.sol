@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import {
-    IBasedAppWhitelisted
-} from "@ssv/src/middleware/interfaces/IBasedAppWhitelisted.sol";
 import { IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
-import { console, Script } from "forge-std/Script.sol";
+import { ECDSAVerifier } from "@ssv/src/middleware/examples/ECDSAVerifier.sol";
 
-contract WhitelistExampleTest is UtilsTest, Script {
+contract WhitelistExampleTest is UtilsTest {
     function testCreateStrategies() public {
         vm.startPrank(USER1);
         erc20mock.approve(address(proxiedManager), INITIAL_USER1_BALANCE_ERC20);
@@ -36,6 +33,7 @@ contract WhitelistExampleTest is UtilsTest, Script {
             STRATEGY1_INITIAL_FEE,
             ""
         );
+        assertEq(strategyId2, STRATEGY2, "Should set the correct strategy ID");
     }
 
     function testRegisterECDSAVerifierExampleBApp() public {
@@ -93,7 +91,33 @@ contract WhitelistExampleTest is UtilsTest, Script {
         );
     }
 
-    function testReplayAttack() public {
+    function testRevertOptInToBAppWithInvalidSignature() public {
+        testCreateStrategies();
+        testRegisterECDSAVerifierExampleBApp();
+        (
+            address[] memory tokensInput,
+            uint32[] memory riskLevelInput
+        ) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 10_000);
+        address signer = 0x763569566a3CE4f8D73f96c4996aBdf297f74ADE;
+        bytes32 messageHash = 0x5b001f2ad81fe86899545b51f8ecd1ca08674437d5c4748e1b70ba5dcf85ed86;
+        bytes
+            memory signature = hex"ddc30e871857b9a4d2dce47f49aec426404e69c98e05abc345df2f096e47fcb33d3e061da2435584d92df8731522d35ae485447311eb4a3c0bfdb09150cbad081c";
+
+        bytes memory data = abi.encode(signer, messageHash, signature);
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(ECDSAVerifier.InvalidSignature.selector)
+        );
+        proxiedManager.optInToBApp(
+            STRATEGY1,
+            address(ecdsaVerifierExample),
+            tokensInput,
+            riskLevelInput,
+            data
+        );
+    }
+
+    function testRevertReplayAttackOnAnotherStrategy() public {
         testOptInToBApp();
         (
             address[] memory tokensInput,
@@ -106,7 +130,9 @@ contract WhitelistExampleTest is UtilsTest, Script {
 
         bytes memory data = abi.encode(signer, messageHash, signature);
         vm.prank(USER2);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(ECDSAVerifier.SignerAlreadyOptedIn.selector)
+        );
         proxiedManager.optInToBApp(
             STRATEGY2,
             address(ecdsaVerifierExample),

@@ -259,9 +259,6 @@ contract SlashingManagerEOATest is StrategyManagerTest {
             slashPercentage > 0 &&
                 slashPercentage <= proxiedManager.maxPercentage()
         );
-        uint256 slashAmount = (depositAmount * percentage * slashPercentage) /
-            proxiedManager.maxPercentage() /
-            proxiedManager.maxPercentage();
         testStrategyOptInToBAppNonCompliant(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(
