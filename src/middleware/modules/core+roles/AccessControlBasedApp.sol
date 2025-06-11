@@ -5,7 +5,6 @@ import {
     AccessControl
 } from "@openzeppelin/contracts/access/AccessControl.sol";
 
-import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import {
     BasedAppCore
 } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
