@@ -7,7 +7,7 @@ import { DeployAll } from "./DeployAll.sol";
 contract DeployAllHoodi is Script, DeployAll {
     function run(bool isProd) external {
         if (block.chainid != 560_048) {
-            revert("This script is only for the Hoodi prod");
+            revert("This script is only for the Hoodi");
         }
 
         string memory cfgPath;

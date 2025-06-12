@@ -16,7 +16,7 @@ import { ProtocolStorageLib } from "src/core/libraries/ProtocolStorageLib.sol";
 contract DeployAll is Script {
     using stdJson for string;
 
-    function _deployAll(string memory raw) internal returns (string memory) {
+    function _deployAll(string memory json) internal returns (string memory) {
         vm.startBroadcast();
 
         SSVBasedApps impl = new SSVBasedApps();
@@ -29,7 +29,7 @@ contract DeployAll is Script {
             strategyMod,
             bAppsMod,
             protocolMod,
-            raw
+            json
         );
 
         vm.stopBroadcast();
@@ -40,7 +40,8 @@ contract DeployAll is Script {
         console.log("ProtocolModule:     ", address(protocolMod));
         console.log("SSVBasedApps Proxy: ", address(proxy));
 
-        return saveToJson(impl, proxy, strategyMod, bAppsMod, protocolMod, raw);
+        return
+            saveToJson(impl, proxy, strategyMod, bAppsMod, protocolMod, json);
     }
 
     function saveToJson(
@@ -49,7 +50,7 @@ contract DeployAll is Script {
         StrategyManager strategyMod,
         BasedAppsManager bAppsMod,
         ProtocolManager protocolMod,
-        string memory raw
+        string memory json
     ) internal returns (string memory) {
         string memory parent = "parent";
 
@@ -85,48 +86,48 @@ contract DeployAll is Script {
         vm.serializeUint(
             parameters,
             "feeTimelockPeriod",
-            raw.readUint(".feeTimelockPeriod")
+            json.readUint(".feeTimelockPeriod")
         );
         vm.serializeUint(
             parameters,
             "feeExpireTime",
-            raw.readUint(".feeExpireTime")
+            json.readUint(".feeExpireTime")
         );
         vm.serializeUint(
             parameters,
             "withdrawalTimelockPeriod",
-            raw.readUint(".withdrawalTimelockPeriod")
+            json.readUint(".withdrawalTimelockPeriod")
         );
         vm.serializeUint(
             parameters,
             "withdrawalExpireTime",
-            raw.readUint(".withdrawalExpireTime")
+            json.readUint(".withdrawalExpireTime")
         );
         vm.serializeUint(
             parameters,
             "obligationTimelockPeriod",
-            raw.readUint(".obligationTimelockPeriod")
+            json.readUint(".obligationTimelockPeriod")
         );
         vm.serializeUint(
             parameters,
             "obligationExpireTime",
-            raw.readUint(".obligationExpireTime")
+            json.readUint(".obligationExpireTime")
         );
         vm.serializeUint(
             parameters,
             "tokenUpdateTimelockPeriod",
-            raw.readUint(".tokenUpdateTimelockPeriod")
+            json.readUint(".tokenUpdateTimelockPeriod")
         );
-        vm.serializeUint(parameters, "maxShares", raw.readUint(".maxShares"));
+        vm.serializeUint(parameters, "maxShares", json.readUint(".maxShares"));
         vm.serializeUint(
             parameters,
             "maxFeeIncrement",
-            raw.readUint(".maxFeeIncrement")
+            json.readUint(".maxFeeIncrement")
         );
         string memory parameters_output = vm.serializeUint(
             parameters,
             "disabledFeatures",
-            raw.readUint(".disabledFeatures")
+            json.readUint(".disabledFeatures")
         );
 
         string memory chain_info = "chainInfo";
@@ -152,7 +153,7 @@ contract DeployAll is Script {
         StrategyManager strategyMod,
         BasedAppsManager bAppsMod,
         ProtocolManager protocolMod,
-        string memory raw
+        string memory json
     ) internal returns (ERC1967Proxy proxy) {
         return
             new ERC1967Proxy(
@@ -165,30 +166,30 @@ contract DeployAll is Script {
                     address(protocolMod),
                     ProtocolStorageLib.Data({
                         feeTimelockPeriod: uint32(
-                            raw.readUint(".feeTimelockPeriod")
+                            json.readUint(".feeTimelockPeriod")
                         ),
-                        feeExpireTime: uint32(raw.readUint(".feeExpireTime")),
+                        feeExpireTime: uint32(json.readUint(".feeExpireTime")),
                         withdrawalTimelockPeriod: uint32(
-                            raw.readUint(".withdrawalTimelockPeriod")
+                            json.readUint(".withdrawalTimelockPeriod")
                         ),
                         withdrawalExpireTime: uint32(
-                            raw.readUint(".withdrawalExpireTime")
+                            json.readUint(".withdrawalExpireTime")
                         ),
                         obligationTimelockPeriod: uint32(
-                            raw.readUint(".obligationTimelockPeriod")
+                            json.readUint(".obligationTimelockPeriod")
                         ),
                         obligationExpireTime: uint32(
-                            raw.readUint(".obligationExpireTime")
+                            json.readUint(".obligationExpireTime")
                         ),
                         tokenUpdateTimelockPeriod: uint32(
-                            raw.readUint(".tokenUpdateTimelockPeriod")
+                            json.readUint(".tokenUpdateTimelockPeriod")
                         ),
-                        maxShares: raw.readUint(".maxShares"),
+                        maxShares: json.readUint(".maxShares"),
                         maxFeeIncrement: uint32(
-                            raw.readUint(".maxFeeIncrement")
+                            json.readUint(".maxFeeIncrement")
                         ),
                         disabledFeatures: uint32(
-                            raw.readUint(".disabledFeatures")
+                            json.readUint(".disabledFeatures")
                         )
                     })
                 )
