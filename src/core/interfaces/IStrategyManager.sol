@@ -15,6 +15,10 @@ interface IStrategyManager {
         address[] tokens,
         uint32[] obligationPercentages
     );
+    event BAppOptedOutByStrategy(
+        uint32 indexed strategyId,
+        address indexed bApp
+    );
     event DelegationCreated(
         address indexed delegator,
         address indexed receiver,
@@ -165,6 +169,7 @@ interface IStrategyManager {
 
     error BAppAlreadyOptedIn();
     error BAppNotOptedIn();
+    error BAppAlreadyOptedOut();
     error BAppOptInFailed();
     error BAppSlashingFailed();
     error DelegationAlreadyExists();

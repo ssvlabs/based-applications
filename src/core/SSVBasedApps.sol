@@ -525,7 +525,7 @@ contract SSVBasedApps is
         address bApp
     ) external view returns (uint32) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return s.accountBAppStrategy[account][bApp];
+        return s.accountBAppStrategy[account][bApp].strategyId;
     }
 
     function feeUpdateRequests(
