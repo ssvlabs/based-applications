@@ -2,16 +2,32 @@
 pragma solidity 0.8.29;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ERC165Checker } from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
+import {
+    ReentrancyGuardTransient
+} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
+import {
+    SafeERC20
+} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {
+    ERC165Checker
+} from "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 
-import { ValidationLib, MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
+import {
+    ValidationLib,
+    MAX_PERCENTAGE,
+    ETH_ADDRESS
+} from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { CoreStorageLib } from "@ssv/src/core/libraries/CoreStorageLib.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
@@ -358,7 +374,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ICore.ObligationRequest storage request = s.obligationRequests[
             strategyId
-        ][bApp][token];
+        ][token][bApp];
 
         request.percentage = obligationPercentage;
         request.requestTime = uint32(block.timestamp);
@@ -386,7 +402,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         ICore.ObligationRequest storage request = s.obligationRequests[
             strategyId
-        ][bApp][address(token)];
+        ][address(token)][bApp];
         uint256 requestTime = request.requestTime;
         uint32 percentage = request.percentage;
 
@@ -403,7 +419,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         emit ObligationUpdated(strategyId, bApp, address(token), percentage);
 
-        delete s.obligationRequests[strategyId][bApp][address(token)];
+        delete s.obligationRequests[strategyId][address(token)][bApp];
     }
 
     /// @notice Instantly lowers the fee for a strategy
@@ -532,7 +548,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
 
         if (obligationPercentage != 0) {
             s
-            .obligations[strategyId][bApp][token]
+                .obligations[strategyId][bApp][token]
                 .percentage = obligationPercentage;
         }
 

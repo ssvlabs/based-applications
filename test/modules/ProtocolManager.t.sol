@@ -1,14 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {
+    Ownable2StepUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
 
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    ERC1967Proxy
+} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
 
 contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
@@ -220,7 +230,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     }
 
     /// @notice By default, no features should be disabled
-    function testDefaultDisabledFeaturesIsZero() public {
+    function testDefaultDisabledFeaturesIsZero() public view {
         assertEq(
             proxiedManager.disabledFeatures(),
             0,

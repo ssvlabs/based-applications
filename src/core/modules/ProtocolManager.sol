@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 contract ProtocolManager is IProtocolManager {
     uint32 private constant SLASHING_DISABLED = 1 << 0;

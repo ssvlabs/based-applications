@@ -1,12 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {
+    Ownable2StepUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-import { Setup, IStrategyManager, IBasedAppManager, IProtocolManager, SSVBasedApps, ERC1967Proxy } from "@ssv/test/helpers/Setup.t.sol";
+import {
+    Setup,
+    IStrategyManager,
+    IBasedAppManager,
+    IProtocolManager,
+    SSVBasedApps,
+    ERC1967Proxy
+} from "@ssv/test/helpers/Setup.t.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 import { SSVCoreModules } from "@ssv/src/core/libraries/CoreStorageLib.sol";
 
 contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
