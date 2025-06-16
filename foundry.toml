@@ -7,7 +7,7 @@ optimizer = true
 optimizer_runs = 10_000
 gas_reports = ["*"]
 gas_reports_ignore = ["ERC20Mock", "BasedAppMock", "BasedAppMock2", "BasedAppMock3", "ERC1967Proxy"]
-fs_permissions = [{ access = "read", path = "./script/config/"}, { access = "write", path = "./artifacts/"}]
+fs_permissions = [{ access = "read", path = "./script/config/"}, { access = "read-write", path = "./artifacts/"}]
 
 [rpc_endpoints]
 hoodi = "${HOODI_RPC_URL}"
