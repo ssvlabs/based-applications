@@ -1,10 +1,10 @@
 {
   "addresses": {
-    "BAppsModule": "0xdC97f7935Ed6FDcA407dDdE95EB26f7807E52Dc9",
-    "ProtocolModule": "0x7AadaE0f159eECCe6a4Faad78FFF94e1eab4C540",
-    "SSVBasedAppsImpl": "0xfCD7243D8fBb441497fEd67e19B7681C27BB20aD",
-    "SSVBasedAppsProxy": "0x40d959B95e7c56962D6d388d87921c03734b9C2C",
-    "StrategyModule": "0x7cF08Af55c6939BB748D4c4D2d219791EDe9dBC1"
+    "BAppsModule": "0x7081f8BBe094d8A3C43C45E3AFb6fd32ab35965E",
+    "ProtocolModule": "0x7b270FCa0693D1B0aC673Bbf989eC2bddb9c22dC",
+    "SSVBasedAppsImpl": "0x90e71bd8580406DFAae69C0032CE48Ff68aF7986",
+    "SSVBasedAppsProxy": "0xCb06f27a0dD4A941790f83739867B44383375bBA",
+    "StrategyModule": "0xa64913E7d0aAAC0755466ed05dcEDAfC4c7342D4"
   },
   "chainInfo": {
     "chainId": 560048,

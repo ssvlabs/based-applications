@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
