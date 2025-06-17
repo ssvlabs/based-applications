@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
@@ -254,7 +254,7 @@ contract UtilsTest is Setup {
         bool expectedIsSet
     ) internal view {
         (uint32 proposedPercentage, uint256 requestTime) = proxiedManager
-            .obligationRequests(strategyId, bApp, token);
+            .obligationRequests(strategyId, token, bApp);
         (uint32 oldPercentage, bool isSet) = proxiedManager.obligations(
             strategyId,
             bApp,

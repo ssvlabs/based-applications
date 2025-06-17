@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { Test } from "forge-std/Test.sol";
 
@@ -138,7 +138,7 @@ contract Setup is Test {
         );
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
-        assertEq(proxiedManager.getVersion(), "0.1.1", "Version mismatch");
+        assertEq(proxiedManager.getVersion(), "0.2.0", "Version mismatch");
         assertEq(
             proxiedManager.maxFeeIncrement(),
             500,

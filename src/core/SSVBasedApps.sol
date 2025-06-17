@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {
@@ -623,7 +623,7 @@ contract SSVBasedApps is
     }
 
     function getVersion() external pure returns (string memory) {
-        return "0.1.1";
+        return "0.2.0";
     }
 
     // *********************************
