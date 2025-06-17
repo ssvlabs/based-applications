@@ -93,7 +93,7 @@ interface IStrategyManager {
         uint32 indexed strategyId,
         address indexed bApp,
         address token,
-        uint256 amount,
+        uint32 percentage,
         address receiver
     );
 
@@ -148,7 +148,7 @@ interface IStrategyManager {
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount,
+        uint32 percentage,
         bytes calldata data
     ) external;
     function updateAccountMetadataURI(string calldata metadataURI) external;
@@ -188,7 +188,9 @@ interface IStrategyManager {
     error ObligationAlreadySet();
     error ObligationHasNotBeenCreated();
     error RequestTimeExpired();
+    error SlashingDisabled();
     error TimelockNotElapsed();
     error TokenNotSupportedByBApp(address token);
     error WithdrawTransferFailed();
+    error WithdrawalsDisabled();
 }

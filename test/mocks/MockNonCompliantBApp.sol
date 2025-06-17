@@ -11,7 +11,7 @@ interface ICustomBasedAppManager {
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount,
+        uint32 percentage,
         bytes calldata data
     ) external;
 }
@@ -44,12 +44,16 @@ contract NonCompliantBApp {
         );
     }
 
-    function slash(uint32 strategyId, address token, uint256 amount) external {
+    function slash(
+        uint32 strategyId,
+        address token,
+        uint32 percentage
+    ) external {
         ICustomBasedAppManager(BASED_APP_MANAGER).slash(
             strategyId,
             address(this),
             token,
-            amount,
+            percentage,
             ""
         );
     }

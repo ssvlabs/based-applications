@@ -2,6 +2,10 @@
 
 :construction: CAUTION: This repo is currently under **heavy development!** :construction:
 
+We strongly advise you to work with **releases tags**. Please, check what version the SSVBasedApp.sol is using by calling `getVersion()`.
+
+&nbsp;
+
 [![CI Tests](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml/badge.svg)](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
@@ -61,94 +65,58 @@ __`❍ forge test`__
 
 &nbsp;
 
-## 🔨 _Slashing Mechanism_
+## 🔨 _Slashing & Withdrawals Mechanisms_
 
-The `slash` function allows for the reduction of a strategy’s token balance under specific conditions, either as a penalty or to enforce protocol-defined behavior. Slashing can happen in two distinct modes, depending on whether:
+[Slashing & Withdrawals](./guides/slashing-and-withdrawals.md)
 
-**1)** The bApp is a compliant smart contract;
+[Generation pattern](./guides/generations.md)
 
-**2)** The bApp is a non-compliant smart contract or an EOA.
+## :gear: _Feature Activation_
 
-### 🧠 Compliant BApp
-
-If the bApp is a compliant contract implementing the required interface `IBasedApp`,
-
-The slash function of the bApp is called: `(success, receiver, exit) = IBasedApp(bApp).slash(...)`
-
-*	`data` parameter is forwarded and may act as a proof or auxiliary input.
-
-*	The bApp decides:
-
-    *	Who receives the slashed funds by setting the `receiver` fund, it can burn by setting the receiver as `address(0)`;
-
-    *	Whether to exit the strategy or adjust obligations;
-
-    *	If `exit == true`, the strategy is exited and the obligation value is set to 0;
-
-    *	Otherwise, obligations are adjusted proportionally based on remaining balances, the new obligated amount is set to the previous one less the slashed amount;
-
-    *	Funds are credited to the receiver in the slashing fund.
-
-### 🔐 Non-compliant bApp (EOA or Non-compliant Contract)
-
-If the bApp is an EOA or does not comply with the required interface:
-
-*	Only the bApp itself can invoke slashing;
-
-*	The receiver of slashed funds is forcibly set to the bApp itself;
-
-*	The strategy is always exited (no obligation adjustment);
-
-*	Funds are added to the bApp’s slashing fund.
-
-### ⏳ Post Slashing
-
-⚠️ Important: After an obligation has been exited, it can be updated again to a value greater than 0, but only after a 14-day obligation timelock.
-
-This acts as a safeguard to prevent immediate re-entry and encourages more deliberate strategy participation.
-
-### 💸 Slashing Fund
-
-Slashed tokens are not immediately transferred. They are deposited into an internal slashing fund.
-
-The `receiver` (set during slashing) can later withdraw them using:
-
-```
-function withdrawSlashingFund(address token, uint256 amount) external
-function withdrawETHSlashingFund(uint256 amount) external
-```
-
-These functions verify balances and authorize the caller to retrieve their accumulated slashed tokens.
-
-&nbsp;
+[Feature Activation](./guides/feature-activation.md)
 
 ## :page_facing_up: _Whitepaper_
 
 [Whitepaper](https://ssv.network/wp-content/uploads/2025/01/SSV2.0-Based-Applications-Protocol-1.pdf)
 
-&nbsp;
 
 ## :books: _More Resources_
 
-[Based Apps Onboarding Guide](./doc/bAppOnBoarding.md) 
+[Based Apps Onboarding Guide](./guides/bApp-onboarding.md) 
 
-&nbsp;
 
 ## :rocket: _Deployments_
 
 ### How to Deploy
 
-**1)** Run the deployment script defined in `scripts/`:
+**2)** Set the environment variables in the `.env` file.
 
-__`❍ npm run deploy:holesky`__: verification is done automatically.
+**1)** Run the deployment script `DeployAllHoodi.s.sol` defined in `script/`:
 
-__`❍ npm run deploy:hoodi`__: verification needs to be done manually for now.
+__`❍ npm run deploy:hoodi-stage`__: verification is done automatically.
 
-### Public Testnet
+### How to Update Module Contracts
+
+It is possible to update each one of the three modules: `StrategyManager`, `BasedAppsManager` and `ProtocolManager`.
+
+It is possible to update multiple modules at the same time. 
+
+**1)** Go on the Proxy Contract on Etherscan, under "Write as Proxy" call the function:
+
+__`❍ updateModules`__: specifying the correct module id and the new module address.
+
+### How to Upgrade the Implementation Contract 
+
+**1)** Go on the Proxy Contract on Etherscan, under "Write as Proxy" call the function:
+
+__`❍ upgradeToAndCall`__: specifying the new implementation address. The data field can be left empty in this case.
+
+
+### Public Testnet Hoodi
 
 | Name | Proxy | Implementation | Notes |
 | -------- | -------- | -------- | -------- | 
-| [`BasedApplications`](https://github.com/ssvlabs/based-applications/blob/main/src/BasedAppManager.sol) | [`0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A) | [`0x9a09A49870353867b0ce9901B44E84C32B2A47AC`](https://holesky.etherscan.io/address/0x9a09A49870353867b0ce9901B44E84C32B2A47AC) | Proxy: [`UUPS@5.1.0`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.1.0/contracts/proxy/utils/UUPSUpgradeable.sol) |
+| [`SSVBasedApps`](https://github.com/ssvlabs/based-applications/blob/main/src/BasedAppManager.sol) | [`<pending>`](https://holesky.etherscan.io/address/0x1Bd6ceB98Daf7FfEB590236b720F81b65213836A) | [`<pending>`](https://holesky.etherscan.io/address/0x9a09A49870353867b0ce9901B44E84C32B2A47AC) | Proxy: [`UUPS@5.1.0`](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/v5.1.0/contracts/proxy/utils/UUPSUpgradeable.sol) |
 
 &nbsp;
 

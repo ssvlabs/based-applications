@@ -2,18 +2,21 @@
 pragma solidity 0.8.29;
 
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { CoreStorageLib } from "@ssv/src/core/libraries/CoreStorageLib.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 
 contract BasedAppsManager is IBasedAppManager {
     /// @notice Allow the function to be called only by a registered bApp
-    modifier onlyRegisteredBApp() {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
+    function _onlyRegisteredBApp(CoreStorageLib.Data storage s) private view {
         if (!s.registeredBApps[msg.sender]) {
             revert IBasedAppManager.BAppNotRegistered();
         }
-        _;
     }
 
     /// @notice Registers a bApp.
@@ -42,10 +45,40 @@ contract BasedAppsManager is IBasedAppManager {
 
     /// @notice Function to update the metadata URI of the Based Application
     /// @param metadataURI The new metadata URI
-    function updateBAppMetadataURI(
-        string calldata metadataURI
-    ) external onlyRegisteredBApp {
+    function updateBAppMetadataURI(string calldata metadataURI) external {
+        _onlyRegisteredBApp(CoreStorageLib.load());
         emit BAppMetadataURIUpdated(msg.sender, metadataURI);
+    }
+
+    function updateBAppsTokens(
+        ICore.TokenConfig[] calldata tokenConfigs
+    ) external {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+
+        _onlyRegisteredBApp(s);
+
+        uint32 requestTime = uint32(block.timestamp);
+
+        address token;
+        ICore.SharedRiskLevel storage tokenData;
+        ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
+
+        for (uint256 i = 0; i < tokenConfigs.length; ) {
+            token = tokenConfigs[i].token;
+            tokenData = s.bAppTokens[msg.sender][token];
+            // Update current value if the previous effect time has passed
+            if (requestTime > tokenData.effectTime) {
+                tokenData.currentValue = tokenData.pendingValue;
+            }
+            tokenData.pendingValue = tokenConfigs[i].sharedRiskLevel;
+            tokenData.effectTime = requestTime + sp.tokenUpdateTimelockPeriod;
+            tokenData.isSet = true;
+            unchecked {
+                i++;
+            }
+        }
+
+        emit BAppTokensUpdated(msg.sender, tokenConfigs);
     }
 
     /// @notice Function to add tokens to a bApp
@@ -67,26 +100,12 @@ contract BasedAppsManager is IBasedAppManager {
             if (s.bAppTokens[bApp][token].isSet) {
                 revert IBasedAppManager.TokenAlreadyAddedToBApp(token);
             }
-            _setTokenRiskLevel(bApp, token, sharedRiskLevels[i]);
+            ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
+            tokenData.currentValue = sharedRiskLevels[i];
+            tokenData.isSet = true;
             unchecked {
                 i++;
             }
         }
-    }
-
-    /// @notice Internal function to set the shared risk level for a token
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    /// @param sharedRiskLevel The shared risk level
-    function _setTokenRiskLevel(
-        address bApp,
-        address token,
-        uint32 sharedRiskLevel
-    ) internal {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-        ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
-
-        tokenData.value = sharedRiskLevel;
-        tokenData.isSet = true;
     }
 }
