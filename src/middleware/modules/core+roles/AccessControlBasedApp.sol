@@ -4,7 +4,6 @@ pragma solidity 0.8.30;
 import {
     AccessControl
 } from "@openzeppelin/contracts/access/AccessControl.sol";
-
 import {
     BasedAppCore
 } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";

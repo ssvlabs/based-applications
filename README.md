@@ -2,6 +2,10 @@
 
 :construction: CAUTION: This repo is currently under **heavy development!** :construction:
 
+We strongly advise you to work with **releases tags**. Please, check what version the SSVBasedApp.sol is using by calling `getVersion()`.
+
+&nbsp;
+
 [![CI Tests](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml/badge.svg)](https://github.com/ssvlabs/based-applications/actions/workflows/tests.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.html)
 
