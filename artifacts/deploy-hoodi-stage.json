@@ -1,0 +1,25 @@
+{
+  "addresses": {
+    "BAppsModule": "0xdC97f7935Ed6FDcA407dDdE95EB26f7807E52Dc9",
+    "ProtocolModule": "0x7AadaE0f159eECCe6a4Faad78FFF94e1eab4C540",
+    "SSVBasedAppsImpl": "0xba84542de120aa2e94ccb5334a6f21a6a9e78999",
+    "SSVBasedAppsProxy": "0x40d959B95e7c56962D6d388d87921c03734b9C2C",
+    "StrategyModule": "0xe9C3AD47E13f5902F97E8ab6f8C63D2414732e8e"
+  },
+  "chainInfo": {
+    "chainId": 560048,
+    "deploymentBlock": 259312
+  },
+  "parameters": {
+    "disabledFeatures": 0,
+    "feeExpireTime": 3600,
+    "feeTimelockPeriod": 300,
+    "maxFeeIncrement": 500,
+    "maxShares": 100000000000000000000000000000000000000000000000000,
+    "obligationExpireTime": 3600,
+    "obligationTimelockPeriod": 300,
+    "tokenUpdateTimelockPeriod": 300,
+    "withdrawalExpireTime": 3600,
+    "withdrawalTimelockPeriod": 300
+  }
+}
