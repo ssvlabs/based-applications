@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.29;
 
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 contract ProtocolManager is IProtocolManager {
+    uint32 private constant SLASHING_DISABLED = 1 << 0;
+    uint32 private constant WITHDRAWALS_DISABLED = 1 << 1;
+
     function updateFeeTimelockPeriod(uint32 feeTimelockPeriod) external {
         ProtocolStorageLib.load().feeTimelockPeriod = feeTimelockPeriod;
         emit FeeTimelockPeriodUpdated(feeTimelockPeriod);
@@ -43,6 +50,15 @@ contract ProtocolManager is IProtocolManager {
         emit ObligationExpireTimeUpdated(obligationExpireTime);
     }
 
+    function updateTokenUpdateTimelockPeriod(
+        uint32 tokenUpdateTimelockPeriod
+    ) external {
+        ProtocolStorageLib
+            .load()
+            .tokenUpdateTimelockPeriod = tokenUpdateTimelockPeriod;
+        emit TokenUpdateTimelockPeriodUpdated(tokenUpdateTimelockPeriod);
+    }
+
     function updateMaxShares(uint256 maxShares) external {
         ProtocolStorageLib.load().maxShares = maxShares;
         emit StrategyMaxSharesUpdated(maxShares);
@@ -51,5 +67,10 @@ contract ProtocolManager is IProtocolManager {
     function updateMaxFeeIncrement(uint32 maxFeeIncrement) external {
         ProtocolStorageLib.load().maxFeeIncrement = maxFeeIncrement;
         emit StrategyMaxFeeIncrementUpdated(maxFeeIncrement);
+    }
+
+    function updateDisabledFeatures(uint32 disabledFeatures) external {
+        ProtocolStorageLib.load().disabledFeatures = disabledFeatures;
+        emit DisabledFeaturesUpdated(disabledFeatures);
     }
 }

@@ -2,17 +2,35 @@
 pragma solidity 0.8.29;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {
+    Ownable2StepUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {
+    UUPSUpgradeable
+} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
-import { MAX_PERCENTAGE, ETH_ADDRESS } from "@ssv/src/core/libraries/ValidationLib.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    MAX_PERCENTAGE,
+    ETH_ADDRESS
+} from "@ssv/src/core/libraries/ValidationLib.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
-import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import { CoreStorageLib, SSVCoreModules } from "@ssv/src/core/libraries/CoreStorageLib.sol";
-import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    IProtocolManager
+} from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    CoreStorageLib,
+    SSVCoreModules
+} from "@ssv/src/core/libraries/CoreStorageLib.sol";
+import {
+    ProtocolStorageLib
+} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
 /**
  * @title SSVBasedApps
@@ -72,7 +90,7 @@ contract SSVBasedApps is
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        ProtocolStorageLib.Data memory config
+        ProtocolStorageLib.Data calldata config
     ) external override initializer onlyProxy {
         __UUPSUpgradeable_init();
         __Ownable_init_unchained(owner_);
@@ -89,7 +107,7 @@ contract SSVBasedApps is
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
-        ProtocolStorageLib.Data memory config
+        ProtocolStorageLib.Data calldata config
     ) internal onlyInitializing {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
@@ -114,7 +132,9 @@ contract SSVBasedApps is
         sp.withdrawalExpireTime = config.withdrawalExpireTime;
         sp.obligationTimelockPeriod = config.obligationTimelockPeriod;
         sp.obligationExpireTime = config.obligationExpireTime;
+        sp.tokenUpdateTimelockPeriod = config.tokenUpdateTimelockPeriod;
         sp.maxShares = config.maxShares;
+        sp.disabledFeatures = config.disabledFeatures;
 
         emit MaxFeeIncrementSet(sp.maxFeeIncrement);
     }
@@ -143,6 +163,12 @@ contract SSVBasedApps is
         address[] calldata tokens,
         uint32[] calldata sharedRiskLevels,
         string calldata metadataURI
+    ) external {
+        _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
+    }
+
+    function updateBAppsTokens(
+        ICore.TokenConfig[] calldata tokenConfigs
     ) external {
         _delegateTo(SSVCoreModules.SSV_BAPPS_MANAGER);
     }
@@ -271,7 +297,7 @@ contract SSVBasedApps is
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount,
+        uint32 percentage,
         bytes calldata data
     ) external {
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
@@ -323,11 +349,19 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
+    function updateTokenUpdateTimelockPeriod(uint32 value) external onlyOwner {
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
+    }
+
     function updateMaxShares(uint256 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
     function updateMaxFeeIncrement(uint32 value) external onlyOwner {
+        _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
+    }
+
+    function updateDisabledFeatures(uint32 value) external onlyOwner {
         _delegateTo(SSVCoreModules.SSV_PROTOCOL_MANAGER);
     }
 
@@ -362,6 +396,13 @@ contract SSVBasedApps is
     ) external view returns (address strategyOwner, uint32 fee) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
+    }
+
+    function ownedStrategies(
+        address owner
+    ) external view returns (uint32[] memory strategyIds) {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        return s.strategyOwners[owner];
     }
 
     function strategyAccountShares(
@@ -420,22 +461,25 @@ contract SSVBasedApps is
         );
     }
 
-    function usedTokens(
-        uint32 strategyId,
-        address token
-    ) external view returns (uint32) {
-        CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return s.usedTokens[strategyId][token];
-    }
-
     function bAppTokens(
         address bApp,
         address token
-    ) external view returns (uint32 value, bool isSet) {
+    )
+        external
+        view
+        returns (
+            uint32 currentValue,
+            bool isSet,
+            uint32 pendingValue,
+            uint32 effectTime
+        )
+    {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         return (
-            s.bAppTokens[bApp][token].value,
-            s.bAppTokens[bApp][token].isSet
+            s.bAppTokens[bApp][token].currentValue,
+            s.bAppTokens[bApp][token].isSet,
+            s.bAppTokens[bApp][token].pendingValue,
+            s.bAppTokens[bApp][token].effectTime
         );
     }
 
@@ -533,8 +577,16 @@ contract SSVBasedApps is
         return ProtocolStorageLib.load().obligationExpireTime;
     }
 
+    function disabledFeatures() external view returns (uint32) {
+        return ProtocolStorageLib.load().disabledFeatures;
+    }
+
+    function tokenUpdateTimelockPeriod() external view returns (uint32) {
+        return ProtocolStorageLib.load().tokenUpdateTimelockPeriod;
+    }
+
     function getVersion() external pure returns (string memory) {
-        return "0.0.1";
+        return "0.1.1";
     }
 
     // *********************************

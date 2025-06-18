@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.29;
 
-import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {
+    IERC165
+} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
-import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IStrategyManager
+} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 // =====================================================================================
 // ⚠️ WARNING: IMPLEMENT OWNER OR ACCESS ROLES ⚠️
@@ -69,6 +77,16 @@ abstract contract BasedAppCore is IBasedApp {
         );
     }
 
+    /// @notice Updates the tokens of a BApp
+    /// @param tokenConfigs new list of tokens and their shared risk levels
+    function updateBAppTokens(
+        ICore.TokenConfig[] calldata tokenConfigs
+    ) external virtual {
+        IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppsTokens(
+            tokenConfigs
+        );
+    }
+
     function withdrawSlashingFund(
         address token,
         uint256 amount
@@ -105,10 +123,18 @@ abstract contract BasedAppCore is IBasedApp {
         /*strategyId*/
         address,
         /*token*/
-        uint256,
-        /*amount*/
+        uint32,
+        /*percentage*/
+        address,
+        /*sender*/
         bytes calldata
-    ) external virtual onlySSVBasedAppManager returns (bool, address, bool) {
+    )
+        external
+        virtual
+        /*data*/
+        onlySSVBasedAppManager
+        returns (bool, address, bool)
+    {
         ///@dev --- CORE LOGIC (TO BE IMPLEMENTED) ---
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
