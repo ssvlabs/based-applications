@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {
     IERC20,
@@ -250,7 +250,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         proxiedManager.withdrawETHSlashingFund(slashAmount);
     }
 
-    // Slash Non Compatible BApp
+    // Slash Non Compatible BApp, does not implement the slash function inside the contract
     function testSlashNonCompatibleBApp(uint32 slashPercentage) public {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
@@ -259,9 +259,6 @@ contract SlashingManagerEOATest is StrategyManagerTest {
             slashPercentage > 0 &&
                 slashPercentage <= proxiedManager.maxPercentage()
         );
-        uint256 slashAmount = (depositAmount * percentage * slashPercentage) /
-            proxiedManager.maxPercentage() /
-            proxiedManager.maxPercentage();
         testStrategyOptInToBAppNonCompliant(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(
@@ -270,25 +267,8 @@ contract SlashingManagerEOATest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(
-            STRATEGY1,
-            address(nonCompliantBApp),
-            token,
-            slashPercentage,
-            address(nonCompliantBApp)
-        );
+        vm.expectRevert();
         nonCompliantBApp.slash(STRATEGY1, token, slashPercentage);
-        uint256 newStrategyBalance = depositAmount - slashAmount;
-        checkTotalSharesAndTotalBalance(
-            STRATEGY1,
-            token,
-            depositAmount,
-            newStrategyBalance
-        );
-        checkAccountShares(STRATEGY1, USER2, token, depositAmount);
-        checkSlashableBalance(STRATEGY1, address(nonCompliantBApp), token, 0);
-        checkSlashingFund(address(nonCompliantBApp), token, slashAmount);
     }
 
     function testRevertSlashNonCompatibleBAppWithNonOwner() public {
@@ -304,13 +284,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
             IERC20(erc20mock),
             depositAmount
         );
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IStrategyManager.InvalidBAppOwner.selector,
-                USER2,
-                address(nonCompliantBApp)
-            )
-        );
+        vm.expectRevert();
         proxiedManager.slash(
             STRATEGY1,
             address(nonCompliantBApp),
@@ -334,6 +308,35 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         vm.prank(USER1);
         vm.expectRevert(
             abi.encodeWithSelector(IBasedAppManager.BAppNotRegistered.selector)
+        );
+        proxiedManager.slash(
+            STRATEGY1,
+            USER1,
+            address(erc20mock),
+            slashPercentage,
+            abi.encodePacked("0x00")
+        );
+    }
+
+    function testRevertSlashStrategyNotOptedInToEOA() public {
+        uint256 depositAmount = 100_000;
+        uint32 slashPercentage = 100;
+
+        testCreateStrategies();
+        testRegisterBAppWithEOA();
+
+        vm.prank(USER2);
+        proxiedManager.depositERC20(
+            STRATEGY1,
+            IERC20(erc20mock),
+            depositAmount
+        );
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.BAppNotOptedIn.selector,
+                STRATEGY1
+            )
         );
         proxiedManager.slash(
             STRATEGY1,

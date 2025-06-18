@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
-
-import {
-    IERC165
-} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+pragma solidity 0.8.30;
 
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
@@ -43,9 +39,8 @@ abstract contract BasedAppCore is IBasedApp {
         SSV_BASED_APPS_NETWORK = _ssvBasedAppsNetwork;
     }
 
-    /// @notice Registers a BApp calling the SSV SSVBasedApps
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
+    /// @notice Registers a BApp calling the SSVBasedApps
+    /// @param tokenConfigs array of token configs (address, shared risk level)
     /// @param metadataURI URI of the metadata
     /// @dev metadata should point to a json that respect template:
     ///    {
@@ -56,13 +51,11 @@ abstract contract BasedAppCore is IBasedApp {
     ///        "social": "https://x.com/ssv_network"
     ///    }
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external virtual {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(
-            tokens,
-            sharedRiskLevels,
+            tokenConfigs,
             metadataURI
         );
     }
@@ -139,17 +132,6 @@ abstract contract BasedAppCore is IBasedApp {
         ///@dev --- RETURN TRUE IF SUCCESS, FALSE OTHERWISE ---
         ///@dev --- RETURN RECEIVER ADDRESS FOR THE SLASHED FUNDS ---
         return (true, address(this), true);
-    }
-
-    /// @notice Checks if the contract supports the interface
-    /// @param interfaceId interface id
-    /// @return true if the contract supports the interface
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public pure virtual returns (bool) {
-        return
-            interfaceId == type(IBasedApp).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
     }
 
     // Receive function to accept plain Ether transfers

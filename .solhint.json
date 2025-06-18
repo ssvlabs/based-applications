@@ -1,7 +1,7 @@
 {
   "extends": "solhint:recommended",
   "rules": {
-    "compiler-version": ["error", "0.8.29"],
+    "compiler-version": ["error", "0.8.30"],
     "no-inline-assembly": "off",
     "no-unused-import": "error",
     "func-named-parameters": "off",

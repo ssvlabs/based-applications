@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import {
@@ -20,14 +20,12 @@ contract BasedAppsManager is IBasedAppManager {
     }
 
     /// @notice Registers a bApp.
-    /// @param tokens The list of tokens the bApp accepts; can be empty.
-    /// @param sharedRiskLevels The shared risk level of the bApp.
+    /// @param tokenConfigs The list of tokens configs the bApp accepts; can be empty.
     /// @param metadataURI The metadata URI of the bApp, which is a link (e.g., http://example.com)
     /// to a JSON file containing metadata such as the name, description, logo, etc.
     /// @dev Allows creating a bApp even with an empty token list.
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
@@ -38,9 +36,9 @@ contract BasedAppsManager is IBasedAppManager {
 
         s.registeredBApps[msg.sender] = true;
 
-        _addNewTokens(msg.sender, tokens, sharedRiskLevels);
+        _addNewTokens(msg.sender, tokenConfigs);
 
-        emit BAppRegistered(msg.sender, tokens, sharedRiskLevels, metadataURI);
+        emit BAppRegistered(msg.sender, tokenConfigs, metadataURI);
     }
 
     /// @notice Function to update the metadata URI of the Based Application
@@ -83,25 +81,22 @@ contract BasedAppsManager is IBasedAppManager {
 
     /// @notice Function to add tokens to a bApp
     /// @param bApp The address of the bApp
-    /// @param tokens The list of tokens to add
-    /// @param sharedRiskLevels The shared risk levels of the tokens
+    /// @param tokenConfigs The list of tokens to add
     function _addNewTokens(
         address bApp,
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels
+        ICore.TokenConfig[] calldata tokenConfigs
     ) internal {
-        ValidationLib.validateArrayLengths(tokens, sharedRiskLevels);
-        uint256 length = tokens.length;
+        uint256 length = tokenConfigs.length;
         address token;
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         for (uint256 i = 0; i < length; ) {
-            token = tokens[i];
+            token = tokenConfigs[i].token;
             ValidationLib.validateNonZeroAddress(token);
             if (s.bAppTokens[bApp][token].isSet) {
                 revert IBasedAppManager.TokenAlreadyAddedToBApp(token);
             }
             ICore.SharedRiskLevel storage tokenData = s.bAppTokens[bApp][token];
-            tokenData.currentValue = sharedRiskLevels[i];
+            tokenData.currentValue = tokenConfigs[i].sharedRiskLevel;
             tokenData.isSet = true;
             unchecked {
                 i++;

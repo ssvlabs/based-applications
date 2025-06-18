@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { Test } from "forge-std/Test.sol";
 
@@ -33,6 +33,7 @@ import {
 import {
     WhitelistExample
 } from "@ssv/src/middleware/examples/WhitelistExample.sol";
+import { ECDSAVerifier } from "@ssv/src/middleware/examples/ECDSAVerifier.sol";
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
 contract Setup is Test {
@@ -53,6 +54,7 @@ contract Setup is Test {
     BasedAppMock4 public bApp4;
     NonCompliantBApp public nonCompliantBApp;
     WhitelistExample public whitelistExample;
+    ECDSAVerifier public ecdsaVerifierExample;
     // Tokens
     IERC20 public erc20mock;
     IERC20 public erc20mock2;
@@ -74,10 +76,10 @@ contract Setup is Test {
     uint32 public constant STRATEGY3 = 3;
     uint32 public constant STRATEGY4 = 4;
     // Fees
-    uint32 public constant STRATEGY1_INITIAL_FEE = 5;
-    uint32 public constant STRATEGY2_INITIAL_FEE = 0;
-    uint32 public constant STRATEGY3_INITIAL_FEE = 1000;
-    uint32 public constant STRATEGY4_INITIAL_FEE = 900;
+    uint32 public constant STRATEGY1_INITIAL_FEE = 5; // %0.05
+    uint32 public constant STRATEGY2_INITIAL_FEE = 0; // %0.00
+    uint32 public constant STRATEGY3_INITIAL_FEE = 1000; // %10.00
+    uint32 public constant STRATEGY4_INITIAL_FEE = 900; // %9.00
     uint32 public constant STRATEGY1_UPDATE_FEE = 10;
     // Initial Balances
     uint256 public constant INITIAL_USER1_BALANCE_ERC20 = 1000 * 10 ** 18;
@@ -94,7 +96,7 @@ contract Setup is Test {
     // Constants
     address public constant ETH_ADDRESS =
         0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    uint32 public constant MAX_FEE_INCREMENT = 500;
+    uint32 public constant MAX_FEE_INCREMENT = 500; // 5%
     // Array containing all the BApps created
     IBasedApp[] public bApps;
     ProtocolStorageLib.Data public config;
@@ -136,7 +138,7 @@ contract Setup is Test {
         );
         proxy = new ERC1967Proxy(address(implementation), data);
         proxiedManager = SSVBasedApps(payable(address(proxy)));
-        assertEq(proxiedManager.getVersion(), "0.1.1", "Version mismatch");
+        assertEq(proxiedManager.getVersion(), "0.2.0", "Version mismatch");
         assertEq(
             proxiedManager.maxFeeIncrement(),
             500,
@@ -157,6 +159,10 @@ contract Setup is Test {
 
         nonCompliantBApp = new NonCompliantBApp(address(proxiedManager));
         whitelistExample = new WhitelistExample(address(proxiedManager), USER1);
+        ecdsaVerifierExample = new ECDSAVerifier(
+            address(proxiedManager),
+            USER1
+        );
 
         bApps.push(bApp1);
         bApps.push(bApp2);
@@ -170,6 +176,7 @@ contract Setup is Test {
         vm.label(address(bApp4), "BasedApp4");
         vm.label(address(nonCompliantBApp), "NonCompliantBApp");
         vm.label(address(whitelistExample), "WhitelistExample");
+        vm.label(address(ecdsaVerifierExample), "ECDSAVerifierExample");
         vm.label(address(proxiedManager), "BasedAppManagerProxy");
 
         vm.deal(USER1, INITIAL_USER1_BALANCE_ETH);

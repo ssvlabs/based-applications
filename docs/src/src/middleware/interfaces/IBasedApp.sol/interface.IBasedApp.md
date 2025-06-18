@@ -1,8 +1,5 @@
 # IBasedApp
-[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/middleware/interfaces/IBasedApp.sol)
-
-**Inherits:**
-IERC165
+[Git Source](https://github.com/ssvlabs/based-applications/blob/3ee95af731e4fce61ac2b03f418aa4e9fb5f64bd/src/middleware/interfaces/IBasedApp.sol)
 
 
 ## Functions
@@ -17,7 +14,7 @@ function optInToBApp(uint32 strategyId, address[] calldata tokens, uint32[] call
 
 
 ```solidity
-function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
+function registerBApp(ICore.TokenConfig[] calldata tokenConfigs, string calldata metadataURI) external;
 ```
 
 ### slash
@@ -27,13 +24,6 @@ function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLev
 function slash(uint32 strategyId, address token, uint32 percentage, address sender, bytes calldata data)
     external
     returns (bool success, address receiver, bool exit);
-```
-
-### supportsInterface
-
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool);
 ```
 
 ### updateBAppMetadataURI

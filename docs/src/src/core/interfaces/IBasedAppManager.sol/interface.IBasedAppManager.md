@@ -1,5 +1,5 @@
 # IBasedAppManager
-[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/core/interfaces/IBasedAppManager.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/3ee95af731e4fce61ac2b03f418aa4e9fb5f64bd/src/core/interfaces/IBasedAppManager.sol)
 
 
 ## Functions
@@ -7,7 +7,7 @@
 
 
 ```solidity
-function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
+function registerBApp(ICore.TokenConfig[] calldata tokenConfigs, string calldata metadataURI) external;
 ```
 
 ### updateBAppMetadataURI
@@ -34,7 +34,7 @@ event BAppMetadataURIUpdated(address indexed bApp, string metadataURI);
 ### BAppRegistered
 
 ```solidity
-event BAppRegistered(address indexed bApp, address[] tokens, uint32[] sharedRiskLevel, string metadataURI);
+event BAppRegistered(address indexed bApp, ICore.TokenConfig[] tokenConfigs, string metadataURI);
 ```
 
 ### BAppTokensUpdated

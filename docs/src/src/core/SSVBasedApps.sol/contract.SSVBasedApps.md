@@ -1,8 +1,8 @@
 # SSVBasedApps
-[Git Source](https://github.com/ssvlabs/based-applications/blob/f462573124548b82b6a002d4ef069bdfacf5c637/src/core/SSVBasedApps.sol)
+[Git Source](https://github.com/ssvlabs/based-applications/blob/3ee95af731e4fce61ac2b03f418aa4e9fb5f64bd/src/core/SSVBasedApps.sol)
 
 **Inherits:**
-[ISSVBasedApps](/src/core/interfaces/ISSVBasedApps.sol/interface.ISSVBasedApps.md), UUPSUpgradeable, Ownable2StepUpgradeable, [IBasedAppManager](/src/core/interfaces/IBasedAppManager.sol/interface.IBasedAppManager.md), [IStrategyManager](/src/core/interfaces/IStrategyManager.sol/interface.IStrategyManager.md), [IProtocolManager](/src/core/interfaces/IProtocolManager.sol/interface.IProtocolManager.md)
+[ISSVBasedApps](/src/core/interfaces/ISSVBasedApps.sol/interface.ISSVBasedApps.md), UUPSUpgradeable, Ownable2StepUpgradeable
 
 **Author:**
 
@@ -91,7 +91,7 @@ function updateBAppMetadataURI(string calldata metadataURI) external;
 
 
 ```solidity
-function registerBApp(address[] calldata tokens, uint32[] calldata sharedRiskLevels, string calldata metadataURI) external;
+function registerBApp(ICore.TokenConfig[] calldata tokenConfigs, string calldata metadataURI) external;
 ```
 
 ### updateBAppsTokens
@@ -329,7 +329,7 @@ function updateMaxFeeIncrement(uint32 value) external onlyOwner;
 
 
 ```solidity
-function updateDisabledFeatures(uint32 disabledFeatures) external onlyOwner;
+function updateDisabledFeatures(uint32 value) external onlyOwner;
 ```
 
 ### delegations

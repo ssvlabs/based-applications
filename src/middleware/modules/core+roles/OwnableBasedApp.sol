@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import {
-    IERC165
-} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-
-import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 import {
     BasedAppCore
 } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
@@ -14,6 +9,7 @@ import {
 import {
     IBasedAppManager
 } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     constructor(
@@ -22,8 +18,7 @@ abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     ) BasedAppCore(_basedAppManager) Ownable(_initOwner) {}
 
     /// @notice Registers a BApp calling the SSV SSVBasedApps
-    /// @param tokens array of token addresses
-    /// @param sharedRiskLevels array of shared risk levels
+    /// @param tokenConfigs array of token addresses and shared risk levels
     /// @param metadataURI URI of the metadata
     /// @dev metadata should point to a json that respect template:
     ///    {
@@ -34,13 +29,11 @@ abstract contract OwnableBasedApp is Ownable, BasedAppCore {
     ///        "social": "https://x.com/ssv_network"
     ///    }
     function registerBApp(
-        address[] calldata tokens,
-        uint32[] calldata sharedRiskLevels,
+        ICore.TokenConfig[] calldata tokenConfigs,
         string calldata metadataURI
     ) external override onlyOwner {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).registerBApp(
-            tokens,
-            sharedRiskLevels,
+            tokenConfigs,
             metadataURI
         );
     }
@@ -53,16 +46,5 @@ abstract contract OwnableBasedApp is Ownable, BasedAppCore {
         IBasedAppManager(SSV_BASED_APPS_NETWORK).updateBAppMetadataURI(
             metadataURI
         );
-    }
-
-    /// @notice Checks if the contract supports the interface
-    /// @param interfaceId interface id
-    /// @return isSupported if the contract supports the interface
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public pure override(BasedAppCore) returns (bool isSupported) {
-        return
-            interfaceId == type(IBasedApp).interfaceId ||
-            interfaceId == type(IERC165).interfaceId;
     }
 }

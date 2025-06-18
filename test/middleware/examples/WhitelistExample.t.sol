@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {
     IBasedAppWhitelisted
 } from "@ssv/src/middleware/interfaces/IBasedAppWhitelisted.sol";
 import { IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 contract WhitelistExampleTest is UtilsTest {
     function testCreateStrategies() public {
@@ -33,14 +34,13 @@ contract WhitelistExampleTest is UtilsTest {
 
     function testRegisterWhitelistExampleBApp() public {
         vm.startPrank(USER1);
-        (
-            address[] memory tokensInput,
-            uint32[] memory sharedRiskLevelInput
-        ) = createSingleTokenAndSingleRiskLevel(address(erc20mock), 102);
-        whitelistExample.registerBApp(tokensInput, sharedRiskLevelInput, "");
+        ICore.TokenConfig[] memory tokenConfigsInput = createSingleTokenConfig(
+            address(erc20mock),
+            102
+        );
+        whitelistExample.registerBApp(tokenConfigsInput, "");
         checkBAppInfo(
-            tokensInput,
-            sharedRiskLevelInput,
+            tokenConfigsInput,
             address(whitelistExample),
             proxiedManager
         );
@@ -117,7 +117,7 @@ contract WhitelistExampleTest is UtilsTest {
         assertEq(whitelistExample.isWhitelisted(STRATEGY1), false);
     }
 
-    function testRevertOddWhitelistedAccount() public {
+    function testRevertAddWhitelistedAccount() public {
         testAddWhitelistedAccount();
         vm.prank(USER1);
         vm.expectRevert(
@@ -136,7 +136,7 @@ contract WhitelistExampleTest is UtilsTest {
         whitelistExample.removeWhitelisted(STRATEGY1);
     }
 
-    function testRevertOddWhitelistedZeroID() public {
+    function testRevertAddWhitelistedZeroID() public {
         vm.prank(USER1);
         vm.expectRevert(
             abi.encodeWithSelector(IBasedAppWhitelisted.ZeroID.selector)

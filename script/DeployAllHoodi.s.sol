@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import { Script } from "forge-std/Script.sol";
 import { DeployAll } from "./DeployAll.sol";
@@ -7,7 +7,7 @@ import { DeployAll } from "./DeployAll.sol";
 contract DeployAllHoodi is Script, DeployAll {
     function run(bool isProd) external {
         if (block.chainid != 560_048) {
-            revert("This script is only for the Hoodi prod");
+            revert("This script is only for the Hoodi");
         }
 
         string memory cfgPath;

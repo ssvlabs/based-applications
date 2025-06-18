@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {
     IERC20,
@@ -914,5 +914,34 @@ contract SlashingManagerTest is StrategyManagerTest {
             )
         );
         bApp4.withdrawETHSlashingFund(1 ether);
+    }
+
+    function testRevertSlashStrategyNotOptedInToBApp() public {
+        uint256 depositAmount = 100_000;
+        uint32 slashPercentage = 100;
+
+        testCreateStrategies();
+        testRegisterBAppWith2Tokens();
+
+        vm.prank(USER2);
+        proxiedManager.depositERC20(
+            STRATEGY1,
+            IERC20(erc20mock),
+            depositAmount
+        );
+        vm.prank(USER1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.BAppNotOptedIn.selector,
+                STRATEGY1
+            )
+        );
+        proxiedManager.slash(
+            STRATEGY1,
+            address(bApp1),
+            address(erc20mock),
+            slashPercentage,
+            abi.encodePacked("0x00")
+        );
     }
 }
