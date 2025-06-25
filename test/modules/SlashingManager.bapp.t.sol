@@ -95,7 +95,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -141,7 +141,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -370,7 +370,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -380,10 +380,21 @@ contract SlashingManagerTest is StrategyManagerTest {
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
 
         vm.prank(USER2);
+        uint256 expectedTotalSharesWithdraw = (newStrategyBalance * 50) / 100;
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
 
-        checkTotalSharesAndTotalBalance(STRATEGY1, token, 50_000, 49_550);
-        checkAccountShares(STRATEGY1, USER2, token, 50_000);
+        checkTotalSharesAndTotalBalance(
+            STRATEGY1,
+            token,
+            expectedTotalSharesWithdraw,
+            expectedTotalSharesWithdraw
+        );
+        checkAccountShares(
+            STRATEGY1,
+            USER2,
+            token,
+            depositAmount - withdrawalAmount
+        );
         checkSlashableBalance(STRATEGY1, address(bApp1), token, 0);
         checkSlashingFund(address(bApp1), token, slashAmount);
     }
@@ -431,12 +442,13 @@ contract SlashingManagerTest is StrategyManagerTest {
             slashPercentage,
             abi.encodePacked("0x00")
         );
+        // 90000
         uint256 newStrategyBalance = depositAmount - slashAmount;
 
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -446,10 +458,21 @@ contract SlashingManagerTest is StrategyManagerTest {
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
 
         vm.prank(USER2);
+        uint256 expectedTotalSharesWithdraw = (newStrategyBalance * 50) / 100;
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
 
-        checkTotalSharesAndTotalBalance(STRATEGY1, token, 50_000, 49_500);
-        checkAccountShares(STRATEGY1, USER2, token, 50_000);
+        checkTotalSharesAndTotalBalance(
+            STRATEGY1,
+            token,
+            expectedTotalSharesWithdraw,
+            expectedTotalSharesWithdraw
+        );
+        checkAccountShares(
+            STRATEGY1,
+            USER2,
+            token,
+            depositAmount - withdrawalAmount
+        );
         checkSlashableBalance(STRATEGY1, address(bApp1), token, 0);
         checkSlashingFund(address(bApp1), token, slashAmount);
     }
@@ -606,14 +629,15 @@ contract SlashingManagerTest is StrategyManagerTest {
             slashPercentage,
             abi.encodePacked("0x00")
         );
-
+        // 1000 - 100 = 900
         uint256 newStrategyBalance = depositAmount - slashAmount;
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
+        // account shares are still 1000
         checkAccountShares(STRATEGY1, USER1, token, depositAmount);
         checkSlashableBalance(STRATEGY1, address(bApp1), token, 0);
         checkSlashingFund(address(bApp1), token, slashAmount);
@@ -621,18 +645,21 @@ contract SlashingManagerTest is StrategyManagerTest {
 
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(token)); // this ends up withdrawing 720
+        // withdrawal era 800 shares
         uint256 effectiveWithdrawalAmount = 720;
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount - withdrawalAmount,
+            // 900 - 720
+            newStrategyBalance - effectiveWithdrawalAmount,
+            // 900 - 720
             newStrategyBalance - effectiveWithdrawalAmount
         );
         checkAccountShares(
             STRATEGY1,
             USER1,
             token,
-            depositAmount - withdrawalAmount
+            depositAmount - withdrawalAmount // 1000-800 = 200
         );
         checkSlashableBalance(STRATEGY1, address(bApp1), token, 0);
         checkSlashingFund(address(bApp1), token, slashAmount);
@@ -683,7 +710,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -743,7 +770,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -848,7 +875,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -897,7 +924,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);

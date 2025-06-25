@@ -179,6 +179,7 @@ interface IStrategyManager {
     error InvalidAmount();
     error InvalidBAppOwner(address caller, address expectedOwner);
     error InvalidPercentageIncrement();
+    error InvalidShareCondition();
     error InvalidStrategyFee();
     error InvalidStrategyOwner(address caller, address expectedOwner);
     error InvalidToken();

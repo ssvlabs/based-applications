@@ -6,6 +6,7 @@ uint32 constant MIN_EXPIRE_TIME = 1 hours;
 
 uint32 constant MAX_PERCENTAGE = 1e4; // 100% in basis points
 address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+uint256 constant RATIO_OFFSET = 100000;
 
 library ValidationLib {
     error InvalidPercentage();

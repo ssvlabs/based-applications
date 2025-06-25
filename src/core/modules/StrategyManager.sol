@@ -12,7 +12,8 @@ import {
 import {
     ValidationLib,
     MAX_PERCENTAGE,
-    ETH_ADDRESS
+    ETH_ADDRESS,
+    RATIO_OFFSET
 } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import {
@@ -602,6 +603,37 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         }
     }
 
+    function calculateGlobalSharesTokenBalanceRatio(
+        CoreStorageLib.Data storage s,
+        address token
+    ) internal view returns (uint256 ratio) {
+        uint256 totalGlobalShares = s.totalGlobalSharesBalance[token];
+        uint256 totalTokenBalance;
+
+        if (token == ETH_ADDRESS) totalTokenBalance = address(this).balance;
+        else totalTokenBalance = IERC20(token).balanceOf(address(this));
+
+        if (totalTokenBalance != 0) {
+            return (totalGlobalShares * RATIO_OFFSET) / totalTokenBalance;
+        } else {
+            if (totalGlobalShares != 0) {
+                revert InvalidShareCondition();
+            } else return 1 * RATIO_OFFSET;
+        }
+    }
+
+    function calculateLocalGlobalShareRatio(
+        ICore.Shares storage strategyTokenShares
+    ) internal view returns (uint256 ratio) {
+        uint256 globalSharesBalance = strategyTokenShares.globalSharesBalance;
+
+        if (globalSharesBalance != 0)
+            return
+                (strategyTokenShares.totalLocalSharesBalance * RATIO_OFFSET) /
+                globalSharesBalance;
+        else return RATIO_OFFSET;
+    }
+
     function _beforeDeposit(
         uint32 strategyId,
         address token,
@@ -614,16 +646,37 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             strategyId
         ][token];
 
-        uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
-        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        uint256 strategyGlobalShares = strategyTokenShares.globalSharesBalance;
+        uint256 totalGlobalShares = s.totalGlobalSharesBalance[token];
 
         uint256 shares;
-        if (totalShares == 0 || totalTokenBalance == 0) shares = amount;
-        else shares = (amount * totalShares) / totalTokenBalance;
+        uint256 shareRatio;
+        // if there are no shares at all
+        if (totalGlobalShares == 0) {
+            // check that the strategy has 0 shares as expected
+            if (strategyGlobalShares != 0) {
+                revert InvalidShareCondition();
+            } else {
+                // as expected, there are no strategy global shares either, it is a first deposit so the ratio will be 1:1
+                shares = amount;
+                shareRatio = 1 * RATIO_OFFSET;
+            }
+        }
+        // if there have been other deposits before, we need to check the proper share ratio
+        else {
+            // ex ratio 1:1, or more shares than tokens like 2. Do we need an offset? no because the shares cannot go lower than tokens
+            uint256 ratio = calculateGlobalSharesTokenBalanceRatio(s, token);
+            // the amount of shares to produce is given by the amount deposited and the previous ratio
+            shares = (amount * ratio) / RATIO_OFFSET;
+            shareRatio = calculateLocalGlobalShareRatio(strategyTokenShares);
+        }
 
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
-        if (totalShares + shares > sp.maxShares) revert ExceedingMaxShares();
+        if (totalGlobalShares + shares > sp.maxShares)
+            revert ExceedingMaxShares();
 
+        // we need to calculate the local shares now to assign it to the user and account the total local
+        uint256 localShares = (shares * shareRatio) / RATIO_OFFSET;
         if (
             strategyTokenShares.currentGeneration !=
             strategyTokenShares.accountGeneration[msg.sender]
@@ -632,13 +685,18 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
                 msg.sender
             ] = strategyTokenShares.currentGeneration;
             /// @dev override the previous share balance
-            strategyTokenShares.accountShareBalance[msg.sender] = shares;
+            strategyTokenShares.accountLocalSharesBalance[
+                msg.sender
+            ] = localShares;
         } else {
-            strategyTokenShares.accountShareBalance[msg.sender] += shares;
+            strategyTokenShares.accountLocalSharesBalance[
+                msg.sender
+            ] += localShares;
         }
+        strategyTokenShares.globalSharesBalance += shares;
+        strategyTokenShares.totalLocalSharesBalance += localShares;
 
-        strategyTokenShares.totalShareBalance += shares;
-        strategyTokenShares.totalTokenBalance += amount;
+        s.totalGlobalSharesBalance[token] += shares;
     }
 
     function _proposeWithdrawal(
@@ -647,6 +705,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 amount
     ) internal {
         if (amount == 0) revert InvalidAmount();
+
+        // withdrawal is sent with amount for a good UX by the user but in reality it withdraws shares first.
 
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
@@ -657,22 +717,53 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             strategyTokenShares.currentGeneration !=
             strategyTokenShares.accountGeneration[msg.sender]
         ) revert InvalidAccountGeneration();
-        uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
-        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        // uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
+        // we check how many global shares the strategy owns
+        uint256 strategyTotalGlobalShares = strategyTokenShares
+            .globalSharesBalance;
+        // we check how many glocal shares a strategy account owns.
+        uint256 accountLocalSharesBalance = strategyTokenShares
+            .accountLocalSharesBalance[msg.sender];
 
-        if (totalTokenBalance == 0 || totalShares == 0) {
+        if (s.totalGlobalSharesBalance[token] == 0) {
             revert InsufficientLiquidity();
         }
-        uint256 shares = (amount * totalShares) / totalTokenBalance;
+        if (
+            strategyTotalGlobalShares == 0 ||
+            strategyTokenShares.totalLocalSharesBalance == 0
+        ) {
+            revert InsufficientLiquidity(); // in strategy
+        }
 
-        if (strategyTokenShares.accountShareBalance[msg.sender] < shares) {
-            revert InsufficientBalance();
+        // calculate the ratio to transform the token amount into global shares
+        uint256 ratio = calculateGlobalSharesTokenBalanceRatio(s, token);
+        // calculate global shares to withdraw
+        uint256 sharesToWithdraw = (amount * ratio) / RATIO_OFFSET;
+        // if the global shares to withdraw are higher than the strategy owns, then revert
+        if (s.totalGlobalSharesBalance[token] < sharesToWithdraw) {
+            revert InsufficientLiquidity();
+        }
+
+        // check if the user has enough local shares to withdraw the declared global shares
+        uint256 shareRatio = calculateLocalGlobalShareRatio(
+            strategyTokenShares
+        );
+
+        uint256 localSharesToWithdraw = (sharesToWithdraw * shareRatio) /
+            RATIO_OFFSET;
+
+        // trying to withdraw more than you have will result in a revert.
+        if (
+            strategyTokenShares.accountLocalSharesBalance[msg.sender] <
+            localSharesToWithdraw
+        ) {
+            revert InsufficientLiquidity();
         }
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[
             strategyId
         ][msg.sender][address(token)];
 
-        request.shares = shares;
+        request.shares = localSharesToWithdraw;
         request.requestTime = uint32(block.timestamp);
 
         emit StrategyWithdrawalProposed(
@@ -703,25 +794,55 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             sp.withdrawalExpireTime
         );
 
-        uint256 shares = request.shares;
+        uint256 localSharesToWithdraw = request.shares;
 
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
             strategyId
         ][token];
 
         if (
+            strategyTokenShares.accountLocalSharesBalance[msg.sender] <
+            localSharesToWithdraw
+        ) {
+            revert InsufficientBalance();
+        }
+
+        if (
             strategyTokenShares.currentGeneration !=
             strategyTokenShares.accountGeneration[msg.sender]
         ) revert InvalidAccountGeneration();
 
-        uint256 totalTokenBalance = strategyTokenShares.totalTokenBalance;
-        uint256 totalShares = strategyTokenShares.totalShareBalance;
+        uint256 sharesRatio = calculateLocalGlobalShareRatio(
+            strategyTokenShares
+        );
 
-        amount = (shares * totalTokenBalance) / totalShares;
+        // calculate how much global shares to withdraw
+        uint256 sharesToWithdraw = (localSharesToWithdraw * RATIO_OFFSET) /
+            sharesRatio;
 
-        strategyTokenShares.accountShareBalance[msg.sender] -= shares;
-        strategyTokenShares.totalShareBalance -= shares;
-        strategyTokenShares.totalTokenBalance -= amount;
+        uint256 availableShares = (strategyTokenShares
+            .accountLocalSharesBalance[msg.sender] * RATIO_OFFSET) /
+            sharesRatio;
+
+        if (availableShares < sharesToWithdraw) revert InsufficientBalance();
+
+        uint256 tokenBalance;
+        if (token == ETH_ADDRESS) tokenBalance = address(this).balance;
+        else tokenBalance = IERC20(token).balanceOf(address(this));
+
+        uint256 totalShares = s.totalGlobalSharesBalance[token];
+
+        amount = (sharesToWithdraw * tokenBalance) / totalShares;
+
+        strategyTokenShares.accountLocalSharesBalance[
+            msg.sender
+        ] -= localSharesToWithdraw;
+
+        strategyTokenShares.globalSharesBalance -= sharesToWithdraw;
+
+        strategyTokenShares.totalLocalSharesBalance -= localSharesToWithdraw;
+
+        s.totalGlobalSharesBalance[token] -= sharesToWithdraw;
 
         delete s.withdrawalRequests[strategyId][msg.sender][token];
 
@@ -745,8 +866,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         ICore.Shares storage strategyTokenShares
     ) internal view returns (uint256 slashableBalance) {
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 balance = strategyTokenShares.totalTokenBalance;
-
+        uint256 strategyGlobalSharesBalance = strategyTokenShares
+            .globalSharesBalance;
+        uint256 ratio = calculateGlobalSharesTokenBalanceRatio(s, token);
+        uint256 balance = (strategyGlobalSharesBalance * ratio) / RATIO_OFFSET;
         return (balance * percentage) / MAX_PERCENTAGE;
     }
 
@@ -760,6 +883,19 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (s.accountBAppStrategy[strategyOwner][bApp] != strategyId) {
             revert BAppNotOptedIn();
         }
+    }
+
+    function getSlashableShares(
+        CoreStorageLib.Data storage s,
+        uint32 strategyId,
+        address bApp,
+        address token,
+        ICore.Shares storage strategyTokenShares
+    ) internal view returns (uint256 slashableBalance) {
+        uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
+        uint256 strategyGlobalSharesBalance = strategyTokenShares
+            .globalSharesBalance;
+        return (strategyGlobalSharesBalance * percentage) / MAX_PERCENTAGE;
     }
 
     /// @notice Slash a strategy
@@ -790,15 +926,16 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
             strategyId
         ][token];
-        uint256 slashableBalance = getSlashableBalance(
+        uint256 slashableShares = getSlashableShares(
             s,
             strategyId,
             bApp,
             token,
             strategyTokenShares
         );
-        if (slashableBalance == 0) revert InsufficientBalance();
-        uint256 amount = (slashableBalance * percentage) / MAX_PERCENTAGE;
+
+        if (slashableShares == 0) revert InsufficientBalance();
+        uint256 slashedShares = (slashableShares * percentage) / MAX_PERCENTAGE;
 
         address receiver;
         bool exit;
@@ -823,7 +960,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
                     strategyId,
                     bApp,
                     token,
-                    amount,
+                    slashedShares,
                     strategyTokenShares
                 );
         } else {
@@ -833,12 +970,12 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             _exitStrategy(s, strategyId, bApp, token);
         }
 
-        strategyTokenShares.totalTokenBalance -= amount;
-        s.slashingFund[receiver][token] += amount;
+        strategyTokenShares.globalSharesBalance -= slashedShares;
+        s.slashingFund[receiver][token] += slashedShares;
 
-        if (strategyTokenShares.totalTokenBalance == 0) {
-            delete strategyTokenShares.totalTokenBalance;
-            delete strategyTokenShares.totalShareBalance;
+        if (strategyTokenShares.globalSharesBalance == 0) {
+            delete strategyTokenShares.globalSharesBalance;
+            delete strategyTokenShares.totalLocalSharesBalance;
             strategyTokenShares.currentGeneration += 1;
         }
 
@@ -872,24 +1009,27 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint32 strategyId,
         address bApp,
         address token,
-        uint256 amount,
+        uint256 slashedShares,
         ICore.Shares storage strategyTokenShares
     ) internal returns (uint32 obligationPercentage) {
         ICore.Obligation storage obligation = s.obligations[strategyId][bApp][
             token
         ];
-        uint256 currentStrategyBalance = strategyTokenShares.totalTokenBalance;
-        uint256 currentObligatedBalance = (obligation.percentage *
-            currentStrategyBalance) / MAX_PERCENTAGE;
-        uint256 postSlashStrategyBalance = currentStrategyBalance - amount;
-        uint256 postSlashObligatedBalance = currentObligatedBalance - amount;
+        uint256 currentStrategyShareBalance = strategyTokenShares
+            .globalSharesBalance;
+        uint256 currentObligatedShareBalance = (obligation.percentage *
+            currentStrategyShareBalance) / MAX_PERCENTAGE;
+        uint256 postSlashStrategyBalance = currentStrategyShareBalance -
+            slashedShares;
+        uint256 postSlashObligatedBalance = currentObligatedShareBalance -
+            slashedShares;
         if (postSlashStrategyBalance == 0) {
             obligation.percentage = 0;
             return 0;
         } else {
             uint32 postSlashObligationPercentage = uint32(
-                (postSlashObligatedBalance / postSlashStrategyBalance) *
-                    MAX_PERCENTAGE
+                (postSlashObligatedBalance * MAX_PERCENTAGE) /
+                    postSlashStrategyBalance
             );
             obligation.percentage = postSlashObligationPercentage;
             return postSlashObligationPercentage;

@@ -225,6 +225,10 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.stopPrank();
     }
 
+    function testCreateStrategyAndSingleDepositDebug() public {
+        testCreateStrategyAndSingleDeposit(1);
+    }
+
     function testCreateStrategyAndSingleDeposit(uint256 amount) public {
         vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
         testCreateStrategies();
@@ -280,13 +284,13 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             deposit1S1
         );
         proxiedManager.depositERC20(STRATEGY2, erc20mock, deposit1S2);
-        checkAccountShares(STRATEGY2, USER1, address(erc20mock), deposit1S2);
         checkTotalSharesAndTotalBalance(
             STRATEGY2,
             address(erc20mock),
             deposit1S2,
             deposit1S2
         );
+        checkAccountShares(STRATEGY2, USER1, address(erc20mock), deposit1S2);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, deposit2S1);
         checkAccountShares(
             STRATEGY1,
@@ -372,7 +376,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.startPrank(USER1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStrategyManager.InsufficientBalance.selector
+                IStrategyManager.InsufficientLiquidity.selector
             )
         );
         proxiedManager.proposeWithdrawal(
@@ -390,7 +394,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.startPrank(USER1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IStrategyManager.InsufficientBalance.selector
+                IStrategyManager.InsufficientLiquidity.selector
             )
         );
         proxiedManager.proposeWithdrawalETH(STRATEGY1, 2 ether);
@@ -1073,6 +1077,10 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.stopPrank();
     }
 
+    function testStrategyOwnerDepositERC20WithNoObligationDebug() public {
+        testStrategyOwnerDepositERC20WithNoObligation(1);
+    }
+
     function testStrategyOwnerDepositERC20WithNoObligation(
         uint256 amount
     ) public {
@@ -1080,7 +1088,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         vm.startPrank(USER1);
         checkAccountShares(STRATEGY1, USER1, address(erc20mock2), 0);
-        checkTotalSharesAndTotalBalance(STRATEGY1, USER1, 0, 0);
+        checkTotalSharesAndTotalBalance(STRATEGY1, address(erc20mock2), 0, 0);
         vm.expectEmit(true, true, true, true);
         emit IStrategyManager.StrategyDeposit(
             STRATEGY1,

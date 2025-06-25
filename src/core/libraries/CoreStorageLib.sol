@@ -48,6 +48,11 @@ library CoreStorageLib {
          */
         mapping(uint32 strategyId => mapping(address token => ICore.Shares shares)) strategyTokenShares;
         /**
+         * @notice Tracks the total balance of shares for a specific token.
+         * @dev Tracks that how much token shares represent the total token balance.
+         */
+        mapping(address token => uint256 shareBalance) totalGlobalSharesBalance;
+        /**
          * @notice Tracks obligation percentages for a strategy based on specific bApps and tokens.
          * @dev Uses a hash of the bApp and token to map the obligation percentage for the strategy.
          */
@@ -75,7 +80,7 @@ library CoreStorageLib {
          * @notice Tracks the slashing fund for a specific token
          * @dev The slashing fund is used to store the tokens that are slashed from the strategies
          */
-        mapping(address account => mapping(address token => uint256 amount)) slashingFund;
+        mapping(address account => mapping(address token => uint256 sharesAmount)) slashingFund;
         /**
          * @notice Tracks the owners of the bApps
          * @dev The bApp is identified with its address
