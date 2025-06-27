@@ -128,6 +128,35 @@ contract UtilsTest is Setup {
         );
     }
 
+    function checkGlobalLocalShareRatio(
+        uint32 strategyId,
+        address token,
+        uint256 expectedGlobalLocalRatio
+    ) internal view {
+        uint256 ratio = proxiedManager.getGlobalLocalShareRatio(
+            strategyId,
+            token
+        );
+        assertEq(
+            ratio,
+            expectedGlobalLocalRatio,
+            "Should match the expected Global/Local share ratio"
+        );
+    }
+
+    function checkGlobalShareTokenBalanceRatio(
+        uint32 strategyId,
+        address token,
+        uint256 expectedSharesTokenRatio
+    ) internal view {
+        uint256 ratio = proxiedManager.getGlobalSharesTokenBalanceRatio(token);
+        assertEq(
+            ratio,
+            expectedSharesTokenRatio,
+            "Should match the expected GlobalShares/TokenBalance share ratio"
+        );
+    }
+
     function checkSlashingFund(
         address account,
         address token,

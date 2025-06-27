@@ -613,13 +613,23 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (token == ETH_ADDRESS) totalTokenBalance = address(this).balance;
         else totalTokenBalance = IERC20(token).balanceOf(address(this));
 
-        if (totalTokenBalance != 0) {
-            return (totalGlobalShares * RATIO_OFFSET) / totalTokenBalance;
-        } else {
-            if (totalGlobalShares != 0) {
-                revert InvalidShareCondition();
-            } else return 1 * RATIO_OFFSET;
-        }
+        if (totalTokenBalance == 0) return RATIO_OFFSET;
+        return (totalGlobalShares * RATIO_OFFSET) / totalTokenBalance;
+
+        // if (totalTokenBalance != 0) {
+        //     if (totalGlobalShares == 0) {
+        //         // it means that the balance is different from 0, but there may have been a donation.
+        //         // Todo: make sure it is not possible to donate. This will block the contract tho. Otherwise it will allow the new depositor to own the new shares.
+        //         // some dust will be left in the balance, making it
+        //         revert InvalidShareCondition();
+        //     }
+        //     return
+        // } else {
+        //     // se il balance e' 0, ma ci sono shares, e' una situazione che non dovrebbe accadere.
+        //     if (totalGlobalShares != 0) {
+        //         revert InvalidShareCondition();
+        //     } else return 1 * RATIO_OFFSET;
+        // }
     }
 
     function calculateLocalGlobalShareRatio(
@@ -652,15 +662,11 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 shares;
         uint256 shareRatio;
         // if there are no shares at all
-        if (totalGlobalShares == 0) {
+        if (totalGlobalShares == 0 && strategyGlobalShares == 0) {
             // check that the strategy has 0 shares as expected
-            if (strategyGlobalShares != 0) {
-                revert InvalidShareCondition();
-            } else {
-                // as expected, there are no strategy global shares either, it is a first deposit so the ratio will be 1:1
-                shares = amount;
-                shareRatio = 1 * RATIO_OFFSET;
-            }
+            // as expected, there are no strategy global shares either, it is a first deposit so the ratio will be 1:1
+            shares = amount;
+            shareRatio = RATIO_OFFSET;
         }
         // if there have been other deposits before, we need to check the proper share ratio
         else {
@@ -693,6 +699,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
                 msg.sender
             ] += localShares;
         }
+
         strategyTokenShares.globalSharesBalance += shares;
         strategyTokenShares.totalLocalSharesBalance += localShares;
 
@@ -728,10 +735,9 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         if (s.totalGlobalSharesBalance[token] == 0) {
             revert InsufficientLiquidity();
         }
-        if (
-            strategyTotalGlobalShares == 0 ||
-            strategyTokenShares.totalLocalSharesBalance == 0
-        ) {
+        // can the sstrategy totalb be 0 if the total global is 0? yes, when withdrawing from a strategy with 0 depossits after some deposits! thi is todo: test
+        // same tiwth total local? or is it not necessary? I think it may not be necessary
+        if (strategyTotalGlobalShares == 0) {
             revert InsufficientLiquidity(); // in strategy
         }
 
@@ -752,6 +758,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         uint256 localSharesToWithdraw = (sharesToWithdraw * shareRatio) /
             RATIO_OFFSET;
 
+        // todo this check should be useless.
         // trying to withdraw more than you have will result in a revert.
         if (
             strategyTokenShares.accountLocalSharesBalance[msg.sender] <
@@ -759,6 +766,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
         ) {
             revert InsufficientLiquidity();
         }
+
         ICore.WithdrawalRequest storage request = s.withdrawalRequests[
             strategyId
         ][msg.sender][address(token)];
@@ -800,13 +808,7 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             strategyId
         ][token];
 
-        if (
-            strategyTokenShares.accountLocalSharesBalance[msg.sender] <
-            localSharesToWithdraw
-        ) {
-            revert InsufficientBalance();
-        }
-
+        // Checks if a full slashing happened
         if (
             strategyTokenShares.currentGeneration !=
             strategyTokenShares.accountGeneration[msg.sender]
@@ -852,26 +854,6 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     // ***********************
     // ** Section: Slashing **
     // ***********************
-
-    /// @notice Get the slashable balance for a strategy
-    /// @param strategyId The ID of the strategy
-    /// @param bApp The address of the bApp
-    /// @param token The address of the token
-    /// @return slashableBalance The slashable balance
-    function getSlashableBalance(
-        CoreStorageLib.Data storage s,
-        uint32 strategyId,
-        address bApp,
-        address token,
-        ICore.Shares storage strategyTokenShares
-    ) internal view returns (uint256 slashableBalance) {
-        uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 strategyGlobalSharesBalance = strategyTokenShares
-            .globalSharesBalance;
-        uint256 ratio = calculateGlobalSharesTokenBalanceRatio(s, token);
-        uint256 balance = (strategyGlobalSharesBalance * ratio) / RATIO_OFFSET;
-        return (balance * percentage) / MAX_PERCENTAGE;
-    }
 
     function _checkStrategyOptedIn(
         CoreStorageLib.Data storage s,

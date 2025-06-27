@@ -10,7 +10,10 @@ import {
     IBasedAppManager
 } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
-import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
+import {
+    RATIO_OFFSET,
+    ValidationLib
+} from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
@@ -197,6 +200,12 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             amount
         );
         checkAccountShares(STRATEGY1, USER1, address(erc20mock), amount);
+        checkGlobalShareTokenBalanceRatio(
+            STRATEGY1,
+            address(erc20mock),
+            RATIO_OFFSET
+        );
+        checkGlobalLocalShareRatio(STRATEGY1, address(erc20mock), RATIO_OFFSET);
         vm.prank(USER2);
         proxiedManager.depositERC20(STRATEGY1, erc20mock, user2Amount);
         uint256 newTotal = amount + user2Amount;
