@@ -169,7 +169,7 @@ contract ERC20Mock is Context, IERC20 {
 
         _beforeTokenTransfer(from, to, amount);
 
-        _mint(from, amount);
+        // _mint(from, amount);
         unchecked {
             _balances[from] = _balances[from] - amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by

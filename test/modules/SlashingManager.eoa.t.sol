@@ -47,7 +47,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
         address token = address(erc20mock);
-        uint32 slashPercentage = 100;
+        uint32 slashPercentage = 100; // 1%
         uint256 slashAmount = (((depositAmount * percentage) /
             proxiedManager.maxPercentage()) * slashPercentage) /
             proxiedManager.maxPercentage();
@@ -71,7 +71,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkSlashableBalance(STRATEGY1, USER1, token, 0);
@@ -115,7 +115,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -157,7 +157,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -229,7 +229,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
 
     function testWithdrawSlashingFundErc20FromEOA() public {
         uint256 slashAmount = 100;
-        uint32 slashPercentage = 9000;
+        uint32 slashPercentage = 9000; // 90%
         testSlashEOA(slashPercentage);
         vm.expectEmit(true, true, true, true);
         emit IStrategyManager.SlashingFundWithdrawn(
@@ -396,14 +396,14 @@ contract SlashingManagerEOATest is StrategyManagerTest {
     function testFinalizeWithdrawalAfterSlashingRedeemsLowerAmountEOA() public {
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
-        uint256 withdrawalAmount = (depositAmount * 50) / 100;
+        uint256 withdrawalAmount = (depositAmount * 50) / 100; //50% of what I have
         address token = address(erc20mock);
-        uint32 slashPercentage = 100;
+        uint32 slashPercentage = 100; // slash 1%
         uint256 slashAmount = calculateSlashAmount(
             depositAmount,
             percentage,
             slashPercentage
-        );
+        ); // slash is 1% 90000(obligated) so is 900
 
         testStrategyOptInToBAppEOA(percentage);
 
@@ -440,14 +440,16 @@ contract SlashingManagerEOATest is StrategyManagerTest {
             slashPercentage,
             abi.encodePacked("0x00")
         );
+        // 900 is in the slashFund
+        // 100000 - 900 = 99100
         uint256 newStrategyBalance = depositAmount - slashAmount;
-
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
+        // local shares are unchanged
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
         checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
@@ -455,10 +457,22 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
 
         vm.prank(USER2);
+        // 50000 local shares are worth 50% of 99100 => 49550
+        uint256 expectedTotalSharesWithdraw = (newStrategyBalance * 50) / 100;
         proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(erc20mock));
 
-        checkTotalSharesAndTotalBalance(STRATEGY1, token, 50_000, 49_550);
-        checkAccountShares(STRATEGY1, USER2, token, 50_000);
+        checkTotalSharesAndTotalBalance(
+            STRATEGY1,
+            token,
+            expectedTotalSharesWithdraw,
+            expectedTotalSharesWithdraw
+        );
+        checkAccountShares(
+            STRATEGY1,
+            USER2,
+            token,
+            depositAmount - withdrawalAmount
+        );
         checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
     }
@@ -509,11 +523,10 @@ contract SlashingManagerEOATest is StrategyManagerTest {
             abi.encodePacked("0x00")
         );
         uint256 newStrategyBalance = depositAmount - slashAmount;
-
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
@@ -523,12 +536,25 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
 
         vm.prank(USER2);
+        uint256 expectedTotalSharesWithdraw = (newStrategyBalance * 50) / 100;
+
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
 
-        checkTotalSharesAndTotalBalance(STRATEGY1, token, 50_000, 49_500);
-        checkAccountShares(STRATEGY1, USER2, token, 50_000);
+        checkTotalSharesAndTotalBalance(
+            STRATEGY1,
+            token,
+            expectedTotalSharesWithdraw,
+            expectedTotalSharesWithdraw
+        );
+        checkAccountShares(
+            STRATEGY1,
+            USER2,
+            token,
+            depositAmount - withdrawalAmount
+        );
         checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);
+        // todo maybe check total balance fund+strategy
     }
 
     function testSlashTotalBalanceEOA(uint256 depositAmount) public {
@@ -642,12 +668,16 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         testStrategyOptInToBAppEOA(percentage);
         uint256 depositAmount = 1000;
         uint256 withdrawalAmount = 800;
+        uint256 sharesToWithdraw = 800;
+        uint256 totalShares = 1000;
+        uint256 localShares = 1000;
         uint32 slashPercentage = 10_00;
         uint256 slashAmount = calculateSlashAmount(
             depositAmount,
             percentage,
             slashPercentage
         );
+        assertEq(slashAmount, 100, "Should match the expected slash amount");
         address token = address(erc20mock);
         vm.startPrank(USER1);
         proxiedManager.depositERC20(
@@ -663,11 +693,12 @@ contract SlashingManagerEOATest is StrategyManagerTest {
             slashPercentage,
             abi.encodePacked("0x00")
         );
-        uint256 newStrategyBalance = depositAmount - slashAmount; // 700
+        uint256 newStrategyBalance = depositAmount - slashAmount; // 900
+        assertEq(newStrategyBalance, 900, "should match");
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount,
+            newStrategyBalance,
             newStrategyBalance
         );
         checkAccountShares(STRATEGY1, USER1, token, depositAmount);
@@ -675,19 +706,21 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         checkSlashingFund(USER1, token, slashAmount);
         checkGeneration(STRATEGY1, token, 0);
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
-        proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(token)); // this ends up withdrawing 720
+        proxiedManager.finalizeWithdrawal(STRATEGY1, IERC20(token)); // this ends up withdrawing 720 global shares
         uint256 effectiveWithdrawalAmount = 720;
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
             token,
-            depositAmount - withdrawalAmount,
+            // 900 - 720 = 180
+            newStrategyBalance - effectiveWithdrawalAmount,
+            //
             newStrategyBalance - effectiveWithdrawalAmount
         );
         checkAccountShares(
             STRATEGY1,
             USER1,
             token,
-            depositAmount - withdrawalAmount
+            depositAmount - withdrawalAmount // 1000-800 = 200
         );
         checkSlashableBalance(STRATEGY1, USER1, token, 0);
         checkSlashingFund(USER1, token, slashAmount);

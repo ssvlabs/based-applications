@@ -13,7 +13,8 @@ import {
     MIN_EXPIRE_TIME,
     MIN_TIME_LOCK_PERIOD,
     MAX_PERCENTAGE,
-    ETH_ADDRESS
+    ETH_ADDRESS,
+    RATIO_OFFSET
 } from "@ssv/src/core/libraries/ValidationLib.sol";
 import {
     IBasedAppManager
@@ -262,6 +263,34 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
+    function getGlobalLocalShareRatio(
+        uint32 strategyId,
+        address token
+    ) public view returns (uint256 ratio) {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
+            strategyId
+        ][token];
+        return
+            (strategyTokenShares.totalLocalSharesBalance * RATIO_OFFSET) /
+            strategyTokenShares.globalSharesBalance;
+    }
+
+    function getGlobalSharesTokenBalanceRatio(
+        address token
+    ) public view returns (uint256 ratio) {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        uint256 totalGlobalShares = s.totalGlobalSharesBalance[token];
+        uint256 totalTokenBalance;
+
+        if (token == ETH_ADDRESS) totalTokenBalance = address(this).balance;
+        else totalTokenBalance = IERC20(token).balanceOf(address(this));
+
+        if (totalTokenBalance != 0)
+            return (totalGlobalShares * RATIO_OFFSET) / totalTokenBalance;
+        else return 1 * RATIO_OFFSET;
+    }
+
     function getSlashableBalance(
         uint32 strategyId,
         address bApp,
@@ -274,7 +303,10 @@ contract SSVBasedApps is
         ][token];
 
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 balance = strategyTokenShares.totalTokenBalance;
+
+        uint256 ratio = getGlobalSharesTokenBalanceRatio(token);
+        uint256 balance = (strategyTokenShares.globalSharesBalance * ratio) /
+            RATIO_OFFSET;
 
         return (balance * percentage) / MAX_PERCENTAGE;
     }
@@ -457,9 +489,9 @@ contract SSVBasedApps is
         ) return 0;
         else
             return
-                s.strategyTokenShares[strategyId][token].accountShareBalance[
-                    account
-                ];
+                s
+                    .strategyTokenShares[strategyId][token]
+                    .accountLocalSharesBalance[account];
     }
 
     function strategyTotalBalance(
@@ -467,7 +499,12 @@ contract SSVBasedApps is
         address token
     ) external view returns (uint256) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return s.strategyTokenShares[strategyId][token].totalTokenBalance;
+        uint256 ratio = getGlobalSharesTokenBalanceRatio(token);
+        if (ratio == 0) return 0;
+        else
+            return
+                (s.strategyTokenShares[strategyId][token].globalSharesBalance *
+                    ratio) / RATIO_OFFSET;
     }
 
     function strategyTotalShares(
@@ -475,7 +512,7 @@ contract SSVBasedApps is
         address token
     ) external view returns (uint256) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return s.strategyTokenShares[strategyId][token].totalShareBalance;
+        return s.strategyTokenShares[strategyId][token].globalSharesBalance;
     }
 
     function strategyGeneration(

@@ -58,16 +58,15 @@ interface ICore {
 
     /// @notice Represents the shares system of a strategy
     struct Shares {
-        /// @dev The total token balance
-        uint256 totalTokenBalance;
-        /// @dev The total share balance
-        uint256 totalShareBalance;
+        /// @dev The total global share balance
+        uint256 globalSharesBalance;
+        uint256 totalLocalSharesBalance;
         /// @dev The current generation
         /// A generation (or versioning) system is required due to full slashing events.
         /// After such an event, the generation counter is bumped so that previous shares become outdated and are no longer able to be withdrawn.
         uint256 currentGeneration;
-        /// @dev The account share balance
-        mapping(address => uint256) accountShareBalance;
+        /// @dev The account internal share balance
+        mapping(address => uint256) accountLocalSharesBalance;
         /// @dev The account latest generation
         mapping(address => uint256) accountGeneration;
     }
