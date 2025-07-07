@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 interface IStrategyManager {
     event AccountMetadataURIUpdated(
@@ -51,6 +52,7 @@ interface IStrategyManager {
     event StrategyCreated(
         uint32 indexed strategyId,
         address indexed owner,
+        address indexed strategyAddress,
         uint32 fee,
         string metadataURI
     );
@@ -144,13 +146,7 @@ interface IStrategyManager {
     function proposeWithdrawalETH(uint32 strategyId, uint256 amount) external;
     function reduceFee(uint32 strategyId, uint32 proposedFee) external;
     function removeDelegatedBalance(address receiver) external;
-    function slash(
-        uint32 strategyId,
-        address bApp,
-        address token,
-        uint32 percentage,
-        bytes calldata data
-    ) external;
+    function slash(ICore.SlashContext memory c, bytes calldata data) external;
     function updateAccountMetadataURI(string calldata metadataURI) external;
     function updateDelegatedBalance(
         address receiver,

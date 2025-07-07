@@ -359,4 +359,17 @@ contract UtilsTest is Setup {
         return ((obligatedAmount * slashingPercentage) /
             proxiedManager.maxPercentage());
     }
+
+    function createSlashContext(
+        uint32 strategyId,
+        address bApp,
+        address token,
+        uint32 percentage
+    ) public pure returns (ICore.SlashContext memory c) {
+        c.strategyId = strategyId;
+        c.bApp = bApp;
+        c.token = token;
+        c.percentage = percentage;
+        return c;
+    }
 }

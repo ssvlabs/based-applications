@@ -84,10 +84,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(bApp1)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
 
@@ -131,10 +133,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(bApp1)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         uint256 newStrategyBalance = depositAmount - slashAmount;
@@ -172,10 +176,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             abi.encodeWithSelector(IStrategyManager.BAppSlashingFailed.selector)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp2),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp2),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         checkTotalSharesAndTotalBalance(
@@ -195,6 +201,8 @@ contract SlashingManagerTest is StrategyManagerTest {
     }
 
     function testRevertSlashBAppNotRegistered() public {
+        uint32 percentage = 9000;
+        testStrategyOptInToBApp(percentage);
         uint256 depositAmount = 100_000;
         vm.prank(USER2);
         proxiedManager.depositERC20(
@@ -208,10 +216,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             abi.encodeWithSelector(IBasedAppManager.BAppNotRegistered.selector)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            USER1,
-            address(erc20mock),
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                USER1,
+                address(erc20mock),
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
     }
@@ -322,21 +332,32 @@ contract SlashingManagerTest is StrategyManagerTest {
         uint32 slashPercentage = 100;
         uint32 percentage = 9000;
         uint256 depositAmount = 100_000;
-        uint256 withdrawalAmount = (depositAmount * 50) / 100;
+        uint256 withdrawalAmount = (depositAmount * 50) / 100; // 50000
         address token = address(erc20mock);
+
         uint256 slashAmount = calculateSlashAmount(
             depositAmount,
             percentage,
             slashPercentage
-        );
+        ); // slashable amount = 90_000
+        // slash Amount = 900
 
         testStrategyOptInToBApp(percentage);
+        assertEq(slashAmount, 900, "Should match the expected slash amount");
 
         vm.prank(USER2);
         proxiedManager.depositERC20(
             STRATEGY1,
             IERC20(erc20mock),
             depositAmount
+        );
+        assertEq(
+            proxiedManager.getSlashableBalance(
+                STRATEGY1,
+                address(bApp1),
+                token
+            ),
+            90_000
         );
 
         vm.prank(USER2);
@@ -358,11 +379,14 @@ contract SlashingManagerTest is StrategyManagerTest {
             slashPercentage,
             address(bApp1)
         );
+
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         uint256 newStrategyBalance = depositAmount - slashAmount;
@@ -425,10 +449,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(bApp1)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         uint256 newStrategyBalance = depositAmount - slashAmount;
@@ -485,10 +511,12 @@ contract SlashingManagerTest is StrategyManagerTest {
         );
         checkGeneration(STRATEGY1, token, 0);
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         uint256 newStrategyBalance = depositAmount - slashAmount;
@@ -560,10 +588,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             )
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         checkTotalSharesAndTotalBalance(
@@ -600,10 +630,12 @@ contract SlashingManagerTest is StrategyManagerTest {
         );
         proxiedManager.proposeWithdrawal(STRATEGY1, token, withdrawalAmount);
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
 
@@ -667,10 +699,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(0)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp3),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp3),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         (uint32 adjustedPercentage, ) = proxiedManager.obligations(
@@ -727,10 +761,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(0)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp3),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp3),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         uint32 adjustedPercentage = checkAdjustedPercentage(
@@ -786,10 +822,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(0)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp3),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp3),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         (uint32 adjustedPercentage, ) = proxiedManager.obligations(
@@ -832,10 +870,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(0)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp3),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp3),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         (uint32 adjustedPercentage, ) = proxiedManager.obligations(
@@ -854,6 +894,10 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkAccountShares(STRATEGY1, USER2, token, depositAmount);
         checkSlashableBalance(STRATEGY1, address(bApp3), token, 99.00 ether);
         checkSlashingFund(address(0), token, slashAmount);
+    }
+
+    function testAE() public {
+        testSlashBAppAdjustBasicETH();
     }
 
     function testSlashBAppAdjustBasicETH() public {
@@ -881,10 +925,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             address(bApp4)
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp4),
-            token,
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp4),
+                token,
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
         (uint32 adjustedPercentage, ) = proxiedManager.obligations(
@@ -937,10 +983,12 @@ contract SlashingManagerTest is StrategyManagerTest {
             )
         );
         proxiedManager.slash(
-            STRATEGY1,
-            address(bApp1),
-            address(erc20mock),
-            slashPercentage,
+            createSlashContext(
+                STRATEGY1,
+                address(bApp1),
+                address(erc20mock),
+                slashPercentage
+            ),
             abi.encodePacked("0x00")
         );
     }

@@ -28,9 +28,8 @@ This cleanly tears down all outstanding share balances in one on‑chain operati
    - Add to `accountShareBalance[msg.sender]`.
 
 2. **Slash & Generation bump**  
-   - If `strategyTokenShares.totalTokenBalance` goes to zero after slashing:  
+   - If `totalTokenBalance` goes to zero after slashing:  
      ```solidity
-     delete strategyTokenShares.totalTokenBalance;
      delete strategyTokenShares.totalShareBalance;
      strategyTokenShares.currentGeneration += 1;
      ```
@@ -51,7 +50,6 @@ This cleanly tears down all outstanding share balances in one on‑chain operati
 
 ```solidity
 struct Shares {
-    uint256 totalTokenBalance;
     uint256 totalShareBalance;
     uint256 currentGeneration;
     mapping(address => uint256) accountShareBalance;
