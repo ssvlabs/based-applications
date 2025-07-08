@@ -171,6 +171,7 @@ interface IStrategyManager {
     error FeeAlreadySet();
     error InsufficientBalance();
     error InsufficientLiquidity();
+    error InsufficientSlashAmount();
     error InvalidAccountGeneration();
     error InvalidAmount();
     error InvalidBAppOwner(address caller, address expectedOwner);

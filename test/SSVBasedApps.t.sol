@@ -257,4 +257,18 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.prank(OWNER);
         proxiedManager.updateModule(moduleIds, moduleAddresses);
     }
+
+    function testStrategyFactory() public view {
+        address strategyFactory = proxiedManager.strategyFactory();
+        assertNotEq(
+            strategyFactory,
+            address(0),
+            "Should not return empty strategy factory"
+        );
+        assertEq(
+            strategyFactory,
+            address(strategyFactoryProxy),
+            "Should return the correct strategy factory address"
+        );
+    }
 }

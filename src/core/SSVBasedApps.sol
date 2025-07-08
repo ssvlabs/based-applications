@@ -436,9 +436,17 @@ contract SSVBasedApps is
 
     function strategies(
         uint32 strategyId
-    ) external view returns (address strategyOwner, uint32 fee) {
+    )
+        external
+        view
+        returns (address strategyAddress, address strategyOwner, uint32 fee)
+    {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
+        return (
+            s.strategies[strategyId].strategyAddress,
+            s.strategies[strategyId].owner,
+            s.strategies[strategyId].fee
+        );
     }
 
     function ownedStrategies(

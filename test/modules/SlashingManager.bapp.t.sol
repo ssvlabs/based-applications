@@ -13,6 +13,7 @@ import {
 import {
     IBasedAppManager
 } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { console } from "forge-std/console.sol";
 
 contract SlashingManagerTest is StrategyManagerTest {
     function testGetSlashableBalanceBasic() public {
@@ -725,20 +726,19 @@ contract SlashingManagerTest is StrategyManagerTest {
         checkSlashingFund(address(0), token, slashAmount);
     }
 
-    function testSlashBAppAdjust(
-        uint32 slashPercentage,
-        uint256 depositAmount
+    function testRevertSlashBAppAdjustInvalidAmount(
+        uint32 slashPercentage
     ) public {
         uint32 percentage = 10_000;
         address token = address(erc20mock);
+        uint256 depositAmount = 1;
         vm.assume(
-            depositAmount > 0 &&
-                depositAmount <= proxiedManager.maxShares() &&
-                percentage > 0 &&
+            percentage > 0 &&
                 percentage <= proxiedManager.maxPercentage() &&
                 slashPercentage > 0 &&
                 slashPercentage < proxiedManager.maxPercentage()
         );
+        console.log(slashPercentage);
         uint256 slashAmount = calculateSlashAmount(
             depositAmount,
             percentage,
@@ -752,14 +752,58 @@ contract SlashingManagerTest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
-        emit IStrategyManager.StrategySlashed(
-            STRATEGY1,
-            address(bApp3),
-            token,
-            slashPercentage,
-            address(0)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IStrategyManager.InsufficientSlashAmount.selector
+            )
         );
+        proxiedManager.slash(
+            createSlashContext(
+                STRATEGY1,
+                address(bApp3),
+                token,
+                slashPercentage
+            ),
+            abi.encodePacked("0x00")
+        );
+    }
+
+    function testSlashBAppAdjust(
+        uint32 slashPercentage,
+        uint256 depositAmount
+    ) public {
+        uint32 percentage = 10_000;
+        address token = address(erc20mock);
+        vm.assume(
+            depositAmount > 10000 &&
+                depositAmount <= proxiedManager.maxShares() &&
+                percentage > 0 &&
+                percentage <= proxiedManager.maxPercentage() &&
+                slashPercentage > 0 &&
+                slashPercentage < proxiedManager.maxPercentage()
+        );
+        console.log(slashPercentage);
+        uint256 slashAmount = calculateSlashAmount(
+            depositAmount,
+            percentage,
+            slashPercentage
+        );
+        testStrategyOptInToBApp(percentage);
+        vm.prank(USER2);
+        proxiedManager.depositERC20(
+            STRATEGY1,
+            IERC20(erc20mock),
+            depositAmount
+        );
+        vm.prank(USER1);
+        //vm.expectEmit(true, true, true, true);
+        //emit IStrategyManager.StrategySlashed(
+        //    STRATEGY1,
+        //    address(bApp3),
+        //    token,
+        //    slashPercentage,
+        //    address(0)
+        //);
         proxiedManager.slash(
             createSlashContext(
                 STRATEGY1,

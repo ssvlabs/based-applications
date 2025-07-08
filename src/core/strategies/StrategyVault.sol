@@ -27,8 +27,6 @@ contract StrategyVault is
 
     address public ssvBasedApps;
 
-    error UnauthorizedCaller();
-
     /// @dev Allows only the SSV Based App Manager to call the function
     modifier onlySSVBasedAppManager() {
         if (msg.sender != ssvBasedApps) {
@@ -47,18 +45,21 @@ contract StrategyVault is
         uint256 amount,
         address receiver
     ) public onlySSVBasedAppManager nonReentrant {
-        token.transfer(receiver, amount);
+        _beforeWithdraw(amount, receiver);
+        token.safeTransfer(receiver, amount);
     }
 
     function withdrawETH(
         uint256 amount,
         address receiver
     ) public onlySSVBasedAppManager nonReentrant {
-        require(address(this).balance >= amount, "Insufficient ETH balance");
-        require(amount > 0, "Amount must be > 0");
-        require(receiver != address(0), "Zero address");
+        _beforeWithdraw(amount, receiver);
         (bool success, ) = payable(receiver).call{ value: amount }("");
-        require(success, "ETH transfer failed");
+        if (!success) revert ETHTransferFailed();
+    }
+
+    function _beforeWithdraw(uint256 amount, address receiver) internal pure {
+        if (amount == 0) revert InvalidZeroAmount();
     }
 
     receive() external payable onlySSVBasedAppManager {}

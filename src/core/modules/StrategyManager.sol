@@ -31,6 +31,7 @@ import {
 } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
+import { console } from "forge-std/Console.sol";
 
 contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
     using SafeERC20 for IERC20;
@@ -833,8 +834,10 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             token,
             strategyAddress
         );
+        console.log("slashable balance:", slashableBalance);
         if (slashableBalance == 0) revert InsufficientBalance();
         amount = (slashableBalance * percentage) / MAX_PERCENTAGE;
+        if (amount == 0) revert InsufficientSlashAmount();
     }
 
     /// @notice Slash a strategy
@@ -866,6 +869,8 @@ contract StrategyManager is ReentrancyGuardTransient, IStrategyManager {
             c.percentage,
             strategyAddress
         );
+
+        console.log("amount:", c.amount);
 
         if (_isContract(c.bApp)) {
             (c.success, c.receiver, c.exit) = IBasedApp(c.bApp).slash(
