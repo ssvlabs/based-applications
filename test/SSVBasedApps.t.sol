@@ -10,6 +10,7 @@ import {
     IStrategyManager,
     IBasedAppManager,
     IProtocolManager,
+    IStrategyFactory,
     SSVBasedApps
 } from "@ssv/test/helpers/Setup.t.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
@@ -20,20 +21,19 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         assertEq(address(proxiedManager).balance, 0);
     }
 
-    function testRevertSendETHDirectly() public payable {
+    function testSendETHDirectly() public payable {
         vm.prank(USER1);
         vm.expectRevert();
         payable(address(proxiedManager)).transfer(1 ether);
-        assertEq(address(proxiedManager).balance, 0);
     }
 
-    function testRevertSendETHViaFallback() public {
+    function testSendETHViaFallback() public {
         vm.prank(USER1);
         (bool success, ) = payable(address(proxiedManager)).call{
             value: 1 ether
         }("");
-        assertEq(success, false);
-        assertEq(address(proxiedManager).balance, 0);
+        assertEq(success, true);
+        assertEq(address(proxiedManager).balance, 1 ether);
     }
 
     function testRevertViaFallbackInvalidFunctionCall() public {
@@ -41,7 +41,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         (bool success, ) = payable(address(proxiedManager)).call{
             value: 0 ether
         }("");
-        assertEq(success, false);
+        assertEq(success, true);
         assertEq(address(proxiedManager).balance, 0);
     }
 
@@ -144,6 +144,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactoryProxy),
             config
         );
     }
@@ -156,6 +157,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactoryProxy),
             config
         );
     }
@@ -170,7 +172,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.etch(newModuleAddress, new bytes(100));
         moduleAddresses[0] = address(newModuleAddress);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit ISSVBasedApps.ModuleUpdated(
             SSVCoreModules.SSV_STRATEGY_MANAGER,
             address(newModuleAddress)
@@ -196,7 +198,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.etch(newModuleAddress, new bytes(100));
         moduleAddresses[0] = address(newModuleAddress);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit ISSVBasedApps.ModuleUpdated(
             SSVCoreModules.SSV_BAPPS_MANAGER,
             address(newModuleAddress)
@@ -215,7 +217,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.etch(newModuleAddress, new bytes(100));
         moduleAddresses[0] = address(newModuleAddress);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit ISSVBasedApps.ModuleUpdated(
             SSVCoreModules.SSV_PROTOCOL_MANAGER,
             address(newModuleAddress)
@@ -254,5 +256,19 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         );
         vm.prank(OWNER);
         proxiedManager.updateModule(moduleIds, moduleAddresses);
+    }
+
+    function testStrategyFactory() public view {
+        address strategyFactory = proxiedManager.strategyFactory();
+        assertNotEq(
+            strategyFactory,
+            address(0),
+            "Should not return empty strategy factory"
+        );
+        assertEq(
+            strategyFactory,
+            address(strategyFactoryProxy),
+            "Should return the correct strategy factory address"
+        );
     }
 }

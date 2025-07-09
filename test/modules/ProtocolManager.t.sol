@@ -17,6 +17,9 @@ import {
     IStrategyManager
 } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import {
+    IStrategyFactory
+} from "@ssv/src/core/interfaces/IStrategyFactory.sol";
+import {
     ERC1967Proxy
 } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
@@ -251,6 +254,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactoryProxy),
             config
         );
         ERC1967Proxy proxy = new ERC1967Proxy(
@@ -281,7 +285,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     /// @notice Updating the flags should emit DisabledFeaturesUpdated
     function testEmitDisabledFeaturesUpdatedEvent() public {
         vm.prank(OWNER);
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit();
         emit IProtocolManager.DisabledFeaturesUpdated(5);
         proxiedManager.updateDisabledFeatures(5);
     }

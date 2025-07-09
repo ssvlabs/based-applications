@@ -19,7 +19,7 @@ contract WhitelistExampleTest is UtilsTest {
             ""
         );
         assertEq(strategyId1, STRATEGY1, "Should set the correct strategy ID");
-        (address owner, uint32 delegationFeeOnRewards) = proxiedManager
+        (, address owner, uint32 delegationFeeOnRewards) = proxiedManager
             .strategies(strategyId1);
         assertEq(owner, USER1, "Should set the correct strategy owner");
         assertEq(

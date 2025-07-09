@@ -14,7 +14,10 @@ interface IViews {
     ) external view returns (bool isRegistered);
     function strategies(
         uint32 strategyId
-    ) external view returns (address strategyOwner, uint32 fee);
+    )
+        external
+        view
+        returns (address strategyAddress, address strategyOwner, uint32 fee);
     function ownedStrategies(
         address owner
     ) external view returns (uint32[] memory strategyIds);

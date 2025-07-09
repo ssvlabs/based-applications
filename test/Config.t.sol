@@ -17,9 +17,13 @@ import {
 import {
     IStrategyManager
 } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import {
+    IStrategyFactory
+} from "@ssv/src/core/interfaces/IStrategyFactory.sol";
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
 import { ProtocolManager } from "@ssv/src/core/modules/ProtocolManager.sol";
 import { StrategyManager } from "@ssv/src/core/modules/StrategyManager.sol";
+import { StrategyFactory } from "@ssv/src/core/strategies/StrategyFactory.sol";
 import {
     ProtocolStorageLib
 } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
@@ -32,6 +36,7 @@ contract Config is Test {
     StrategyManager public strategyManagerMod;
     BasedAppsManager public basedAppsManagerMod;
     ProtocolManager public protocolManagerMod;
+    StrategyFactory public strategyFactory;
 
     // Proxies
     ERC1967Proxy public proxy; // UUPS Proxy contract
@@ -53,6 +58,7 @@ contract Config is Test {
         basedAppsManagerMod = new BasedAppsManager();
         strategyManagerMod = new StrategyManager();
         protocolManagerMod = new ProtocolManager();
+        strategyFactory = new StrategyFactory("0.0.1");
         implementation = new SSVBasedApps();
         vm.stopPrank();
     }
@@ -77,6 +83,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -107,6 +114,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -137,6 +145,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -167,6 +176,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -195,6 +205,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -225,6 +236,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -255,6 +267,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -285,6 +298,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -315,6 +329,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -345,6 +360,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
@@ -372,6 +388,7 @@ contract Config is Test {
             IBasedAppManager(basedAppsManagerMod),
             IStrategyManager(strategyManagerMod),
             IProtocolManager(protocolManagerMod),
+            IStrategyFactory(strategyFactory),
             config
         );
         vm.expectRevert(
