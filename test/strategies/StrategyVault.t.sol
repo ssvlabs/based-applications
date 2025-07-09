@@ -74,6 +74,4 @@ contract StrategyVaultTest is StrategyManagerTest {
         );
         payable(strategyAddress).transfer(1 ether);
     }
-
-    // todo: test if they can receive eth from other users
 }
