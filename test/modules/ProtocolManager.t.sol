@@ -285,7 +285,7 @@ contract ProtocolManagerTest is Setup, Ownable2StepUpgradeable {
     /// @notice Updating the flags should emit DisabledFeaturesUpdated
     function testEmitDisabledFeaturesUpdatedEvent() public {
         vm.prank(OWNER);
-        vm.expectEmit(true, false, false, true);
+        vm.expectEmit();
         emit IProtocolManager.DisabledFeaturesUpdated(5);
         proxiedManager.updateDisabledFeatures(5);
     }

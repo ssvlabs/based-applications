@@ -76,7 +76,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp1),
@@ -125,7 +125,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         vm.prank(USER2);
         proxiedManager.depositETH{ value: depositAmount }(STRATEGY1);
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp1),
@@ -257,7 +257,7 @@ contract SlashingManagerTest is StrategyManagerTest {
     function testWithdrawSlashingFundErc20() public {
         uint32 slashPercentage = 9000;
         testSlashBApp(slashPercentage);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.SlashingFundWithdrawn(address(erc20mock), 1);
         vm.prank(USER1);
         bApp1.withdrawSlashingFund(address(erc20mock), 1);
@@ -273,7 +273,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             slashPercentage
         );
         testSlashBAppWithEth(slashPercentage);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.SlashingFundWithdrawn(ETH_ADDRESS, slashAmount);
         vm.prank(USER1);
         bApp1.withdrawETHSlashingFund(slashAmount);
@@ -372,7 +372,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         );
 
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp1),
@@ -441,7 +441,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         );
 
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp1),
@@ -502,7 +502,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp1),
@@ -691,7 +691,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp3),
@@ -795,7 +795,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp3),
@@ -856,7 +856,7 @@ contract SlashingManagerTest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp3),
@@ -904,7 +904,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         vm.prank(USER2);
         proxiedManager.depositETH{ value: depositAmount }(STRATEGY1);
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp3),
@@ -959,7 +959,7 @@ contract SlashingManagerTest is StrategyManagerTest {
         vm.prank(USER2);
         proxiedManager.depositETH{ value: depositAmount }(STRATEGY1);
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             address(bApp4),

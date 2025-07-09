@@ -172,7 +172,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.etch(newModuleAddress, new bytes(100));
         moduleAddresses[0] = address(newModuleAddress);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit ISSVBasedApps.ModuleUpdated(
             SSVCoreModules.SSV_STRATEGY_MANAGER,
             address(newModuleAddress)
@@ -198,7 +198,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.etch(newModuleAddress, new bytes(100));
         moduleAddresses[0] = address(newModuleAddress);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit ISSVBasedApps.ModuleUpdated(
             SSVCoreModules.SSV_BAPPS_MANAGER,
             address(newModuleAddress)
@@ -217,7 +217,7 @@ contract SSVBasedAppsTest is Setup, Ownable2StepUpgradeable {
         vm.etch(newModuleAddress, new bytes(100));
         moduleAddresses[0] = address(newModuleAddress);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit ISSVBasedApps.ModuleUpdated(
             SSVCoreModules.SSV_PROTOCOL_MANAGER,
             address(newModuleAddress)

@@ -218,7 +218,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 slashAmount = 100;
         uint32 slashPercentage = 9000;
         testSlashEOA(slashPercentage);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.SlashingFundWithdrawn(
             address(erc20mock),
             slashAmount
@@ -231,7 +231,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         uint256 slashAmount = 0.2 ether;
         uint32 slashPercentage = 1000;
         testSlashEOAWithEth(slashPercentage);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.SlashingFundWithdrawn(ETH_ADDRESS, slashAmount);
         vm.prank(USER1);
         proxiedManager.withdrawETHSlashingFund(slashAmount);
@@ -418,7 +418,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         );
 
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             USER1,
@@ -483,7 +483,7 @@ contract SlashingManagerEOATest is StrategyManagerTest {
         );
 
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategySlashed(
             STRATEGY1,
             USER1,

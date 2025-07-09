@@ -30,7 +30,6 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         proxiedManager.finalizeUpdateObligation(strategyId, bApp, token);
     }
 
-    // TESTS
     function testCreateStrategies() public {
         vm.startPrank(USER1);
 
@@ -40,14 +39,14 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             INITIAL_USER1_BALANCE_ERC20
         );
 
-        /*vm.expectEmit(true, true, true, true);
+        vm.expectEmit(true, false, true, true);
         emit IStrategyManager.StrategyCreated(
             STRATEGY1,
-            STRATEGY_ADDRESS,
+            address(0),
             USER1,
             STRATEGY1_INITIAL_FEE,
             ""
-        );*/
+        );
         uint32 strategyId1 = proxiedManager.createStrategy(
             STRATEGY1_INITIAL_FEE,
             ""
@@ -144,8 +143,14 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
 
     function testCreateStrategyWithZeroFee() public {
         vm.startPrank(USER1);
-        // vm.expectEmit(true, true, true, true);
-        // emit IStrategyManager.StrategyCreated(STRATEGY1, USER1, 0, "");
+        vm.expectEmit(true, false, true, true);
+        emit IStrategyManager.StrategyCreated(
+            STRATEGY1,
+            address(0), // Placeholder, cause the address is not possible to predict
+            USER1,
+            0,
+            ""
+        );
         uint32 strategyId1 = proxiedManager.createStrategy(0, "");
         (, , uint32 delegationFeeOnRewards) = proxiedManager.strategies(
             strategyId1
@@ -183,7 +188,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
         testCreateStrategies();
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyDeposit(
             STRATEGY1,
             USER1,
@@ -230,7 +235,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.assume(amount > 0 && amount < INITIAL_USER1_BALANCE_ERC20);
         testCreateStrategies();
         vm.startPrank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyDeposit(
             STRATEGY1,
             USER1,
@@ -328,7 +333,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint256 depositAmount = 100_000;
         testCreateStrategies();
         vm.startPrank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyDeposit(
             STRATEGY1,
             USER1,
@@ -412,7 +417,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.BAppOptedInByStrategy(
                 STRATEGY1,
                 address(bApps[i]),
@@ -456,14 +461,14 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
         bytes memory data = abi.encodePacked("0x00");
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit BasedAppMock.OptInToBApp(
             STRATEGY1,
             tokensInput,
             obligationPercentagesInput,
             data
         );
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.BAppOptedInByStrategy(
             STRATEGY1,
             address(bApp1),
@@ -505,7 +510,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.BAppOptedInByStrategy(
             STRATEGY1,
             USER1,
@@ -545,7 +550,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         tokensInput[0] = ETH_ADDRESS;
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.BAppOptedInByStrategy(
             STRATEGY1,
             USER1,
@@ -585,7 +590,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         tokensInput[0] = address(erc20mock);
         uint32[] memory obligationPercentagesInput = new uint32[](1);
         obligationPercentagesInput[0] = percentage;
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.BAppOptedInByStrategy(
             STRATEGY1,
             address(nonCompliantBApp),
@@ -655,7 +660,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testRegisterBAppWithNoTokens();
         vm.startPrank(USER1);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.BAppOptedInByStrategy(
                 STRATEGY1,
                 address(bApps[i]),
@@ -703,7 +708,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32[] memory obligationPercentagesInput = new uint32[](2);
         obligationPercentagesInput[0] = percentage;
         obligationPercentagesInput[1] = percentage;
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.BAppOptedInByStrategy(
             STRATEGY1,
             address(bApp1),
@@ -788,7 +793,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 percentage
             );
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.BAppOptedInByStrategy(
                 STRATEGY1,
                 address(bApps[i]),
@@ -859,7 +864,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 percentage
             );
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.BAppOptedInByStrategy(
                 STRATEGY1,
                 address(bApps[i]),
@@ -900,7 +905,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 percentage
             );
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.BAppOptedInByStrategy(
                 STRATEGY1,
                 address(bApps[i]),
@@ -1082,7 +1087,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.startPrank(USER1);
         checkAccountShares(STRATEGY1, USER1, address(erc20mock2), 0);
         checkTotalSharesAndTotalBalance(STRATEGY1, address(erc20mock2), 0, 0);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyDeposit(
             STRATEGY1,
             USER1,
@@ -1105,7 +1110,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint256 amount = 1_000_000 ether;
         testStrategyOptInToBApp(percentage);
         vm.startPrank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyDeposit(
             STRATEGY1,
             USER1,
@@ -1153,7 +1158,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testCreateStrategyETHAndDepositETH() public {
         testStrategyOptInToBAppWithETH();
         vm.startPrank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyDeposit(
             STRATEGY1,
             USER1,
@@ -1267,7 +1272,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         uint32 percentage = 9500;
         address token = address(erc20mock2);
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.ObligationCreated(
                 STRATEGY1,
                 address(bApps[i]),
@@ -1380,7 +1385,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testStrategyOptInToBApp(9000);
         proposedFee = 505;
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyFeeUpdateProposed(
             STRATEGY1,
             USER1,
@@ -1406,7 +1411,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 timeBeforeLimit
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyFeeUpdated(
             STRATEGY1,
             USER1,
@@ -1451,7 +1456,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testStrategyFastFeeUpdate() public {
         testStrategyOptInToBApp(9000);
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyFeeUpdated(STRATEGY1, USER1, 1, true);
         proxiedManager.reduceFee(STRATEGY1, 1);
         checkFee(STRATEGY1, USER1, 1);
@@ -1538,7 +1543,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
 
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.ObligationUpdateProposed(
                 STRATEGY1,
                 address(bApps[i]),
@@ -1573,7 +1578,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.warp(block.timestamp + proxiedManager.obligationTimelockPeriod());
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.ObligationUpdated(
                 STRATEGY1,
                 address(bApps[i]),
@@ -1611,7 +1616,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         );
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.ObligationUpdated(
                 STRATEGY1,
                 address(bApps[i]),
@@ -1651,7 +1656,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 proxiedManager.obligationExpireTime()
         );
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.ObligationUpdated(
                 STRATEGY1,
                 address(bApps[i]),
@@ -1797,7 +1802,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         withdrawalAmount = 1000;
         token = erc20mock;
         currentBalance = 120_000;
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyWithdrawalProposed(
             STRATEGY1,
             USER1,
@@ -1833,7 +1838,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             uint256 currentBalance
         ) = testProposeWithdrawalFromStrategy();
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyWithdrawal(
             STRATEGY1,
             USER1,
@@ -1871,7 +1876,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategyETHAndDepositETH();
         vm.assume(withdrawalAmount > 0 && withdrawalAmount <= 1 ether);
         currentBalance = 1 ether;
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyWithdrawalProposed(
             STRATEGY1,
             USER1,
@@ -1896,7 +1901,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             withdrawalAmount
         );
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.StrategyWithdrawal(
             STRATEGY1,
             USER1,
@@ -2030,7 +2035,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 percentage
             );
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.BAppOptedInByStrategy(
                 STRATEGY1,
                 address(bApps[i]),
@@ -2054,7 +2059,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 proxiedManager
             );
 
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.ObligationCreated(
                 STRATEGY1,
                 address(bApps[i]),
@@ -2092,7 +2097,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             );
 
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.BAppOptedInByStrategy(
                 STRATEGY1,
                 address(bApps[i]),
@@ -2116,7 +2121,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 proxiedManager
             );
 
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IStrategyManager.ObligationCreated(
                 STRATEGY1,
                 address(bApps[i]),
@@ -2230,7 +2235,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         testCreateStrategies();
         string memory metadataURI = "https://metadata.com";
         vm.startPrank(USER1);
-        vm.expectEmit(true, false, false, false);
+        vm.expectEmit();
         emit IStrategyManager.StrategyMetadataURIUpdated(
             STRATEGY1,
             metadataURI
