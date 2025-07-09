@@ -1153,13 +1153,13 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function testCreateStrategyETHAndDepositETH() public {
         testStrategyOptInToBAppWithETH();
         vm.startPrank(USER1);
-        // vm.expectEmit(true, true, true, true);
-        // emit IStrategyManager.StrategyDeposit(
-        //     STRATEGY1,
-        //     USER1,
-        //     ETH_ADDRESS,
-        //     1 ether
-        // );
+        vm.expectEmit(true, true, true, true);
+        emit IStrategyManager.StrategyDeposit(
+            STRATEGY1,
+            USER1,
+            ETH_ADDRESS,
+            1 ether
+        );
         proxiedManager.depositETH{ value: 1 ether }(STRATEGY1);
         checkAccountShares(STRATEGY1, USER1, ETH_ADDRESS, 1 ether);
         checkTotalSharesAndTotalBalance(

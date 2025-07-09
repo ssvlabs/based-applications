@@ -738,12 +738,12 @@ contract SlashingManagerTest is StrategyManagerTest {
                 slashPercentage > 0 &&
                 slashPercentage < proxiedManager.maxPercentage()
         );
-        console.log(slashPercentage);
         uint256 slashAmount = calculateSlashAmount(
             depositAmount,
             percentage,
             slashPercentage
         );
+        assertEq(slashAmount, 0, "Should return 0 as slash amount");
         testStrategyOptInToBApp(percentage);
         vm.prank(USER2);
         proxiedManager.depositERC20(
@@ -782,7 +782,6 @@ contract SlashingManagerTest is StrategyManagerTest {
                 slashPercentage > 0 &&
                 slashPercentage < proxiedManager.maxPercentage()
         );
-        console.log(slashPercentage);
         uint256 slashAmount = calculateSlashAmount(
             depositAmount,
             percentage,
@@ -796,14 +795,14 @@ contract SlashingManagerTest is StrategyManagerTest {
             depositAmount
         );
         vm.prank(USER1);
-        //vm.expectEmit(true, true, true, true);
-        //emit IStrategyManager.StrategySlashed(
-        //    STRATEGY1,
-        //    address(bApp3),
-        //    token,
-        //    slashPercentage,
-        //    address(0)
-        //);
+        vm.expectEmit(true, true, true, true);
+        emit IStrategyManager.StrategySlashed(
+            STRATEGY1,
+            address(bApp3),
+            token,
+            slashPercentage,
+            address(0)
+        );
         proxiedManager.slash(
             createSlashContext(
                 STRATEGY1,
