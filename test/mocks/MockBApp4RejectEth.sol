@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-import {
-    OwnableBasedApp
-} from "@ssv/src/middleware/modules/core+roles/OwnableBasedApp.sol";
+import { OwnableBasedApp } from "@ssv/src/middleware/modules/core+roles/OwnableBasedApp.sol";
 
 contract BasedAppMock4 is OwnableBasedApp {
     event OptInToBApp(

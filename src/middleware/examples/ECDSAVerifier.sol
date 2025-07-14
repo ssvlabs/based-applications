@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-import {
-    OwnableBasedApp
-} from "@ssv/src/middleware/modules/core+roles/OwnableBasedApp.sol";
+import { OwnableBasedApp } from "@ssv/src/middleware/modules/core+roles/OwnableBasedApp.sol";
 
-import {
-    SignatureChecker
-} from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 contract ECDSAVerifier is OwnableBasedApp {
     mapping(address => bool) public hasOptedIn;

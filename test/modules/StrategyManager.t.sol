@@ -3,12 +3,8 @@ pragma solidity 0.8.30;
 
 import { IERC20, BasedAppMock } from "@ssv/test/helpers/Setup.t.sol";
 import { BasedAppsManagerTest } from "@ssv/test/modules/BasedAppsManager.t.sol";
-import {
-    IStrategyManager
-} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {
-    IBasedAppManager
-} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
@@ -1538,7 +1534,7 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 initialObligationPercentage <= proxiedManager.maxPercentage() &&
                 proposedObligationPercentage >= 0 &&
                 proposedObligationPercentage <=
-                proxiedManager.maxPercentage() &&
+                    proxiedManager.maxPercentage() &&
                 proposedObligationPercentage != initialObligationPercentage
         );
 

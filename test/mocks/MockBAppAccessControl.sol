@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-import {
-    AccessControlBasedApp
-} from "@ssv/src/middleware/modules/core+roles/AccessControlBasedApp.sol";
+import { AccessControlBasedApp } from "@ssv/src/middleware/modules/core+roles/AccessControlBasedApp.sol";
 
 contract BasedAppMock3 is AccessControlBasedApp {
     event OptInToBApp(

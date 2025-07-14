@@ -7,12 +7,8 @@ import {
     IBasedApp
 } from "@ssv/test/helpers/Setup.t.sol";
 import { StrategyManagerTest } from "@ssv/test/modules/StrategyManager.t.sol";
-import {
-    IStrategyManager
-} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {
-    IBasedAppManager
-} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { console } from "forge-std/console.sol";
 
 contract SlashingManagerTest is StrategyManagerTest {

@@ -2,9 +2,7 @@
 pragma solidity 0.8.30;
 
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
-import {
-    IStrategyManager
-} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 
 contract BasedAppManagerDelegateTest is Setup {

@@ -3,28 +3,18 @@ pragma solidity 0.8.30;
 
 import { Test } from "forge-std/Test.sol";
 
-import {
-    ERC1967Proxy
-} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { BasedAppMock } from "@ssv/test/mocks/MockBApp.sol";
 import { BasedAppMock2 } from "@ssv/test/mocks/MockBApp2.sol";
 import { BasedAppMock3 } from "@ssv/test/mocks/MockBAppAccessControl.sol";
 import { BasedAppMock4 } from "@ssv/test/mocks/MockBApp4RejectEth.sol";
 import { BasedAppsManager } from "@ssv/src/core/modules/BasedAppsManager.sol";
-import {
-    IBasedAppManager
-} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { IERC20, ERC20Mock } from "@ssv/test/mocks/MockERC20.sol";
-import {
-    IProtocolManager
-} from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import {
-    IStrategyManager
-} from "@ssv/src/core/interfaces/IStrategyManager.sol";
-import {
-    IStrategyFactory
-} from "@ssv/src/core/interfaces/IStrategyFactory.sol";
+import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IStrategyFactory } from "@ssv/src/core/interfaces/IStrategyFactory.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import { NonCompliantBApp } from "@ssv/test/mocks/MockNonCompliantBApp.sol";
 import { SSVBasedApps } from "@ssv/src/core/SSVBasedApps.sol";
@@ -32,18 +22,12 @@ import { ProtocolManager } from "@ssv/src/core/modules/ProtocolManager.sol";
 import { StrategyManager } from "@ssv/src/core/modules/StrategyManager.sol";
 import { StrategyFactory } from "@ssv/src/core/strategies/StrategyFactory.sol";
 import { StrategyVault } from "@ssv/src/core/strategies/StrategyVault.sol";
-import {
-    ProtocolStorageLib
-} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
 
-import {
-    WhitelistExample
-} from "@ssv/src/middleware/examples/WhitelistExample.sol";
+import { WhitelistExample } from "@ssv/src/middleware/examples/WhitelistExample.sol";
 import { ECDSAVerifier } from "@ssv/src/middleware/examples/ECDSAVerifier.sol";
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
-import {
-    UpgradeableBeacon
-} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 contract Setup is Test {
     // Main Contract
