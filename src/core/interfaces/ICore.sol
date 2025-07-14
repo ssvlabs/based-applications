@@ -26,6 +26,8 @@ interface ICore {
 
     /// @notice Represents a Strategy
     struct Strategy {
+        /// @dev The address of the deployed strategy vault
+        address strategyAddress;
         /// @dev The owner of the strategy
         address owner;
         /// @dev The fee in percentage
@@ -58,8 +60,6 @@ interface ICore {
 
     /// @notice Represents the shares system of a strategy
     struct Shares {
-        /// @dev The total token balance
-        uint256 totalTokenBalance;
         /// @dev The total share balance
         uint256 totalShareBalance;
         /// @dev The current generation
@@ -80,5 +80,17 @@ interface ICore {
     struct TokenConfig {
         address token;
         uint32 sharedRiskLevel;
+    }
+
+    struct SlashContext {
+        uint256 amount;
+        uint32 strategyId;
+        uint32 percentage;
+        uint32 obligationPercentage;
+        address bApp;
+        bool exit;
+        bool success;
+        address token;
+        address receiver;
     }
 }

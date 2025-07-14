@@ -2,12 +2,8 @@
 pragma solidity 0.8.30;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {
-    Ownable2StepUpgradeable
-} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import {
-    UUPSUpgradeable
-} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import {
     MIN_EXPIRE_TIME,
@@ -15,24 +11,18 @@ import {
     MAX_PERCENTAGE,
     ETH_ADDRESS
 } from "@ssv/src/core/libraries/ValidationLib.sol";
-import {
-    IBasedAppManager
-} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
-import {
-    IProtocolManager
-} from "@ssv/src/core/interfaces/IProtocolManager.sol";
-import {
-    IStrategyManager
-} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IProtocolManager } from "@ssv/src/core/interfaces/IProtocolManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IStrategyFactory } from "@ssv/src/core/interfaces/IStrategyFactory.sol";
 import {
     CoreStorageLib,
     SSVCoreModules
 } from "@ssv/src/core/libraries/CoreStorageLib.sol";
-import {
-    ProtocolStorageLib
-} from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import { ProtocolStorageLib } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 /**
  * @title SSVBasedApps
@@ -88,7 +78,8 @@ contract SSVBasedApps is
         address owner_,
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
-        IProtocolManager protocolManager_,
+        IProtocolManager ssvProtocolManager_,
+        IStrategyFactory ssvStrategyFactory_,
         ProtocolStorageLib.Data calldata config
     ) external override initializer onlyProxy {
         __UUPSUpgradeable_init();
@@ -96,7 +87,8 @@ contract SSVBasedApps is
         __SSVBasedApplications_init_unchained(
             ssvBasedAppManger_,
             ssvStrategyManager_,
-            protocolManager_,
+            ssvProtocolManager_,
+            ssvStrategyFactory_,
             config
         );
     }
@@ -105,11 +97,13 @@ contract SSVBasedApps is
     function __SSVBasedApplications_init_unchained(
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
-        IProtocolManager protocolManager_,
+        IProtocolManager ssvProtocolManager_,
+        IStrategyFactory ssvStrategyFactory_,
         ProtocolStorageLib.Data calldata config
     ) internal onlyInitializing {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
         ProtocolStorageLib.Data storage sp = ProtocolStorageLib.load();
+        s.strategyFactory = address(ssvStrategyFactory_);
         s.ssvContracts[SSVCoreModules.SSV_STRATEGY_MANAGER] = address(
             ssvStrategyManager_
         );
@@ -117,7 +111,7 @@ contract SSVBasedApps is
             ssvBasedAppManger_
         );
         s.ssvContracts[SSVCoreModules.SSV_PROTOCOL_MANAGER] = address(
-            protocolManager_
+            ssvProtocolManager_
         );
 
         if (
@@ -269,12 +263,11 @@ contract SSVBasedApps is
     ) public view returns (uint256 slashableBalance) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
 
-        ICore.Shares storage strategyTokenShares = s.strategyTokenShares[
-            strategyId
-        ][token];
-
         uint32 percentage = s.obligations[strategyId][bApp][token].percentage;
-        uint256 balance = strategyTokenShares.totalTokenBalance;
+
+        uint256 balance = token == ETH_ADDRESS
+            ? s.strategies[strategyId].strategyAddress.balance
+            : IERC20(token).balanceOf(s.strategies[strategyId].strategyAddress);
 
         return (balance * percentage) / MAX_PERCENTAGE;
     }
@@ -330,13 +323,7 @@ contract SSVBasedApps is
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
-    function slash(
-        uint32 strategyId,
-        address bApp,
-        address token,
-        uint32 percentage,
-        bytes calldata data
-    ) external {
+    function slash(ICore.SlashContext memory s, bytes calldata data) external {
         _delegateTo(SSVCoreModules.SSV_STRATEGY_MANAGER);
     }
 
@@ -406,6 +393,11 @@ contract SSVBasedApps is
     // ** Section: External Views **
     // *****************************
 
+    function strategyFactory() external view returns (address) {
+        CoreStorageLib.Data storage s = CoreStorageLib.load();
+        return s.strategyFactory;
+    }
+
     function delegations(
         address account,
         address receiver
@@ -430,9 +422,17 @@ contract SSVBasedApps is
 
     function strategies(
         uint32 strategyId
-    ) external view returns (address strategyOwner, uint32 fee) {
+    )
+        external
+        view
+        returns (address strategyAddress, address strategyOwner, uint32 fee)
+    {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return (s.strategies[strategyId].owner, s.strategies[strategyId].fee);
+        return (
+            s.strategies[strategyId].strategyAddress,
+            s.strategies[strategyId].owner,
+            s.strategies[strategyId].fee
+        );
     }
 
     function ownedStrategies(
@@ -467,7 +467,9 @@ contract SSVBasedApps is
         address token
     ) external view returns (uint256) {
         CoreStorageLib.Data storage s = CoreStorageLib.load();
-        return s.strategyTokenShares[strategyId][token].totalTokenBalance;
+        address strategy = s.strategies[strategyId].strategyAddress;
+        if (token == ETH_ADDRESS) return strategy.balance;
+        else return IERC20(token).balanceOf(strategy);
     }
 
     function strategyTotalShares(
@@ -695,4 +697,6 @@ contract SSVBasedApps is
             }
         }
     }
+
+    receive() external payable {}
 }

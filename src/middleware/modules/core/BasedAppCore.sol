@@ -3,13 +3,9 @@ pragma solidity 0.8.30;
 
 import { IBasedApp } from "@ssv/src/middleware/interfaces/IBasedApp.sol";
 
-import {
-    IBasedAppManager
-} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 
-import {
-    IStrategyManager
-} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
