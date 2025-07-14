@@ -2,9 +2,7 @@
 pragma solidity 0.8.30;
 
 import { Setup } from "@ssv/test/helpers/Setup.t.sol";
-import {
-    IStrategyManager
-} from "@ssv/src/core/interfaces/IStrategyManager.sol";
+import { IStrategyManager } from "@ssv/src/core/interfaces/IStrategyManager.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 
 contract BasedAppManagerDelegateTest is Setup {
@@ -52,7 +50,7 @@ contract BasedAppManagerDelegateTest is Setup {
     function testDelegateMinimumBalance() public {
         uint32 delegatedAmount = 1;
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationCreated(
             USER1,
             RECEIVER,
@@ -68,7 +66,7 @@ contract BasedAppManagerDelegateTest is Setup {
                 percentageAmount < proxiedManager.maxPercentage()
         );
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationCreated(
             USER1,
             RECEIVER,
@@ -116,10 +114,10 @@ contract BasedAppManagerDelegateTest is Setup {
 
         vm.startPrank(USER1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationCreated(USER1, RECEIVER, percentage1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         checkDelegation(USER1, RECEIVER, percentage1, percentage1);
 
         emit IStrategyManager.DelegationCreated(USER1, RECEIVER2, percentage2);
@@ -163,7 +161,7 @@ contract BasedAppManagerDelegateTest is Setup {
 
         vm.startPrank(USER1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationCreated(USER1, RECEIVER, percentage1);
         proxiedManager.delegateBalance(RECEIVER, percentage1);
         checkDelegation(USER1, RECEIVER, percentage1, percentage1);
@@ -192,7 +190,7 @@ contract BasedAppManagerDelegateTest is Setup {
 
         uint32 updatePercentage = proxiedManager.maxPercentage();
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationUpdated(
             USER1,
             RECEIVER,
@@ -248,7 +246,7 @@ contract BasedAppManagerDelegateTest is Setup {
 
         vm.startPrank(USER1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationCreated(
             USER1,
             RECEIVER,
@@ -257,7 +255,7 @@ contract BasedAppManagerDelegateTest is Setup {
         proxiedManager.delegateBalance(RECEIVER, delegatedAmount1);
         checkDelegation(USER1, RECEIVER, delegatedAmount1, delegatedAmount1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationCreated(
             USER1,
             RECEIVER2,
@@ -285,7 +283,7 @@ contract BasedAppManagerDelegateTest is Setup {
         testDelegateFullBalance();
 
         vm.prank(USER1);
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationRemoved(USER1, RECEIVER);
         proxiedManager.removeDelegatedBalance(RECEIVER);
         checkDelegationZero(USER1, RECEIVER, 0);
@@ -299,14 +297,14 @@ contract BasedAppManagerDelegateTest is Setup {
 
         vm.startPrank(USER1);
 
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationRemoved(USER1, RECEIVER);
         proxiedManager.removeDelegatedBalance(RECEIVER);
         checkDelegationZero(USER1, RECEIVER, delegatedAmount2);
         checkDelegation(USER1, RECEIVER2, delegatedAmount2, delegatedAmount2);
 
         uint32 newDelegatedAmount1 = 1;
-        vm.expectEmit(true, true, true, true);
+        vm.expectEmit();
         emit IStrategyManager.DelegationCreated(
             USER1,
             RECEIVER,
@@ -337,7 +335,7 @@ contract BasedAppManagerDelegateTest is Setup {
     function testUpdateAccountMetadata() public {
         string memory metadataURI = "https://account-metadata.com";
         vm.startPrank(USER1);
-        vm.expectEmit(true, false, false, false);
+        vm.expectEmit();
         emit IStrategyManager.AccountMetadataURIUpdated(USER1, metadataURI);
         proxiedManager.updateAccountMetadataURI(metadataURI);
         vm.stopPrank();
@@ -347,7 +345,7 @@ contract BasedAppManagerDelegateTest is Setup {
         testUpdateAccountMetadata();
         string memory metadataURI2 = "https://account-metadata-2.com";
         vm.startPrank(USER1);
-        vm.expectEmit(true, false, false, false);
+        vm.expectEmit();
         emit IStrategyManager.AccountMetadataURIUpdated(USER1, metadataURI2);
         proxiedManager.updateAccountMetadataURI(metadataURI2);
         vm.stopPrank();

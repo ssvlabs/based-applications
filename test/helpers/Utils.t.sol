@@ -87,7 +87,7 @@ contract UtilsTest is Setup {
         );
         assertEq(isSet, expectedIsSet, "Obligation is set");
         assertEq(obligationPercentage, percentage, "Obligation percentage");
-        (address strategyOwner, ) = proxiedManager.strategies(strategyId);
+        (, address strategyOwner, ) = proxiedManager.strategies(strategyId);
         if (strategyOwner != address(0)) {
             assertEq(owner, strategyOwner, "Strategy owner");
         }
@@ -205,7 +205,7 @@ contract UtilsTest is Setup {
         uint32 expectedProposedFee,
         uint256 expectedUpdateTime
     ) internal view {
-        (address owner, uint32 fee) = proxiedManager.strategies(strategyId);
+        (, address owner, uint32 fee) = proxiedManager.strategies(strategyId);
         (uint32 feeProposed, uint256 feeUpdateTime) = proxiedManager
             .feeUpdateRequests(strategyId);
         assertEq(
@@ -235,7 +235,7 @@ contract UtilsTest is Setup {
         address expectedOwner,
         uint32 expectedFee
     ) internal view {
-        (address owner, uint32 fee) = proxiedManager.strategies(strategyId);
+        (, address owner, uint32 fee) = proxiedManager.strategies(strategyId);
         assertEq(
             owner,
             expectedOwner,
@@ -358,5 +358,18 @@ contract UtilsTest is Setup {
             proxiedManager.maxPercentage();
         return ((obligatedAmount * slashingPercentage) /
             proxiedManager.maxPercentage());
+    }
+
+    function createSlashContext(
+        uint32 strategyId,
+        address bApp,
+        address token,
+        uint32 percentage
+    ) public pure returns (ICore.SlashContext memory c) {
+        c.strategyId = strategyId;
+        c.bApp = bApp;
+        c.token = token;
+        c.percentage = percentage;
+        return c;
     }
 }

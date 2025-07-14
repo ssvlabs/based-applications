@@ -2,15 +2,11 @@
 pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import {
-    IAccessControl
-} from "@openzeppelin/contracts/access/IAccessControl.sol";
+import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { IBasedAppManager, IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
-import {
-    IBasedAppManager
-} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
@@ -99,7 +95,7 @@ contract BasedAppsManagerTest is UtilsTest {
         );
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
-            vm.expectEmit(true, true, true, true);
+            vm.expectEmit();
             emit IBasedAppManager.BAppRegistered(
                 address(bApps[i]),
                 tokenConfigsInput,
@@ -275,7 +271,7 @@ contract BasedAppsManagerTest is UtilsTest {
     function testUpdateBAppMetadata() public {
         testRegisterBApp();
         for (uint256 i = 0; i < bApps.length; i++) {
-            vm.expectEmit(true, false, false, false);
+            vm.expectEmit();
             emit IBasedAppManager.BAppMetadataURIUpdated(
                 address(bApps[i]),
                 metadataURI
@@ -336,15 +332,6 @@ contract BasedAppsManagerTest is UtilsTest {
         testRegisterBApp();
         ICore.TokenConfig[]
             memory tokenConfigsInput = createTwoTokenAndRiskInputs();
-        // ICore.TokenConfig[] memory tokenConfigs = new ICore.TokenConfig[](
-        //     tokensInput.length
-        // );
-        // for (uint256 i = 0; i < tokensInput.length; i++) {
-        //     tokenConfigs[i] = ICore.TokenConfig({
-        //         token: tokensInput[i],
-        //         sharedRiskLevel: sharedRiskLevelInput[i] + 1000
-        //     });
-        // }
         for (uint256 i = 0; i < bApps.length; i++) {
             vm.prank(USER1);
             vm.expectEmit(true, true, false, false);
