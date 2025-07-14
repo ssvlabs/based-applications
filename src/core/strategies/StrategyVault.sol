@@ -7,7 +7,6 @@ pragma solidity 0.8.30;
 // use balanceOf for balance.
 import { IStrategyVault } from "@ssv/src/core/interfaces/IStrategyVault.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuardTransient } from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
