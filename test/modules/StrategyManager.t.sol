@@ -2593,22 +2593,17 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
 
         uint256 oldUserBalance = token.balanceOf(USER1);
-        console.log(oldUserBalance);
 
         (address strategyAddress, , ) = proxiedManager.strategies(STRATEGY1);
-        console.log(strategyAddress);
         // 120.000
         // withdraw 1000, withdraw 1000 shares
         // rebase to 220000, 1000 shares now are worth 1833 tokens
         uint256 oldStrategyBalance = token.balanceOf(strategyAddress);
-        console.log(oldStrategyBalance);
 
         IRebase(address(token)).rebase(strategyAddress, 100000);
         uint256 newStrategyBalance = token.balanceOf(strategyAddress);
-        console.log(newStrategyBalance);
         uint256 newWithdrawalAmount = (newStrategyBalance * withdrawalAmount) /
             oldStrategyBalance;
-        console.log(newWithdrawalAmount);
 
         vm.prank(USER1);
         vm.expectEmit();
@@ -2622,7 +2617,6 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
         proxiedManager.finalizeWithdrawal(STRATEGY1, token);
         uint256 newShareBalance = currentBalance - withdrawalAmount;
         uint256 newBalance = newStrategyBalance - newWithdrawalAmount;
-        console.log("newabalnce:", newBalance);
         uint256 newUserBalance = token.balanceOf(USER1);
 
         assertNotEq(newUserBalance, oldUserBalance);
