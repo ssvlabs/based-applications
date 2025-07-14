@@ -10,7 +10,6 @@ import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 import { IRebase } from "@ssv/test/mocks/MockERC20.sol";
 import { CoreStorageLib } from "@ssv/src/core/libraries/CoreStorageLib.sol";
-import { console } from "forge-std/Console.sol";
 
 contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function updateObligation(
