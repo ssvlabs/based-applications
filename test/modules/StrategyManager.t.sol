@@ -12,6 +12,9 @@ import {
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
+import { IRebase } from "@ssv/test/mocks/MockERC20.sol";
+import { CoreStorageLib } from "@ssv/src/core/libraries/CoreStorageLib.sol";
+import { console } from "forge-std/Console.sol";
 
 contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
     function updateObligation(
@@ -1846,9 +1849,15 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             withdrawalAmount,
             false
         );
+        uint256 oldUserBalance = token.balanceOf(USER1);
         vm.prank(USER1);
         proxiedManager.finalizeWithdrawal(STRATEGY1, token);
         uint256 newBalance = currentBalance - withdrawalAmount;
+        uint256 newUserBalance = token.balanceOf(USER1);
+
+        assertNotEq(newUserBalance, oldUserBalance);
+        assertEq(newUserBalance, oldUserBalance + withdrawalAmount);
+
         checkAccountShares(STRATEGY1, USER1, address(token), newBalance);
         checkTotalSharesAndTotalBalance(
             STRATEGY1,
@@ -2120,7 +2129,6 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
                 true,
                 proxiedManager
             );
-
             vm.expectEmit();
             emit IStrategyManager.ObligationCreated(
                 STRATEGY1,
@@ -2573,5 +2581,61 @@ contract StrategyManagerTest is UtilsTest, BasedAppsManagerTest {
             )
         );
         proxiedManager.finalizeWithdrawalETH(STRATEGY1);
+    }
+
+    //todo test withdrawal propose ok, rebase, withdraw will retrieve more tokens than submitted.
+    function testWithdrawalAfterRebasingEvent() public {
+        (
+            uint256 withdrawalAmount,
+            IERC20 token,
+            uint256 currentBalance
+        ) = testProposeWithdrawalFromStrategy();
+        vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
+
+        uint256 oldUserBalance = token.balanceOf(USER1);
+        console.log(oldUserBalance);
+
+        (address strategyAddress, , ) = proxiedManager.strategies(STRATEGY1);
+        console.log(strategyAddress);
+        // 120.000
+        // withdraw 1000, withdraw 1000 shares
+        // rebase to 220000, 1000 shares now are worth 1833 tokens
+        uint256 oldStrategyBalance = token.balanceOf(strategyAddress);
+        console.log(oldStrategyBalance);
+
+        IRebase(address(token)).rebase(strategyAddress, 100000);
+        uint256 newStrategyBalance = token.balanceOf(strategyAddress);
+        console.log(newStrategyBalance);
+        uint256 newWithdrawalAmount = (newStrategyBalance * withdrawalAmount) /
+            oldStrategyBalance;
+        console.log(newWithdrawalAmount);
+
+        vm.prank(USER1);
+        vm.expectEmit();
+        emit IStrategyManager.StrategyWithdrawal(
+            STRATEGY1,
+            USER1,
+            address(token),
+            newWithdrawalAmount,
+            false
+        );
+        proxiedManager.finalizeWithdrawal(STRATEGY1, token);
+        uint256 newShareBalance = currentBalance - withdrawalAmount;
+        uint256 newBalance = newStrategyBalance - newWithdrawalAmount;
+        console.log("newabalnce:", newBalance);
+        uint256 newUserBalance = token.balanceOf(USER1);
+
+        assertNotEq(newUserBalance, oldUserBalance);
+
+        assertEq(newUserBalance, oldUserBalance + newWithdrawalAmount);
+
+        checkAccountShares(STRATEGY1, USER1, address(token), newShareBalance);
+        checkTotalSharesAndTotalBalance(
+            STRATEGY1,
+            address(token),
+            newShareBalance,
+            newBalance
+        );
+        checkProposedWithdrawal(STRATEGY1, USER1, address(token), 0, 0);
     }
 }
