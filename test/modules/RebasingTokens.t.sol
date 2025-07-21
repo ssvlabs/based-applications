@@ -26,5 +26,52 @@ contract RebasingTokensTest is StrategyManagerTest {
         checkAccountShares(STRATEGY1, USER1, address(erc20mock), depositAmount);
     }
 
-    function testWithdrawalAfterRebase() public {}
+    function testWithdrawalAfterRebasingEvent() public {
+        (
+            uint256 withdrawalAmount,
+            IERC20 token,
+            uint256 currentBalance
+        ) = testProposeWithdrawalFromStrategy();
+        vm.warp(block.timestamp + proxiedManager.withdrawalTimelockPeriod());
+
+        uint256 oldUserBalance = token.balanceOf(USER1);
+
+        (address strategyAddress, , ) = proxiedManager.strategies(STRATEGY1);
+        // 120.000
+        // withdraw 1000, withdraw 1000 shares
+        // rebase to 220000, 1000 shares now are worth 1833 tokens
+        uint256 oldStrategyBalance = token.balanceOf(strategyAddress);
+
+        IRebase(address(token)).rebase(strategyAddress, 100000);
+        uint256 newStrategyBalance = token.balanceOf(strategyAddress);
+        uint256 newWithdrawalAmount = (newStrategyBalance * withdrawalAmount) /
+            oldStrategyBalance;
+
+        vm.prank(USER1);
+        vm.expectEmit();
+        emit IStrategyManager.StrategyWithdrawal(
+            STRATEGY1,
+            USER1,
+            address(token),
+            newWithdrawalAmount,
+            false
+        );
+        proxiedManager.finalizeWithdrawal(STRATEGY1, token);
+        uint256 newShareBalance = currentBalance - withdrawalAmount;
+        uint256 newBalance = newStrategyBalance - newWithdrawalAmount;
+        uint256 newUserBalance = token.balanceOf(USER1);
+
+        assertNotEq(newUserBalance, oldUserBalance);
+
+        assertEq(newUserBalance, oldUserBalance + newWithdrawalAmount);
+
+        checkAccountShares(STRATEGY1, USER1, address(token), newShareBalance);
+        checkTotalSharesAndTotalBalance(
+            STRATEGY1,
+            address(token),
+            newShareBalance,
+            newBalance
+        );
+        checkProposedWithdrawal(STRATEGY1, USER1, address(token), 0, 0);
+    }
 }
