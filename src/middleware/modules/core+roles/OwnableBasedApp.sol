@@ -2,9 +2,13 @@
 pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { BasedAppCore } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
+import {
+    BasedAppCore
+} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 abstract contract OwnableBasedApp is Ownable, BasedAppCore {

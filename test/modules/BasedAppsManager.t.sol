@@ -2,11 +2,15 @@
 pragma solidity 0.8.30;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IAccessControl } from "@openzeppelin/contracts/access/IAccessControl.sol";
+import {
+    IAccessControl
+} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { IBasedAppManager, IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ValidationLib } from "@ssv/src/core/libraries/ValidationLib.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 

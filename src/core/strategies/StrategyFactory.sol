@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity 0.8.30;
 
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {
+    OwnableUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {
+    BeaconProxy
+} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { IBeacon } from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import { ISSVBasedApps } from "@ssv/src/core/interfaces/ISSVBasedApps.sol";
 import { IStrategyVault } from "@ssv/src/core/interfaces/IStrategyVault.sol";
-import { IStrategyFactory } from "@ssv/src/core/interfaces/IStrategyFactory.sol";
+import {
+    IStrategyFactory
+} from "@ssv/src/core/interfaces/IStrategyFactory.sol";
 
 contract StrategyFactory is OwnableUpgradeable, IStrategyFactory {
     ISSVBasedApps public ssvBasedApps;

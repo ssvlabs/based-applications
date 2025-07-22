@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-import { IBasedAppWhitelisted } from "@ssv/src/middleware/interfaces/IBasedAppWhitelisted.sol";
+import {
+    IBasedAppWhitelisted
+} from "@ssv/src/middleware/interfaces/IBasedAppWhitelisted.sol";
 import { IBasedApp } from "@ssv/test/helpers/Setup.t.sol";
 import { UtilsTest } from "@ssv/test/helpers/Utils.t.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";

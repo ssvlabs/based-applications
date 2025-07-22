@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.30;
 
-import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { BasedAppCore } from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
+import {
+    AccessControl
+} from "@openzeppelin/contracts/access/AccessControl.sol";
+import {
+    BasedAppCore
+} from "@ssv/src/middleware/modules/core/BasedAppCore.sol";
 
-import { IBasedAppManager } from "@ssv/src/core/interfaces/IBasedAppManager.sol";
+import {
+    IBasedAppManager
+} from "@ssv/src/core/interfaces/IBasedAppManager.sol";
 import { ICore } from "@ssv/src/core/interfaces/ICore.sol";
 
 abstract contract AccessControlBasedApp is BasedAppCore, AccessControl {

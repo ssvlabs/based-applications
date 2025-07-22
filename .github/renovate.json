@@ -1,6 +1,4 @@
 {
-  "extends": [
-    "github>ssvlabs/shared-configs//renovate/renovate.json"
-  ],
-  "baseBranches": ["develop"]
+  "extends": ["github>ssvlabs/shared-configs//renovate/renovate.json"],
+  "baseBranchPatterns": ["develop"]
 }
