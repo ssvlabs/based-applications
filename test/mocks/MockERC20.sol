@@ -6,6 +6,10 @@ pragma solidity 0.8.30;
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
+interface IRebase {
+    function rebase(address account, uint256 amount) external;
+}
+
 /**
  * @dev Implementation of the {IERC20} interface.
  *
@@ -34,7 +38,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
  * functions have been added to mitigate the well-known issues around setting
  * allowances. See {IERC20-approve}.
  */
-contract ERC20Mock is Context, IERC20 {
+contract ERC20Mock is Context, IERC20, IRebase {
     mapping(address => uint256) private _balances;
 
     mapping(address => mapping(address => uint256)) private _allowances;
@@ -169,7 +173,7 @@ contract ERC20Mock is Context, IERC20 {
 
         _beforeTokenTransfer(from, to, amount);
 
-        _mint(from, amount);
+        // _mint(from, amount);
         unchecked {
             _balances[from] = _balances[from] - amount;
             // Overflow not possible: the sum of all balances is capped by totalSupply, and the sum is preserved by
@@ -201,6 +205,10 @@ contract ERC20Mock is Context, IERC20 {
             _balances[account] += amount;
         }
         emit Transfer(address(0), account, amount);
+    }
+
+    function rebase(address account, uint256 amount) external {
+        _mint(account, amount);
     }
 
     /**

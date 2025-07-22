@@ -33,4 +33,10 @@ contract BasedAppMock is OwnableBasedApp {
         if (counter % 2 == 0) return false;
         else return true;
     }
+
+    event Received(address, uint256);
+
+    receive() external payable override {
+        emit Received(msg.sender, msg.value);
+    }
 }

@@ -14,6 +14,7 @@ library CoreStorageLib {
     /// @notice Represents all operational state required by the SSV Based Application platform.
     struct Data {
         uint32 _strategyCounter;
+        address strategyFactory;
         /// @notice Maps each SSVCoreModules' module to its corresponding contract address
         mapping(SSVCoreModules => address) ssvContracts;
         /**
@@ -92,6 +93,7 @@ library CoreStorageLib {
          * Submitting a new request will overwrite the previous one and reset the timer.
          */
         mapping(address bApp => ICore.TokenUpdateRequest) tokenUpdateRequests;
+        uint256[50] __gap;
     }
 
     uint256 private constant SSV_BASED_APPS_STORAGE_POSITION =

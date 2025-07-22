@@ -15,6 +15,9 @@ import { SSVCoreModules } from "@ssv/src/core/libraries/CoreStorageLib.sol";
 import {
     ProtocolStorageLib
 } from "@ssv/src/core/libraries/ProtocolStorageLib.sol";
+import {
+    IStrategyFactory
+} from "@ssv/src/core/interfaces/IStrategyFactory.sol";
 
 interface ISSVBasedApps is
     IStrategyManager,
@@ -32,6 +35,7 @@ interface ISSVBasedApps is
         IBasedAppManager ssvBasedAppManger_,
         IStrategyManager ssvStrategyManager_,
         IProtocolManager protocolManager_,
+        IStrategyFactory ssvStrategyFactory_,
         ProtocolStorageLib.Data memory config
     ) external;
     function updateModule(
